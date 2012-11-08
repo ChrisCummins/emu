@@ -1,0 +1,69 @@
+#!/bin/sh
+
+SCRIPT=$(basename $0)
+VERSION="0.0.1"
+
+help ()
+{
+    echo "\
+usage: $SCRIPT [-v] [-h]
+           <command> [<args>]
+"
+}
+
+version ()
+{
+    echo "$SCRIPT version $VERSION"
+}
+
+no_command ()
+{
+    echo "$SCRIPT: '$1' is not a command. See '$SCRIPT help'."
+    exit 1
+}
+
+# Get arguments.
+while getopts :hv OPT
+do
+    case $OPT in
+        h)
+            help
+            exit 0
+            ;;
+        v)
+            version
+            exit 0
+            ;;
+         \?)
+            echo "Invalid option: -$OPTARG" >&2
+            exit $EXIT_INVALID_ARGS
+            ;;
+        :)
+            echo "Option -$OPTARG requires an argument." >&2
+            exit $EXIT_INVALID_ARGS
+            ;;
+    esac
+done
+
+# Get command.
+COMMAND="$1"
+shift
+
+# Parse local commands.
+case $COMMAND in
+    "" | "help")
+        help
+        exit 0
+        ;;
+    "version")
+        version
+        exit 0
+        ;;
+esac
+
+# Test if argument is valid command.
+command -v $SCRIPT-$COMMAND >/dev/null 2>&1 || { no_command $COMMAND; }
+
+# Run command.
+$SCRIPT-$COMMAND $@
+exit $?

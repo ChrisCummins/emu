@@ -1,0 +1,29 @@
+#!/bin/sh
+
+SCRIPT=$(basename $0)
+PROG="emu"
+
+SOURCE_DIR="$(pwd)"
+CONF_DIR="$SOURCE_DIR/.$PROG"
+TEMPLATE_HOOKS_DIR="/usr/share/emu/templates/hooks"
+
+initialize ()
+{
+    mkdir "$CONF_DIR"
+    cp -r "$TEMPLATE_HOOKS_DIR" "$CONF_DIR"
+    echo "$SCRIPT: Initialized empty emu source in $CONF_DIR"
+}
+
+reinitialize ()
+{
+    echo "$SCRIPT: Reinitialized existing emu source in $CONF_DIR"
+}
+
+if [[ -d .emu ]]
+then
+    reinitialize
+else
+    initialize
+fi
+
+exit 0
