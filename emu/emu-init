@@ -5,25 +5,55 @@ PROG="emu"
 
 SOURCE_DIR="$(pwd)"
 CONF_DIR="$SOURCE_DIR/.$PROG"
-TEMPLATE_HOOKS_DIR="/usr/share/emu/templates/hooks"
 
-initialize ()
+help ()
 {
-    mkdir "$CONF_DIR"
-    cp -r "$TEMPLATE_HOOKS_DIR" "$CONF_DIR"
-    echo "$SCRIPT: Initialized empty emu source in $CONF_DIR"
+    echo "\
+$SCRIPT - Create or reinitialize an existing $PROG source.
+
+This command is non-destructive, running it on an existing emu source will not
+overwrite any existing data. Instead, it can be used to rescue a broken source,
+as it will silently replace or recreate any missing files. If you have broken a
+file and would like to revert to the default, delete it and run this command."
 }
 
-reinitialize ()
+create_directories ()
 {
-    echo "$SCRIPT: Reinitialized existing emu source in $CONF_DIR"
+    mkdir -p "$CONF_DIR"
+    mkdir -p "$CONF_DIR/sinks"
+    chmod 0755 "$CONF_DIR/sinks"
 }
+
+copy_template_files ()
+{
+    TEMPLATE_DIR="/usr/share/$PROG/templates"
+
+    # Copy over files from shared templates dir.
+    # If a file already exists, don't overwrite.
+    cp -n "$TEMPLATE_DIR/config" "$CONF_DIR"
+    cp -n "$TEMPLATE_DIR/excludes" "$CONF_DIR"
+    cp -nr "$TEMPLATE_DIR/hooks" "$CONF_DIR"
+}
+
+init_filesystem ()
+{
+    create_directories
+    copy_template_files
+}
+
+if [[ "$1" == "help" ]]
+then
+    help
+    exit 0
+fi
 
 if [[ -d .emu ]]
 then
-    reinitialize
+    init_filesystem
+    echo "$SCRIPT: Reinitialized existing source in $CONF_DIR"
 else
-    initialize
+    init_filesystem
+    echo "$SCRIPT: Initialized source in $CONF_DIR"
 fi
 
 exit 0
