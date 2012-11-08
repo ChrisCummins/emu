@@ -1,0 +1,97 @@
+#!/bin/sh
+
+SCRIPT=$(basename $0)
+PROG="emu"
+
+help ()
+{
+    echo "\
+$SCRIPT - manage $PROG sinks.
+
+With no arguments, show a list of existing sinks. Several subommands are
+available to perform operations on sinks.
+
+add <name> <path>
+    Adds a sink name <name> for the directory at <path>.
+rename <old> <new>
+    Rename the sink named <old> to <new>.
+rm <name>
+    Remove the sink named <name>.
+show <name>
+    Gives some information about the sink <name>.
+"
+
+}
+
+add_sink ()
+{
+    if [[ "$1" == "" ]] || [[ "$2" == "" ]]
+    then
+        help
+        exit 1
+    fi
+
+    if [[ -f ".$PROG/sinks/$1" ]]
+    then
+        echo "$SCRIPT: Sink '$1' already exists."
+        exit 1
+    fi
+    echo "$2" > ".$PROG/sinks/$1"
+}
+
+rm_sink ()
+{
+    if [[ ! -f ".$PROG/sinks/$1" ]]
+    then
+        echo "$SCRIPT: Sink '$1' does not exist."
+        exit 1
+    fi
+
+    rm -f ".$PROG/sinks/$1"
+    echo "$SCRIPT: Sink '$1' removed."
+}
+
+show_sink ()
+{
+    if [[ ! -f ".$PROG/sinks/$1" ]]
+    then
+        echo "$SCRIPT: Sink '$1' does not exist."
+        exit 1
+    fi
+
+# TODO:
+#   number of snapshots
+#   last write time
+#   directory size
+    echo "\
+* sink $1
+  Path: $(cat .$PROG/sinks/$1)"
+}
+
+list_sinks ()
+{
+    ls ".$PROG/sinks"
+}
+
+COMMAND="$1"
+shift
+
+case "$COMMAND" in
+    "help")
+        help
+        ;;
+    "")
+        list_sinks
+        ;;
+    "add")
+        add_sink $1 $2
+        ;;
+    "rm")
+        rm_sink $@
+        ;;
+    "show")
+        show_sink $1
+        ;;
+esac
+
+exit 0
