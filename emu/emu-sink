@@ -23,6 +23,18 @@ show <name>
 
 }
 
+init_sink ()
+{
+    SINK_DIR="$1"
+
+    mkdir -p "$SINK_DIR/.$PROG"
+    mkdir -p "$SINK_DIR/.$PROG/trees"
+    touch "$SINK_DIR/.$PROG/HEAD"
+    echo $(pwd) > "$SINK_DIR/.$PROG/SOURCE"
+
+    echo "$SCRIPT: Initialized sink at $SINK_DIR/.$PROG"
+}
+
 add_sink ()
 {
     if [[ "$1" == "" ]] || [[ "$2" == "" ]]
@@ -33,17 +45,28 @@ add_sink ()
 
     if [[ -f ".$PROG/sinks/$1" ]]
     then
-        echo "$SCRIPT: Sink '$1' already exists."
+        echo "$SCRIPT: Sink '$1' already exists." >&2
         exit 1
     fi
+
+    if [[ -d "$2/.$PROG" ]]
+    then
+        echo "$SCRIPT: '$2/.$PROG' already exists." >&2
+        exit 1
+    fi
+
+    # Create sinks/remote file.
     echo "$2" > ".$PROG/sinks/$1"
+
+    # Initialize sink.
+    init_sink "$2"
 }
 
 rm_sink ()
 {
     if [[ ! -f ".$PROG/sinks/$1" ]]
     then
-        echo "$SCRIPT: Sink '$1' does not exist."
+        echo "$SCRIPT: Sink '$1' does not exist." >&2
         exit 1
     fi
 
@@ -55,7 +78,7 @@ show_sink ()
 {
     if [[ ! -f ".$PROG/sinks/$1" ]]
     then
-        echo "$SCRIPT: Sink '$1' does not exist."
+        echo "$SCRIPT: Sink '$1' does not exist." >&2
         exit 1
     fi
 
