@@ -139,12 +139,12 @@ exit_with_error ()
     exit 1
 }
 
-# Get a a list of the sink files.
+# Retrieve all sink files.
 #
 # @return SINK_FILES List of paths to sink files.
-get_sinks ()
+get_all_sinks ()
 {
-    SINK_FILES=$(find $CONF_DIR/sinks/ | tail -n+2)
+    SINK_FILES="$(find $CONF_DIR/sinks/ | tail -n+2)"
 
     if [[ "$SINK_FILES" == "" ]]
     then
@@ -162,6 +162,22 @@ get_sinks ()
             exit_with_error
         fi
     done
+}
+
+get_sinks ()
+{
+    SINK_FILES[$#]=$@
+    for ARG in $@
+    do
+        SINK_FILE="$(find $CONF_DIR/sinks/ -name $ARG)"
+        if [[ "$SINK_FILE" == "" ]]
+        then
+            echo "Sink 'arg' not found!" >&2
+            exit_with_error
+        fi
+        SINK_FILES="$SINK_FILES\n$SINK_FILE"
+    done
+    SINK_FILES="$(echo -e $SINK_FILES | tail -n+2)"
 }
 
 # Generate a snapshot hash.
@@ -349,7 +365,13 @@ perform_snapshots ()
 }
 
 exec_pre_exec_hooks
-get_sinks
+if [[ "$@" == "" ]]
+then
+    get_all_sinks
+else
+    get_sinks $@
+fi
+
 lock_dir "$SOURCE_DIR"
 
 perform_snapshots
