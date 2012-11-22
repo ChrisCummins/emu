@@ -1,0 +1,52 @@
+#!/bin/bash
+
+source /usr/share/emu/emu-util
+SCRIPT=$(basename $0)
+SOURCE_DIR="$(pwd)"
+
+# Print the nodes for a sink.
+#
+# @param $1 Name of sink.
+print_nodes ()
+{
+    print_sink_details $1 >> .emu_log
+
+    SINK_PATH="$(cat $SOURCE_DIR/.$PROG/sinks/$1)"
+    for NODE in $(ls "$SINK_DIR/.$PROG/nodes" | sort -r)
+    do
+        NODE_PATH="$SINK_PATH/.$PROG/nodes/$NODE"
+        DATE="$(cat $NODE_PATH | grep Date | sed -r 's/Date +(.*)/\1/')"
+        SIZE="$(cat $NODE_PATH | grep Size | sed -r 's/Size +(.*)/\1/')"
+
+        echo "$NODE
+  Date: $DATE
+  Size: $SIZE
+" >> .emu_log
+    done
+    cat .emu_log | less
+    rm -f .emu_log
+}
+
+main ()
+{
+    pre_exec_hooks "$SOURCE_DIR"
+
+    if [[ "$1" == "" ]]
+    then
+        echo "$SCRIPT: no sink specified"
+        exit_with_error "$SOURCE_DIR"
+    fi
+
+    SINK_DIR="$(cat $SOURCE_DIR/.$PROG/sinks/$1 2>/dev/null)"
+    if [[ ! -d "$SINK_DIR" ]]
+    then
+        echo "$SCRIPT: sink '$1' does not exist" >&2
+        exit_with_error "$SOURCE_DIR"
+    fi
+
+    print_nodes "$1"
+
+    post_exec_hooks "$SOURCE_DIR"
+    exit 0
+}
+main $@
