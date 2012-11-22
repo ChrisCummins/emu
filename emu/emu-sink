@@ -31,7 +31,7 @@ init_sink ()
     touch "$SINK_DIR/.$PROG/HEAD"
     echo $(pwd) > "$SINK_DIR/.$PROG/SOURCE"
 
-    echo "$SCRIPT: Initialized sink at $SINK_DIR/.$PROG"
+    echo "$SCRIPT: Initialized sink at $SINK_DIR/"
 }
 
 add_sink ()
