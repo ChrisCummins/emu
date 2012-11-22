@@ -166,6 +166,7 @@ get_sinks ()
 
 # Generate a snapshot hash.
 #
+# @param $1 Path to sink directory.
 # @return HASH a 40 digit snapshot UID.
 generate_hash ()
 {
@@ -173,6 +174,30 @@ generate_hash ()
         |sed 's/^[^ ]* //'|head -n10|md5sum)
     HASH=${HASH:0:32}
     HASH=$HASH$(printf '%x\n' $(date +'%s')|tail -c8)
+
+    # Check if hash exists, and if so, wait.
+    if [[ -f "$1/.$PROG/nodes/$HASH" ]]
+    then
+        sleep 2
+        generate_hash
+    fi
+}
+
+# Generate a snapshot node file.
+#
+# @param $1 Path to sink directory.
+# @var $HEAD The UID of the parent snapshot.
+# @var $HASH The 40 digit snapshot UID.
+generate_node ()
+{
+    NODE="$1/.$PROG/nodes/$HASH"
+    touch "$NODE"
+    cat <<EOF >> "$NODE"
+Parent  $HEAD
+Date    $(date)
+Source  $(cat $1/.$PROG/SOURCE)
+Size    $(du -sh "$1/.$PROG/trees/In Progress..." | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')
+EOF
 }
 
 # Fetch the head of the sink tree, if there is one.
@@ -202,6 +227,66 @@ push_head ()
     echo "$HASH" > "$1/.$PROG/HEAD"
 }
 
+# Fetch the parent of the current snapshot.
+#
+# @param $1 Path to sink directory.
+# @param $2 Starting hash.
+# @return Next hash, or empty string if NULL.
+get_snapshot_parent ()
+{
+    echo "$(cat $1/.$PROG/nodes/$2 2>/dev/null | grep Parent | sed -r 's/Parent +//')"
+}
+
+# Fetch the child of the current snapshot.
+#
+# @param $1 Path to sink directory.
+# @param $2 Hash of starting point.
+# @param $3 Target hash.
+# @return SNAPSHOT_HASH The has of the last snapshot.
+get_snapshot_child ()
+{
+    NEXT_SNAPSHOT_HASH="$2"
+    while [[ "$NEXT_SNAPSHOT_HASH" != "$3" ]]
+    do
+        SNAPSHOT_HASH="$NEXT_SNAPSHOT_HASH"
+        NEXT_SNAPSHOT_HASH="$(get_snapshot_parent $1 $SNAPSHOT_HASH)"
+    done
+}
+
+# Deletes a snapshot.
+#
+# @param $1 Path to sink directory.
+# @param $2 UID of snapshot to delete.
+remove_snapshot ()
+{
+    get_snapshot_child "$1" "$(cat $1/.$PROG/HEAD)" $2
+    cat "$1/.$PROG/nodes/$SNAPSHOT_HASH" | sed -r 's/(Parent +).*$/\1/' > "$1/.$PROG/nodes/$SNAPSHOT_HASH"
+    echo "$SINK_NAME: removing $2"
+    rm -f "$1/.$PROG/nodes/$2"
+    rm -rf "$1/.$PROG/trees/$2"
+}
+
+# Remove the oldest in tree in a set of snapshots.
+#
+# @param $1 Path to sink directory.
+pop_tail ()
+{
+    get_snapshot_child "$1" "$(cat $1/.$PROG/HEAD)"
+    remove_snapshot "$1" "$SNAPSHOT_HASH"
+}
+
+# Push the latest snapshot to HEAD.
+#
+# @param $1 Path to sink directory.
+pop_tails ()
+{
+    while [[ $(sink_snapshot_count "$1") -ge $(sink_max_snapshots "$1") ]]
+    do
+        NEXT_SNAPSHOT_HASH="$(cat $1/.$PROG/HEAD)"
+        pop_tail "$1"
+    done
+}
+
 # Perform the a snapshot on sink.
 #
 # @param $1 Path to sink directory.
@@ -214,6 +299,7 @@ perform_snapshot_on_sink ()
     lock_dir "$1"
 
     get_rsync_link "$1"
+    pop_tails "$1"
 
     rsync \
         --delete \
@@ -230,7 +316,8 @@ perform_snapshot_on_sink ()
         return 3
     fi
 
-    generate_hash
+    generate_hash "$1"
+    generate_node "$1"
     push_head "$1"
 
     unlock_dir "$1"
