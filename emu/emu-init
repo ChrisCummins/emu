@@ -20,17 +20,17 @@ file and would like to revert to the default, delete it and run this command."
 create_directories ()
 {
     mkdir -p "$CONF_DIR"
+    mkdir -p "$CONF_DIR/config"
     mkdir -p "$CONF_DIR/sinks"
     chmod 0755 "$CONF_DIR/sinks"
 }
 
 copy_template_files ()
 {
-    TEMPLATE_DIR="/usr/share/$PROG/templates"
+    TEMPLATE_DIR="/usr/share/$PROG/source-templates"
 
     # Copy over files from shared templates dir.
     # If a file already exists, don't overwrite.
-    cp -n "$TEMPLATE_DIR/config" "$CONF_DIR"
     cp -n "$TEMPLATE_DIR/excludes" "$CONF_DIR"
     cp -nr "$TEMPLATE_DIR/hooks" "$CONF_DIR"
 }

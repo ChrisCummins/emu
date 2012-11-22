@@ -25,11 +25,14 @@ show <name>
 init_sink ()
 {
     SINK_DIR="$1"
+    TEMPLATE_DIR="/usr/share/emu/sink-templates"
 
     mkdir -p "$SINK_DIR/.$PROG"
     mkdir -p "$SINK_DIR/.$PROG/trees"
+    mkdir -p "$SINK_DIR/.$PROG/config"
     touch "$SINK_DIR/.$PROG/HEAD"
     echo $(pwd) > "$SINK_DIR/.$PROG/SOURCE"
+    cp -n "$TEMPLATE_DIR/config/SNAPSHOT-COUNT" "$SINK_DIR/.$PROG/config"
 
     echo "$SCRIPT: Initialized sink at $SINK_DIR/"
 }
@@ -86,7 +89,7 @@ show_sink ()
 #   last write time
 #   directory size
     echo "\
-* sink $1
+* $1
   Path: $(cat .$PROG/sinks/$1)"
 }
 

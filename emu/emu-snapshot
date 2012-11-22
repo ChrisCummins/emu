@@ -209,7 +209,8 @@ push_head ()
 # @return Integer success value (non-zero indicates failure)
 perform_snapshot_on_sink ()
 {
-    echo "$2: creating snapshot ($(ls -l $1/.$PROG/trees | wc -l))"
+    echo -n "$2: creating snapshot ($(sink_snapshot_count $1) of "
+    echo "$(sink_max_snapshots $1))"
     lock_dir "$1"
 
     get_rsync_link "$1"
