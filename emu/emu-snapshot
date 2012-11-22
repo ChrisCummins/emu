@@ -214,6 +214,7 @@ Date    $(date)
 Source  $(cat $1/.$PROG/SOURCE)
 Size    $(du -sh "$1/.$PROG/trees/In Progress..." | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')
 EOF
+chmod 0640 "$NODE"
 }
 
 # Fetch the head of the sink tree, if there is one.
