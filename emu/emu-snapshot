@@ -127,8 +127,11 @@ exit_with_error ()
 
     for SINK_FILE in $SINK_FILES
     do
-        SINK="$(cat $SINK_FILE)"
-        unlock_dir "$SINK"
+        if [[ -f "$SINK_FILE" ]]
+        then
+            SINK="$(cat $SINK_FILE)"
+            unlock_dir "$SINK"
+        fi
     done
 
     # FIXME: Doesn't work.
@@ -172,7 +175,7 @@ get_sinks ()
         SINK_FILE="$(find $CONF_DIR/sinks/ -name $ARG)"
         if [[ "$SINK_FILE" == "" ]]
         then
-            echo "Sink 'arg' not found!" >&2
+            echo "$SCRIPT: sink '$ARG' not found!" >&2
             exit_with_error
         fi
         SINK_FILES="$SINK_FILES\n$SINK_FILE"
