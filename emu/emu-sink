@@ -114,6 +114,9 @@ case "$COMMAND" in
     "show")
         show_sink $1
         ;;
+    *)
+        no_command_error "$COMMAND"
+        ;;
 esac
 
 exit 0
