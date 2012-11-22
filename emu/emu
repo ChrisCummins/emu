@@ -18,12 +18,51 @@ version ()
     echo "$SCRIPT version $VERSION"
 }
 
-# Print 'not a command' text and exit.
-# @param $1 name of missing command.
-no_command_error ()
+print_emu ()
 {
-    echo "$SCRIPT: '$1' is not an $SCRIPT command. See '$SCRIPT help'."
-    exit 1
+    cat << EOF
+                                       /-/-=/-=
+                                      //  ZX   \"
+                                    / /XZXZX(o)  ---,
+                                    / XZXZXZXZX _____\`\\
+                                     /ZXZXZXZX
+                                      / ;,ZXZ
+                                      /  :ZX%\\
+                                      /%  : X\\
+                                      :/:  %:X:
+                                      /%:%   %\\\\
+                                       /:%:  %  \\
+                                       /  :%  : \\
+                                        /  :%  :%\\
+                                        /%  %    \\
+                                        /%:  %:  %\\
+                                        //%    :  %\\
+                   %%%%%%%%%%  %% %%   /  /     :   :
+              %%%%%%%%       %%  %   %%%%           \\:
+            %%%%%%                                 : \\
+          %%%%                                    :%:\\
+       % %                                       %  \\
+      %                                         %% \\
+    %                                  %%% %%%%%% \\
+  %                                 %%%%%%%% %%%\\
+ %                                %%  %%%%%% %\\
+ %                         %%%%%%%%%%%%% %%%%\\\\
+ %%%%/%%%%%%%%%%%%%%%%%%%%%%% %%%%%%% %%% %%\\
+ /       %%%%%%%%%  % %% % %%% % %%%%% %%%\\
+                (_____)%%(_____)%%%%%%\\
+              ((_____) ((____)
+                (___)    (___)
+                 (__)     (__)
+                  (__)     (__)
+                   (__)     (__)
+                    (__)     (__)
+                     (  )     (  )
+                     (  )     (  )
+                    (    )   (    )
+                  (__    |  (___  |
+              ___(  /  \\  \\____ \\  |---
+            <(____/      \\_____(>\\_____(>
+EOF
 }
 
 # Get arguments.
@@ -63,6 +102,10 @@ case $COMMAND in
         version
         exit 0
         ;;
+    "emu")
+	print_emu
+	exit 0
+	;;
     *)
 	# Execute command.
         EXEC=$SCRIPT-$COMMAND
