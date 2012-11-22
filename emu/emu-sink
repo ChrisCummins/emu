@@ -125,28 +125,32 @@ list_sinks ()
     ls ".$PROG/sinks"
 }
 
-COMMAND="$1"
-shift
+main ()
+{
+    COMMAND="$1"
+    shift
 
-case "$COMMAND" in
-    "help")
-        help
-        ;;
-    "")
-        list_sinks
-        ;;
-    "add")
-        add_sink $1 $2
-        ;;
-    "rm")
-        rm_sink $@
-        ;;
-    "show")
-        show_sink $@
-        ;;
-    *)
-        no_command_error "$SCRIPT" "$COMMAND"
-        ;;
-esac
+    case "$COMMAND" in
+        "help")
+            help
+            ;;
+        "")
+            list_sinks
+            ;;
+        "add")
+            add_sink $1 $2
+            ;;
+        "rm")
+            rm_sink $@
+            ;;
+        "show")
+            show_sink $@
+            ;;
+        *)
+            no_command_error "$SCRIPT" "$COMMAND"
+            ;;
+    esac
 
-exit 0
+    exit 0
+}
+main
