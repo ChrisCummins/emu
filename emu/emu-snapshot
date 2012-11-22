@@ -252,4 +252,4 @@ main ()
     unlock_dir "$SOURCE_DIR"
     post_exec_hooks "$SOURCE_DIR"
 }
-main
+main $@
