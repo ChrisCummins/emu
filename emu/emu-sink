@@ -29,6 +29,7 @@ init_sink ()
 
     mkdir -p "$SINK_DIR/.$PROG"
     mkdir -p "$SINK_DIR/.$PROG/trees"
+    mkdir -p "$SINK_DIR/.$PROG/nodes"
     mkdir -p "$SINK_DIR/.$PROG/config"
     touch "$SINK_DIR/.$PROG/HEAD"
     echo $(pwd) > "$SINK_DIR/.$PROG/SOURCE"
