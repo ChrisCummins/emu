@@ -79,19 +79,45 @@ rm_sink ()
 
 show_sink ()
 {
-    if [[ ! -f ".$PROG/sinks/$1" ]]
+    if [[ $@ == "" ]]
     then
-        echo "$SCRIPT: Sink '$1' does not exist." >&2
-        exit 1
+        SINKS=$(ls ".$PROG/sinks")
+    else
+        FAILURE=0
+        for ARG in $@
+        do
+            if [[ -f ".$PROG/sinks/$ARG" ]]
+            then
+                SINKS="$SINKS\n$ARG"
+            else
+                echo "$SCRIPT: Sink '$ARG' does not exist." >&2
+                FAILURE=1
+            fi
+
+            if [[ FAILURE -ne 0 ]]
+            then
+                exit_with_error
+            fi
+
+            SINKS="$(echo -e SINKS | tail -n+2)"
+        done
     fi
 
-# TODO:
-#   number of snapshots
-#   last write time
-#   directory size
-    echo "\
-* $1
-  Path: $(cat .$PROG/sinks/$1)"
+    for SINK in $SINKS
+    do
+        SINK_PATH="$(cat .$PROG/sinks/$SINK)"
+        SIZE="$(du -sh $SINK_PATH | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')"
+        HEAD="$(cat $SINK_PATH/.$PROG/HEAD)"
+        SNAPSHOT_COUNT="$(ls $SINK_PATH/.$PROG/trees | wc -l)"
+        LOAD="$(echo $SNAPSHOT_COUNT / $(cat $SINK_PATH/.$PROG/config/SNAPSHOT-COUNT) * 100 | bc -l)"
+        echo "\
+* $SINK
+  Path:           $SINK_PATH
+  Size:           $SIZE
+  Last snapshot:  $(cat $SINK_PATH/.$PROG/nodes/$HEAD | grep Date | sed -r 's/Date +(.*)/\1/')
+  Snapshot count: $SNAPSHOT_COUNT (${LOAD::2}%)
+"
+    done
 }
 
 list_sinks ()
@@ -116,7 +142,7 @@ case "$COMMAND" in
         rm_sink $@
         ;;
     "show")
-        show_sink $1
+        show_sink $@
         ;;
     *)
         no_command_error "$COMMAND"
