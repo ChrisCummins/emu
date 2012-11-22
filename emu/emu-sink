@@ -145,7 +145,7 @@ case "$COMMAND" in
         show_sink $@
         ;;
     *)
-        no_command_error "$COMMAND"
+        no_command_error "$SCRIPT" "$COMMAND"
         ;;
 esac
 

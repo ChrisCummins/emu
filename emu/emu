@@ -109,7 +109,7 @@ case $COMMAND in
     *)
 	# Execute command.
         EXEC=$SCRIPT-$COMMAND
-        command -v $EXEC >/dev/null 2>&1 || { no_command_error $COMMAND; }
+        command -v $EXEC >/dev/null 2>&1 || { no_command_error "$SCRIPT" "$COMMAND"; }
         $EXEC $@
         exit $?
 	;;

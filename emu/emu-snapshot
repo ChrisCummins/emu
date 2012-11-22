@@ -3,151 +3,13 @@
 source /usr/share/emu/emu-util
 SCRIPT=$(basename $0)
 SOURCE_DIR="$(pwd)"
-CONF_DIR="$SOURCE_DIR/.$PROG"
-
-# Execute each in a list of executables.
-#
-# @param $1 a list of absolute paths to files.
-exec_list ()
-{
-    for EXEC in $1
-    do
-        # Execute file.
-        $EXEC
-    done
-}
-
-# Execute pre-execution hooks.
-#
-# @var $CONF_DIR Path to source configuration directory.
-exec_pre_exec_hooks ()
-{
-    HOOKS=$(find $CONF_DIR/hooks/exec/ -name '*.pre.sample')
-    exec_list $HOOKS
-}
-
-# Execute post-execution hooks.
-#
-# @var $CONF_DIR Path to source configuration directory.
-exec_post_exec_hooks ()
-{
-    HOOKS=$(find $CONF_DIR/hooks/exec/ -name '*.post')
-    exec_list $HOOKS
-}
-
-# Execute error condition hooks.
-#
-# @var $CONF_DIR Path to source configuration directory.
-exec_error_hooks ()
-{
-    HOOKS=$(find $CONF_DIR/hooks/exec/ -name '*.error')
-    exec_list $HOOKS
-}
-
-# Check and block directory. If the directory is already locked, it will block
-# and poll periodically until free.
-#
-# @param $1 Path to directory to block on.
-# @var BLOCK_SLEEP_TIME Time to sleep between block attempts (s).
-# @var BLOCK_COUNTER Numeric Variable which must be initialised to 0.
-# @var BLOCK_COUNTER_MAX Maximum number of attempts before failing, or -1 to
-#                        continue indefinitely.
-block_until_dir_free ()
-{
-    if [[ -f "$1/.$PROG/LOCK" ]]
-    then
-        BLOCK_COUNTER=$((BLOCK_COUNTER+1))
-
-        if [[ $BLOCK_COUNTER_MAX -ne -1 ]]
-        then
-            if [[ $BLOCK_COUNTER -gt $BLOCK_COUNTER_MAX ]]
-            then
-                echo -e "\n$SCRIPT: failed to get exclusive access to directory:\n  $1" >&2
-                exit_with_error "5"
-            fi
-        fi
-
-        # Print the PID of blocking process.
-        BLOCK_PID=$(cat "$1/.$PROG/LOCK" | grep PID | sed -r 's/PID: +//')
-        echo -en "\r$1 blocking on process: $BLOCK_PID "
-
-        # Print status of blocking process.
-        BLOCK_STATUS=$(ps -p "$BLOCK_PID")
-        if (( $? ))
-        then
-            echo -n "[dead]"
-        else
-            echo -n "[$(echo $BLOCK_STATUS | cut -d' ' -f8)]"
-        fi
-        sleep $BLOCK_SLEEP_TIME
-        block_until_dir_free "$1"
-    fi
-}
-
-# Lock the specified directory.
-#
-# @param $1 Path to the directory to lock.
-lock_dir ()
-{
-    BLOCK_SLEEP_TIME=1
-    BLOCK_COUNTER=0
-    BLOCK_COUNTER_MAX=10
-
-    block_until_dir_free "$1"
-    echo -e "DATE: $(date)\nPID:  $$" > "$1/.$PROG/LOCK"
-}
-
-# Remove the lock on source directory.
-#
-# @param $1 Path to directory to lock.
-unlock_dir ()
-{
-    LOCK=$(cat "$1/.$PROG/LOCK" 2> /dev/null)
-    if [[ "$LOCK" == "" ]]
-    then
-        return
-    fi
-    LOCK_PID=$(echo "$LOCK" | grep PID | sed -r 's/PID: +//')
-
-    if [[ $$ -eq $LOCK_PID ]]
-    then
-        rm -f "$1/.$PROG/LOCK"
-    else
-        echo "$SCRIPT: Cannot free lock $LOCK_PID with key $$" >&2
-    fi
-}
-
-# Tidy up and quit with error condition.
-#
-# @param $1 (optional) exit code, otherwise 1.
-exit_with_error ()
-{
-    exec_error_hooks
-    unlock_dir "$SOURCE_DIR"
-
-    for SINK_FILE in $SINK_FILES
-    do
-        if [[ -f "$SINK_FILE" ]]
-        then
-            SINK="$(cat $SINK_FILE)"
-            unlock_dir "$SINK"
-        fi
-    done
-
-    # FIXME: Doesn't work.
-    # if ! [[ "$1" =~ ^[0-9]+$ ]]
-    # then
-    # fi
-
-    exit 1
-}
 
 # Retrieve all sink files.
 #
 # @return SINK_FILES List of paths to sink files.
 get_all_sinks ()
 {
-    SINK_FILES="$(find $CONF_DIR/sinks/ | tail -n+2)"
+    SINK_FILES="$(find $SOURCE_DIR/.$PROG/sinks/ | tail -n+2)"
 
     if [[ "$SINK_FILES" == "" ]]
     then
@@ -167,12 +29,16 @@ get_all_sinks ()
     done
 }
 
+# Convert a list of sinks to sink files.
+#
+# @param $@ List of sinks.
+# @return SINK_FILES List of sink files paths.
 get_sinks ()
 {
     SINK_FILES[$#]=$@
     for ARG in $@
     do
-        SINK_FILE="$(find $CONF_DIR/sinks/ -name $ARG)"
+        SINK_FILE="$(find $SOURCE_DIR/.$PROG/sinks/ -name $ARG)"
         if [[ "$SINK_FILE" == "" ]]
         then
             echo "$SCRIPT: sink '$ARG' not found!" >&2
@@ -369,7 +235,7 @@ perform_snapshots ()
 
 main ()
 {
-    exec_pre_exec_hooks
+    pre_exec_hooks "$SOURCE_DIR"
     if [[ "$@" == "" ]]
     then
         get_all_sinks
@@ -384,6 +250,6 @@ main ()
         exit_with_error
     fi
     unlock_dir "$SOURCE_DIR"
-    exec_post_exec_hooks
+    post_exec_hooks "$SOURCE_DIR"
 }
 main
