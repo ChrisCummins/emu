@@ -367,22 +367,23 @@ perform_snapshots ()
     return $SNAPSHOT_FAILED
 }
 
-exec_pre_exec_hooks
-if [[ "$@" == "" ]]
-then
-    get_all_sinks
-else
-    get_sinks $@
-fi
-
-lock_dir "$SOURCE_DIR"
-
-perform_snapshots
-if (( $? ))
-then
-    echo "$SCRIPT: at least one snapshot failed!" >&2
-    exit_with_error
-fi
-
-unlock_dir "$SOURCE_DIR"
-exec_post_exec_hooks
+main ()
+{
+    exec_pre_exec_hooks
+    if [[ "$@" == "" ]]
+    then
+        get_all_sinks
+    else
+        get_sinks $@
+    fi
+    lock_dir "$SOURCE_DIR"
+    perform_snapshots
+    if (( $? ))
+    then
+        echo "$SCRIPT: at least one snapshot failed!" >&2
+        exit_with_error
+    fi
+    unlock_dir "$SOURCE_DIR"
+    exec_post_exec_hooks
+}
+main
