@@ -1,0 +1,275 @@
+#!/bin/sh
+
+source /usr/share/emu/emu-util
+SCRIPT=$(basename $0)
+SOURCE_DIR="$(pwd)"
+CONF_DIR="$SOURCE_DIR/.$PROG"
+
+# Execute each in a list of executables.
+#
+# @param $1 a list of absolute paths to files.
+exec_list ()
+{
+    for EXEC in $1
+    do
+        # Execute file.
+        $EXEC
+    done
+}
+
+# Execute pre-execution hooks.
+#
+# @var $CONF_DIR Path to source configuration directory.
+exec_pre_exec_hooks ()
+{
+    HOOKS=$(find $CONF_DIR/hooks/exec/ -name '*.pre.sample')
+    exec_list $HOOKS
+}
+
+# Execute post-execution hooks.
+#
+# @var $CONF_DIR Path to source configuration directory.
+exec_post_exec_hooks ()
+{
+    HOOKS=$(find $CONF_DIR/hooks/exec/ -name '*.post')
+    exec_list $HOOKS
+}
+
+# Execute error condition hooks.
+#
+# @var $CONF_DIR Path to source configuration directory.
+exec_error_hooks ()
+{
+    HOOKS=$(find $CONF_DIR/hooks/exec/ -name '*.error')
+    exec_list $HOOKS
+}
+
+# Check and block directory. If the directory is already locked, it will block
+# and poll periodically until free.
+#
+# @param $1 Path to directory to block on.
+# @var BLOCK_SLEEP_TIME Time to sleep between block attempts (s).
+# @var BLOCK_COUNTER Numeric Variable which must be initialised to 0.
+# @var BLOCK_COUNTER_MAX Maximum number of attempts before failing, or -1 to
+#                        continue indefinitely.
+block_until_dir_free ()
+{
+    if [[ -f "$1/.$PROG/LOCK" ]]
+    then
+        BLOCK_COUNTER=$((BLOCK_COUNTER+1))
+
+        if [[ $BLOCK_COUNTER_MAX -ne -1 ]]
+        then
+            if [[ $BLOCK_COUNTER -gt $BLOCK_COUNTER_MAX ]]
+            then
+                echo -e "\n$SCRIPT: failed to get exclusive access to directory:\n  $1" >&2
+                exit_with_error "5"
+            fi
+        fi
+
+        # Print the PID of blocking process.
+        BLOCK_PID=$(cat "$1/.$PROG/LOCK" | grep PID | sed -r 's/PID: +//')
+        echo -en "\r$1 blocking on process: $BLOCK_PID "
+
+        # Print status of blocking process.
+        BLOCK_STATUS=$(ps -p "$BLOCK_PID")
+        if (( $? ))
+        then
+            echo -n "[dead]"
+        else
+            echo -n "[$(echo $BLOCK_STATUS | cut -d' ' -f8)]"
+        fi
+        sleep $BLOCK_SLEEP_TIME
+        block_until_dir_free "$1"
+    fi
+}
+
+# Lock the specified directory.
+#
+# @param $1 Path to the directory to lock.
+lock_dir ()
+{
+    BLOCK_SLEEP_TIME=1
+    BLOCK_COUNTER=0
+    BLOCK_COUNTER_MAX=10
+
+    block_until_dir_free "$1"
+    echo -e "DATE: $(date)\nPID:  $$" > "$1/.$PROG/LOCK"
+}
+
+# Remove the lock on source directory.
+#
+# @param $1 Path to directory to lock.
+unlock_dir ()
+{
+    LOCK=$(cat "$1/.$PROG/LOCK" 2> /dev/null)
+    if [[ "$LOCK" == "" ]]
+    then
+        return
+    fi
+    LOCK_PID=$(echo "$LOCK" | grep PID | sed -r 's/PID: +//')
+
+    if [[ $$ -eq $LOCK_PID ]]
+    then
+        rm -f "$1/.$PROG/LOCK"
+    else
+        echo "$SCRIPT: Cannot free lock $LOCK_PID with key $$" >&2
+    fi
+}
+
+# Tidy up and quit with error condition.
+#
+# @param $1 (optional) exit code, otherwise 1.
+exit_with_error ()
+{
+    exec_error_hooks
+    unlock_dir "$SOURCE_DIR"
+
+    for SINK_FILE in $SINK_FILES
+    do
+        SINK="$(cat $SINK_FILE)"
+        unlock_dir "$SINK"
+    done
+
+    # FIXME: Doesn't work.
+    # if ! [[ "$1" =~ ^[0-9]+$ ]]
+    # then
+    # fi
+
+    exit 1
+}
+
+# Get a a list of the sink files.
+#
+# @return SINK_FILES List of paths to sink files.
+get_sinks ()
+{
+    SINK_FILES=$(find $CONF_DIR/sinks/ | tail -n+2)
+
+    if [[ "$SINK_FILES" == "" ]]
+    then
+        echo "$SCRIPT: no sinks! Add one with '$PROG sink add <name> <path>'" >&2
+        exit_with_error
+    fi
+
+    # Check for all sync files.
+    for SINK_FILE in $SINK_FILES
+    do
+        SINK="$(cat $SINK_FILE)"
+        if [[ ! -d "$SINK/.$PROG" ]]
+        then
+            echo -e "$SCRIPT: sink does not exist:\n  $SINK\n" >&2
+            exit_with_error
+        fi
+    done
+}
+
+# Generate a snapshot hash.
+#
+# @return HASH a 40 digit snapshot UID.
+generate_hash ()
+{
+    HASH=$(find . -type f -printf '%T@ %p\n' 2>/dev/null|sort -k 1nr \
+        |sed 's/^[^ ]* //'|head -n10|md5sum)
+    HASH=${HASH:0:32}
+    HASH=$HASH$(printf '%x\n' $(date +'%s')|tail -c8)
+}
+
+# Fetch the head of the sink tree, if there is one.
+#
+# @param $1 Path to sink directory.
+# @return HEAD The UID of the HEAD snapshot.
+# @return RSYNC_LINK The rsync link command, pointed to head.
+get_rsync_link ()
+{
+    HEAD="$(cat $1/.$PROG/HEAD)"
+    if [[ "$HEAD" != "" ]] && [[ -d "$1/.$PROG/trees/$HEAD" ]]
+    then
+        RSYNC_LINK="--link-dest=$1/.$PROG/trees/$HEAD"
+    else
+        RSYNC_LINK=""
+    fi
+}
+
+# Push the latest snapshot to HEAD.
+#
+# @param $1 Path to sink directory.
+# @var HASH The UID of the latest snapshot.
+push_head ()
+{
+    mv "$1/.$PROG/trees/In Progress..." "$1/.$PROG/trees/$HASH"
+    rm -f "$1/.$PROG/HEAD"
+    echo "$HASH" > "$1/.$PROG/HEAD"
+}
+
+# Perform the a snapshot on sink.
+#
+# @param $1 Path to sink directory.
+# @param $2 Name of sink.
+# @return Integer success value (non-zero indicates failure)
+perform_snapshot_on_sink ()
+{
+    echo "$2: creating snapshot ($(ls -l $1/.$PROG/trees | wc -l))"
+    lock_dir "$1"
+
+    get_rsync_link "$1"
+
+    rsync \
+        --delete \
+        --delete-excluded \
+        --archive \
+        --human-readable \
+        --verbose \
+        --exclude-from="$SOURCE_DIR/.$PROG/excludes" \
+        "$RSYNC_LINK" \
+        "$SOURCE_DIR/" "$1/.$PROG/trees/In Progress..."
+    if (( $? ))
+    then
+        unlock_dir "$1"
+        return 3
+    fi
+
+    generate_hash
+    push_head "$1"
+
+    unlock_dir "$1"
+    echo "$2: new HEAD $HASH"
+    return 0
+}
+
+# Perform snapshots on all sink files.
+#
+# @var $SINK_FILES List of paths to sink files.
+perform_snapshots ()
+{
+    SNAPSHOT_FAILED=0
+
+    for SINK_FILE in $SINK_FILES
+    do
+        SINK="$(cat $SINK_FILE)"
+        SINK_NAME="$(basename $SINK_FILE)"
+
+        perform_snapshot_on_sink "$SINK" "$SINK_NAME"
+        if (( $? ))
+        then
+            SNAPSHOT_FAILED=1
+            echo "$SCRIPT: snapshot to '$SINK_NAME' failed" >&2
+        fi
+    done
+
+    return $SNAPSHOT_FAILED
+}
+
+exec_pre_exec_hooks
+get_sinks
+lock_dir "$SOURCE_DIR"
+
+perform_snapshots
+if (( $? ))
+then
+    echo "$SCRIPT: at least one snapshot failed!" >&2
+    exit_with_error
+fi
+
+unlock_dir "$SOURCE_DIR"
+exec_post_exec_hooks
