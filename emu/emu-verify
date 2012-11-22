@@ -1,0 +1,38 @@
+#!/bin/bash
+
+source /usr/share/emu/emu-util
+SCRIPT=$(basename $0)
+SOURCE_DIR="$(pwd)"
+
+main ()
+{
+    pre_exec_hooks "$SOURCE_DIR"
+
+    IN=$(echo "$1" | tr ":" "\n")
+
+    if [[ $(echo "$IN" | wc -l) -ne 2 ]]
+    then
+        echo "$SCRIPT: invalid snapshot path"
+        exit_with_error "$SOURCE_DIR"
+    fi
+
+    SINK=$(echo "$IN" | head -n1)
+    SINK_DIR="$(cat $SOURCE_DIR/.$PROG/sinks/$SINK 2>/dev/null)"
+    if [[ ! -d "$SINK_DIR" ]]
+    then
+        echo "$SCRIPT: sink '$SINK' does not exist" >&2
+        exit_with_error "$SOURCE_DIR"
+    fi
+
+    SNAPSHOT=$(echo "$IN" | tail -n1)
+    SNAPSHOT_DIR="$SINK_DIR/.$PROG/trees/$SNAPSHOT"
+    if [[ ! -d "$SNAPSHOT_DIR" ]]
+    then
+        echo "$SCRIPT: snapshot '$SNAPSHOT' does not exist" >&2
+        exit_with_error "$SOURCE_DIR"
+    fi
+
+    post_exec_hooks "$SOURCE_DIR"
+    exit 0
+}
+main $@
