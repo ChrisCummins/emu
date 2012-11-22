@@ -314,12 +314,11 @@ pop_tails ()
 # @return Integer success value (non-zero indicates failure)
 perform_snapshot_on_sink ()
 {
-    echo -n "$2: creating snapshot ($(sink_snapshot_count $1) of "
-    echo "$(sink_max_snapshots $1))"
     lock_dir "$1"
-
     get_rsync_link "$1"
     pop_tails "$1"
+    echo -n "$2: creating snapshot ($(sink_snapshot_count $1) of "
+    echo "$(sink_max_snapshots $1))"
 
     rsync \
         --delete \
