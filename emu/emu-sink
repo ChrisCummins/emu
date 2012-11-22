@@ -16,11 +16,10 @@ add <name> <path>
 rename <old> <new>
     Rename the sink named <old> to <new>.
 rm <name>
-    Remove the sink named <name>.
+    Remove the sink named <name>. Does not remove any $PROG files.
 show <name>
     Gives some information about the sink <name>.
 "
-
 }
 
 init_sink ()
