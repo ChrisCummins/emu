@@ -32,6 +32,9 @@ main ()
         exit_with_error "$SOURCE_DIR"
     fi
 
+    $(verify_node "$SNAPSHOT_DIR")
+    echo "$SCRIPT: passed"
+
     post_exec_hooks "$SOURCE_DIR"
     exit 0
 }
