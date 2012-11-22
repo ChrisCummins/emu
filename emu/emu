@@ -3,6 +3,7 @@
 SCRIPT=$(basename $0)
 VERSION="0.0.1"
 
+# Print the help text.
 help ()
 {
     echo "\
@@ -11,14 +12,17 @@ usage: $SCRIPT [-v] [-h]
 "
 }
 
+# Print the version number.
 version ()
 {
     echo "$SCRIPT version $VERSION"
 }
 
-no_command ()
+# Print 'not a command' text and exit.
+# @param $1 name of missing command.
+no_command_error ()
 {
-    echo "$SCRIPT: '$1' is not a command. See '$SCRIPT help'."
+    echo "$SCRIPT: '$1' is not an $SCRIPT command. See '$SCRIPT help'."
     exit 1
 }
 
@@ -34,7 +38,7 @@ do
             version
             exit 0
             ;;
-         \?)
+        \?)
             echo "Invalid option: -$OPTARG" >&2
             exit $EXIT_INVALID_ARGS
             ;;
@@ -49,7 +53,7 @@ done
 COMMAND="$1"
 shift
 
-# Parse local commands.
+# Parse commands.
 case $COMMAND in
     "" | "help")
         help
@@ -59,11 +63,11 @@ case $COMMAND in
         version
         exit 0
         ;;
+    *)
+	# Execute command.
+        EXEC=$SCRIPT-$COMMAND
+        command -v $EXEC >/dev/null 2>&1 || { no_command_error $COMMAND; }
+        $EXEC $@
+        exit $?
+	;;
 esac
-
-# Test if argument is valid command.
-command -v $SCRIPT-$COMMAND >/dev/null 2>&1 || { no_command $COMMAND; }
-
-# Run command.
-$SCRIPT-$COMMAND $@
-exit $?
