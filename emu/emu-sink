@@ -2,15 +2,16 @@
 
 source /usr/share/emu/emu-util
 SCRIPT=$(basename $0)
+SOURCE_DIR="$(pwd)"
 
 help ()
 {
-cat <<EOF
+    cat <<EOF | less
 NAME
         $SCRIPT - manage $PROG sinks
 
 SYNOPSIS
-        $PROG snapshot [OPTION...] [<add> | <rm> | <rename> | <show>] <args>...
+        $PROG snapshot [OPTION...] [add|rm|rename|show] <args>...
 
 DESCRIPTION
 
@@ -40,7 +41,7 @@ OPTIONS
                    the sink file structure and is non-destructive, except with
                    the use of arguments:
 
-                -F
+                -R
                     force removal of the sink directory itself. This means that
                     all snapshots, configurations and all other files in the
                     sink directory will be permanently wiped. Use with extreme
@@ -139,7 +140,7 @@ show_sink ()
 
     for SINK in $SINKS
     do
-	print_sink_details "$SINK"
+        print_sink_details "$SINK"
     done
 }
 
@@ -153,10 +154,19 @@ main ()
     COMMAND="$1"
     shift
 
+    if [[ "$COMMAND" == "help" ]]
+    then
+        help
+        exit 0
+    fi
+
+    if [ ! -d "$SOURCE_DIR/.$PROG/sinks" ]
+    then
+        echo "$SCRIPT: not an $PROG source!" >&2
+        exit_with_error
+    fi
+
     case "$COMMAND" in
-        "help")
-            help
-            ;;
         "")
             list_sinks
             ;;

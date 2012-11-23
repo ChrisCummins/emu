@@ -8,7 +8,7 @@ CONF_DIR="$SOURCE_DIR/.$PROG"
 
 help ()
 {
-cat <<EOF
+    cat <<EOF | less
 NAME
         $SCRIPT - create or reinitialize an existing $PROG source
 
@@ -36,6 +36,10 @@ OPTIONS
         -q
                    only print error and warning messages, all other output will
                    be suppressed
+        -R
+                   clean directory. This undoes the effect of an init, clearing
+                   the .$PROG directory. It does not affect sinks, though it
+                   will remove refs to them
 
 EOF
 }
@@ -64,14 +68,8 @@ init_filesystem ()
     copy_template_files
 }
 
-main ()
+emu_init ()
 {
-    if [ "$1" = "help" ]
-    then
-        help
-        exit 0
-    fi
-
     if [[ -d .emu ]]
     then
         init_filesystem
@@ -80,6 +78,18 @@ main ()
         init_filesystem
         echo "$SCRIPT: Initialized source in $CONF_DIR"
     fi
+}
+
+
+main ()
+{
+    if [ "$1" = "help" ]
+    then
+        help
+        exit 0
+    fi
+
+    emu_init
 
     exit 0
 }

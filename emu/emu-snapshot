@@ -6,7 +6,7 @@ SOURCE_DIR="$(pwd)"
 
 help ()
 {
-    cat << EOF
+    cat << EOF | less
 NAME
         $SCRIPT - record a snapshot of the source directory
 
@@ -52,6 +52,16 @@ OPTIONS
                    increase verbosity
         -p
                    show progress during transfer
+        -f
+                   force snapshot. This causes the program to disregard any
+                   exclusivity locks that the source or sink directories may
+                   have. Not recommended for everyday consumption, but is useful
+                   after a previous snapshot attempt failed
+        -F
+                   equivalent to -f force option, but in addition causing $PROG
+                   to kill any process owning a sink or source lock and removing
+                   any in-progress snapshot data. Exercise caution or heads will
+                   explode
 
 EOF
 }
