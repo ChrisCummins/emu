@@ -250,7 +250,6 @@ perform_snapshot_on_sink ()
         --delete-excluded \
         --archive \
         --human-readable \
-        --verbose \
         --exclude-from="$SOURCE_DIR/.$PROG/excludes" \
         "$RSYNC_LINK" \
         "$SOURCE_DIR/" "$1/.$PROG/trees/new"
