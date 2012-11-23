@@ -20,12 +20,19 @@ DESCRIPTION
 
 OPTIONS
         add <sink> <path>
+
                    initializes an empty sink named <sink> in the directory
-                   <path>. This meanings creating a .$PROG directory at <path>
-                   with subdirectories for trees, refs/nodes and configuration
-                   files. Each sink <sink> must be unique, and each <path> must
-                   not already be an $PROG sink/source. Additionally the command
-                   takes the following options:
+                   <path>. This means creating a .$PROG directory at <path> with
+                   subdirectories for trees, refs/nodes and configuration
+                   files. If necessary, <path> will be created. Each sink <sink>
+                   must be unique, and each <path> must not already be an $PROG
+                   sink/source, unless it is a detached sink. A detached sink
+                   means that it refs the current source, but the current source
+                   does not acknowledge it as a sink. This happens if you
+                   attempt to add a sink that has previously be removed with
+                   '$PROG rm'. In this situation, '$PROG add' will behave the
+                   same way that '$PROG init' does in an existing
+                   source. Additionally the command takes the following options:
 
                 -s <number>
                     set the maximum number of snapshots for the new sink. This
@@ -70,7 +77,7 @@ init_sink ()
     echo $(pwd) > "$SINK_DIR/.$PROG/SOURCE"
     cp -n "$TEMPLATE_DIR/config/SNAPSHOT-COUNT" "$SINK_DIR/.$PROG/config"
 
-    echo "$SCRIPT: Initialized sink at $SINK_DIR/"
+    echo "$SCRIPT: Initialized sink at $SINK_DIR/.$PROG"
 }
 
 add_sink ()
