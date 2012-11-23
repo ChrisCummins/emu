@@ -1,7 +1,8 @@
 #!/bin/bash
+# env.sh
+# Run this script to configure the environment and start a subshell.
 
-# Setup build environment and shell:
-
-PATH=$PATH:~/src/emu/emu
+# Add source directory to path.
+PATH=$(pwd)/emu:$PATH
 
 PS1='(emu) $ ' bash -i
