@@ -8,13 +8,36 @@ CONF_DIR="$SOURCE_DIR/.$PROG"
 
 help ()
 {
-    echo "\
-$SCRIPT - Create or reinitialize an existing $PROG source.
+cat <<EOF
+NAME
+        $SCRIPT - create or reinitialize an existing $PROG source
 
-This command is non-destructive, running it on an existing emu source will not
-overwrite any existing data. Instead, it can be used to rescue a broken source,
-as it will silently replace or recreate any missing files. If you have broken a
-file and would like to revert to the default, delete it and run this command."
+SYNOPSIS
+        $PROG init [OPTION...] [directory]
+
+DESCRIPTION
+        This command creates an empty $PROG source. This means creating a .$PROG
+        directory with subdirectories for hooks, sink refs and configuration
+        files.
+
+        During the init process, template files are copied from the global
+        templates path, normally /usr/share/emu. Use of option -t to specify a
+        template directory will supercede this.
+
+        This command is non-destructive, running it on an existing emu source
+        will not overwrite any existing data. Instead, it can be used to rescue
+        a broken source, as it will silently replace or recreate any missing
+        files. If you have broken a file and would like to revert to the
+        default, delete it and run this command.
+
+OPTIONS
+        -t <template-dir>
+                   specify the directory from which templates will be used
+        -q
+                   only print error and warning messages, all other output will
+                   be suppressed
+
+EOF
 }
 
 create_directories ()
@@ -41,19 +64,23 @@ init_filesystem ()
     copy_template_files
 }
 
-if [[ "$1" == "help" ]]
-then
-    help
+main ()
+{
+    if [ "$1" = "help" ]
+    then
+        help
+        exit 0
+    fi
+
+    if [[ -d .emu ]]
+    then
+        init_filesystem
+        echo "$SCRIPT: Reinitialized existing source in $CONF_DIR"
+    else
+        init_filesystem
+        echo "$SCRIPT: Initialized source in $CONF_DIR"
+    fi
+
     exit 0
-fi
-
-if [[ -d .emu ]]
-then
-    init_filesystem
-    echo "$SCRIPT: Reinitialized existing source in $CONF_DIR"
-else
-    init_filesystem
-    echo "$SCRIPT: Initialized source in $CONF_DIR"
-fi
-
-exit 0
+}
+main $@

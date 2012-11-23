@@ -6,10 +6,18 @@ VERSION="0.0.1"
 # Print the help text.
 help ()
 {
-    echo "\
+    if [ $1 != "" ]
+    then
+        EXEC=$SCRIPT-$1
+        command -v $EXEC >/dev/null 2>&1 || { no_command_error "$SCRIPT" "$COMMAND"; }
+        $EXEC help
+        exit 0
+    fi
+
+    cat <<EOF
 usage: $SCRIPT [-v] [-h]
-           <command> [<args>]
-"
+         <command> [<args>]
+EOF
 }
 
 # Print the version number.
@@ -95,7 +103,7 @@ shift
 # Parse commands.
 case $COMMAND in
     "" | "help")
-        help
+        help $@
         exit 0
         ;;
     "version")
@@ -103,14 +111,14 @@ case $COMMAND in
         exit 0
         ;;
     "emu")
-	print_emu
-	exit 0
-	;;
+        print_emu
+        exit 0
+        ;;
     *)
-	# Execute command.
+        # Execute command.
         EXEC=$SCRIPT-$COMMAND
         command -v $EXEC >/dev/null 2>&1 || { no_command_error "$SCRIPT" "$COMMAND"; }
         $EXEC $@
         exit $?
-	;;
+        ;;
 esac
