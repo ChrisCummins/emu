@@ -123,8 +123,8 @@ generate_hash ()
     # Check if hash exists, and if so, wait.
     if [[ -f "$1/.$PROG/nodes/$HASH" ]]
     then
-        sleep 2
-        generate_hash
+        sleep 1
+        generate_hash "$1"
     fi
 }
 
