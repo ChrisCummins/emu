@@ -30,6 +30,23 @@ OPTIONS
 EOF
 }
 
+print_node_verbose ()
+{
+cat <<EOF >>.emu_log
+$NODE
+  Date: $DATE
+  Size: $SIZE
+
+EOF
+}
+
+print_node_dense ()
+{
+cat <<EOF >>.emu_log
+ $NODE * $DATE
+EOF
+}
+
 # Print the nodes for a sink.
 #
 # @param $1 Name of sink.
@@ -44,10 +61,7 @@ print_nodes ()
         DATE="$(cat $NODE_PATH | grep Date | sed -r 's/Date +(.*)/\1/')"
         SIZE="$(cat $NODE_PATH | grep Size | sed -r 's/Size +(.*)/\1/')"
 
-        echo "$NODE
-  Date: $DATE
-  Size: $SIZE
-" >> .emu_log
+        print_node_verbose $NODE
     done
     cat .emu_log | less
     rm -f .emu_log
