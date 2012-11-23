@@ -5,21 +5,55 @@ SCRIPT=$(basename $0)
 
 help ()
 {
-    echo "\
-$SCRIPT - manage $PROG sinks.
+cat <<EOF
+NAME
+        $SCRIPT - manage $PROG sinks
 
-With no arguments, show a list of existing sinks. Several subommands are
-available to perform operations on sinks.
+SYNOPSIS
+        $PROG snapshot [OPTION...] [<add> | <rm> | <rename> | <show>] <args>...
 
-add <name> <path>
-    Adds a sink name <name> for the directory at <path>.
-rename <old> <new>
-    Rename the sink named <old> to <new>.
-rm <name>
-    Remove the sink named <name>. Does not remove any $PROG files.
-show <name>
-    Gives some information about the sink <name>.
-"
+DESCRIPTION
+
+        With no arguments, show a list of existing sinks. Several subommands are
+        available to perform operations on sinks.
+
+OPTIONS
+        add <sink> <path>
+                   initializes an empty sink named <sink> in the directory
+                   <path>. This meanings creating a .$PROG directory at <path>
+                   with subdirectories for trees, refs/nodes and configuration
+                   files. Each sink <sink> must be unique, and each <path> must
+                   not already be an $PROG sink/source. Additionally the command
+                   takes the following options:
+
+                -s <number>
+                    set the maximum number of snapshots for the new sink. This
+                    is a convenience option which saves the user editing the
+                    .$PROG/config/SNAPSHOT-COUNT file themselves. If this
+                    argument is ommitted, the default value will be dictated by
+                    the contents of the
+                    /usr/share/emu/sink-templates/config/SNAPSHOT-COUNT template
+                    file
+
+        rm <sink>
+                   remove sink <sink> from the source refs. This does not affect
+                   the sink file structure and is non-destructive, except with
+                   the use of arguments:
+
+                -F
+                    force removal of the sink directory itself. This means that
+                    all snapshots, configurations and all other files in the
+                    sink directory will be permanently wiped. Use with extreme
+                    caution, double up to be safe
+
+        mv <old> <new>
+                   rename sink <old> to <new>. This does not affect any of the
+                   location of the sink or its files
+
+        show <sink>
+                   gives some information about the sink <sink>
+
+EOF
 }
 
 init_sink ()
