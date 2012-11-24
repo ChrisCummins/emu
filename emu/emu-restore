@@ -102,7 +102,7 @@ main ()
         echo "$SCRIPT: restore of '$SINK:$SNAPSHOT' failed" >&2
     fi
 
-    echo "$SCRIPT: source at '$SINK:$SNAPSHOT'"
+    echo "$SCRIPT: SOURCE at '$SINK:$SNAPSHOT'"
 
     unlock_dir "$SINK_DIR"
     unlock_dir "$SOURCE_DIR"
