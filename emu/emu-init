@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source /usr/share/emu/emu-util
+source /usr/local/lib/libemu
 SCRIPT=$(basename $0)
 
 SOURCE_DIR="$(pwd)"

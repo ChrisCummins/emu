@@ -1,0 +1,223 @@
+#!/bin/bash
+
+PROG="emu"
+VERSION="0.0.1"
+
+# Print 'not a command' text and exit.
+#
+# @param $1 name of calling script.
+# @param $2 name of missing command.
+no_command_error ()
+{
+    echo "$1: '$2' is not an $PROG command. See '$PROG help'."
+    exit 1
+}
+
+# Tidy up and quit with error condition.
+#
+# @param $1 Path to source directory.
+exit_with_error ()
+{
+    error_exec_hooks "$1"
+    unlock_dir "$1"
+
+    # Unlock all sink files.
+    for SINK_FILE in "$1/.$PROG/sinks"
+    do
+        if [[ -f "$SINK_FILE" ]]
+        then
+            SINK="$(cat $SINK_FILE)"
+            unlock_dir "$SINK"
+        fi
+    done
+    exit 1
+}
+
+# Execute each in a list of executables.
+#
+# @param $1 a list of absolute paths to files.
+exec_list ()
+{
+    for EXEC in "$1"
+    do
+        $EXEC
+    done
+}
+
+# Execute pre-execution hooks.
+#
+# @param $1 Path to source directory.
+pre_exec_hooks ()
+{
+    HOOKS=$(find "$1/.$PROG/hooks/exec/" -name '*.pre' 2>/dev/null)
+    exec_list $HOOKS
+}
+
+# Execute post-execution hooks.
+#
+# @param $1 Path to source directory.
+post_exec_hooks ()
+{
+    HOOKS=$(find "$1/.$PROG/hooks/exec/" -name '*.post' 2>/dev/null)
+    exec_list $HOOKS
+}
+
+# Execute error condition hooks.
+#
+# @param $1 Path to source directory.
+error_exec_hooks ()
+{
+    HOOKS=$(find "$1/.$PROG/hooks/exec/" -name '*.error' 2>/dev/null)
+    exec_list $HOOKS
+}
+
+# Return the number of snapshots in sink.
+#
+# @param $1 Path to sink directory.
+sink_snapshot_count ()
+{
+    echo "$(ls -l "$1/.$PROG/trees" | wc -l)"
+}
+
+# Return the max number of snapshots for sink.
+#
+# @param $1 Path to sink directory.
+sink_max_snapshots ()
+{
+    echo "$(cat $1/.$PROG/config/SNAPSHOT-COUNT)"
+}
+
+# Check and block directory. If the directory is already locked, it will block
+# and poll periodically until free.
+#
+# @param $1 Path to directory to block on.
+# @var BLOCK_SLEEP_TIME Time to sleep between block attempts (s).
+# @var BLOCK_COUNTER Numeric Variable which must be initialised to 0.
+# @var BLOCK_COUNTER_MAX Maximum number of attempts before failing, or -1 to
+#                        continue indefinitely.
+block_until_dir_free ()
+{
+    if [[ -f "$1/.$PROG/LOCK" ]]
+    then
+        BLOCK_COUNTER=$((BLOCK_COUNTER+1))
+
+        if [[ $BLOCK_COUNTER_MAX -ne -1 ]]
+        then
+            if [[ $BLOCK_COUNTER -gt $BLOCK_COUNTER_MAX ]]
+            then
+                echo -e "\n$SCRIPT: failed to get exclusive access to directory:\n  $1" >&2
+                exit_with_error
+            fi
+        fi
+
+        # Print the PID of blocking process.
+        BLOCK_PID=$(cat "$1/.$PROG/LOCK" | grep PID | sed -r 's/PID: +//')
+        echo -en "\r$1 blocking on process: $BLOCK_PID "
+
+        # Print status of blocking process.
+        BLOCK_STATUS=$(ps -p "$BLOCK_PID")
+        if (( $? ))
+        then
+            echo -n "[dead]"
+        else
+            echo -n "[$(echo $BLOCK_STATUS | cut -d' ' -f8)]"
+        fi
+        sleep $BLOCK_SLEEP_TIME
+        block_until_dir_free "$1"
+    fi
+}
+
+# Lock the specified directory.
+#
+# @param $1 Path to the directory to lock.
+lock_dir ()
+{
+    BLOCK_SLEEP_TIME=1
+    BLOCK_COUNTER=0
+    BLOCK_COUNTER_MAX=10
+
+    block_until_dir_free "$1"
+    echo -e "DATE: $(date)\nPID:  $$" > "$1/.$PROG/LOCK"
+}
+
+# Remove the lock on source directory.
+#
+# @param $1 Path to directory to lock.
+unlock_dir ()
+{
+    LOCK=$(cat "$1/.$PROG/LOCK" 2> /dev/null)
+    if [[ "$LOCK" == "" ]]
+    then
+        return
+    fi
+    LOCK_PID=$(echo "$LOCK" | grep PID | sed -r 's/PID: +//')
+
+    if [[ $$ -eq $LOCK_PID ]]
+    then
+        rm -f "$1/.$PROG/LOCK"
+    else
+        echo "$SCRIPT: Cannot free lock $LOCK_PID with key $$" >&2
+    fi
+}
+
+print_sink_details ()
+{
+    SINK_PATH="$(cat $SOURCE_DIR/.$PROG/sinks/$1)"
+    SIZE="$(du -sh $SINK_PATH | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')"
+    HEAD="$(cat $SINK_PATH/.$PROG/HEAD)"
+    SNAPSHOT_COUNT="$(ls $SINK_PATH/.$PROG/trees | wc -l)"
+    LOAD="$(echo $SNAPSHOT_COUNT / $(cat $SINK_PATH/.$PROG/config/SNAPSHOT-COUNT) * 100 | bc -l)"
+    echo "\
+* $1
+  Path:           $SINK_PATH
+  Size:           $SIZE
+  Last snapshot:  $(cat $SINK_PATH/.$PROG/nodes/$HEAD | grep Date | sed -r 's/Date +(.*)/\1/')
+  Snapshot count: $SNAPSHOT_COUNT (${LOAD::2}%)
+"
+}
+
+# Generate a 32 digit hash of a directory.
+#
+# @param $1 Path to directory.
+hash_directory ()
+{
+    pushd . > /dev/null
+    cd "$1"
+    HASH=$(find . -type f -printf '%T@ %p\n' 2>/dev/null|sort -k 1nr \
+        |sed 's/^[^ ]* //'|head -n10|md5sum)
+    HASH=${HASH:0:32}
+    popd > /dev/null
+    echo $HASH
+}
+
+# Calculate and compare the snapshot hash against the node hash.
+#
+# @param $1 Path to snapshot.
+verify_node ()
+{
+    NODE=$(basename "$1")
+    NODE_HASH=${NODE:0:32}
+    HASH=$(hash_directory "$1")
+
+    if [ "$NODE_HASH" = "$HASH" ]
+    then
+        return 0
+    else
+        echo "$SCRIPT: verification failed!" >&2
+        echo "  Expected: $NODE_HASH" >&2
+        echo "  Actual:   $HASH" >&2
+        return 1
+    fi
+
+    exit_with_error "$SOURCE_DIR"
+}
+
+# Lookup info from an emu node
+#
+# @param $1 Node path
+# @param $2 Key
+# @return Value for key, or empty string if not found
+lookup_node_key ()
+{
+    echo "$(cat $1 2>/dev/null | grep $2 | sed -r 's/'$2' +(.*)/\1/')"
+}
