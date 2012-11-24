@@ -211,3 +211,13 @@ verify_node ()
 
     exit_with_error "$SOURCE_DIR"
 }
+
+# Lookup info from an emu node
+#
+# @param $1 Node path
+# @param $2 Key
+# @return Value for key, or empty string if not found
+lookup_node_key ()
+{
+    echo "$(cat $1 2>/dev/null | grep $2 | sed -r 's/'$2' +(.*)/\1/')"
+}
