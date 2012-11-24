@@ -37,12 +37,13 @@ COMMANDS
         Below is a brief summary of the available commands. For more information
         on any, see '$PROG help <command>':
 
-          init          initialize sources
+          clean         remove locks and orphaned data
+          init          initialize a source
           log           show sink logs
           sink          manage sinks
           reset         restore and discard snapshots
           restore       restore source from snaphot
-          sanitycheck   check compatability
+          sanitycheck   check program compatability
           snapshot      create snapshots
           status        source status
           verify        validate snapshots
