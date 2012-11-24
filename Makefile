@@ -59,6 +59,11 @@ uninstall_usr:
 
 uninstall: uninstall_usr uninstall_lib uninstall_exec
 
+check:
+	@bash test/run-tests.sh
+
+test: check
+
 release:
 	@cd .. && tar czf emu-$(VERSION).tar.gz emu
 	@mv ../emu-$(VERSION).tar.gz ./
