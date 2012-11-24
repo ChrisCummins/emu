@@ -69,11 +69,20 @@ main ()
 
     if [[ $(echo "$IN" | wc -l) -ne 2 ]]
     then
-        echo "$SCRIPT: invalid snapshot path"
-        exit_with_error "$SOURCE_DIR"
+        if [[ $(ls "$SOURCE_DIR/.$PROG/sinks" | wc -l) -eq 1 ]]
+        then
+            SINK="$(ls $SOURCE_DIR/.$PROG/sinks)"
+        else
+            echo "$SCRIPT: invalid snapshot"
+            exit_with_error "$SOURCE_DIR"
+        fi
     fi
 
-    SINK=$(echo "$IN" | head -n1)
+    if [ "$SINK" = "" ]
+    then
+        SINK=$(echo "$IN" | head -n1)
+    fi
+
     SINK_DIR="$(cat $SOURCE_DIR/.$PROG/sinks/$SINK 2>/dev/null)"
     if [[ ! -d "$SINK_DIR" ]]
     then
