@@ -40,6 +40,7 @@ COMMANDS
           init          initialize sources
           log           show sink logs
           sink          manage sinks
+          reset         restore and discard snapshots
           restore       restore source from snaphot
           sanitycheck   check compatability
           snapshot      create snapshots
