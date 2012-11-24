@@ -8,10 +8,10 @@ help ()
 {
     cat << EOF | less
 NAME
-        $SCRIPT - restore snapshot to source directory
+        $SCRIPT - restore source to snapshot
 
 SYNOPSIS
-        $PROG restore [OPTION...] <sink>:<snapshot>
+        $PROG restore [OPTION...] [<sink>:]<snapshot>
 
 DESCRIPTION
         Restores the contents of a snapshot to the source directory.
@@ -35,8 +35,7 @@ OPTIONS
         -f
                    force restore. This causes the program to disregard any
                    exclusivity locks that the source or sink directories may
-                   have. Not recommended for everyday consumption, but is useful
-                   after a previous snapshot attempt failed
+                   have
 
 EOF
 }
