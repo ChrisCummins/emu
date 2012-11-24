@@ -45,6 +45,11 @@ DESCRIPTION
         in last-modified time.
 
 OPTIONS
+        -m <message>
+                   add a snapshot message <message>
+        -M [<editor>]
+                   open an editor to add a snapshot message (use EDITOR
+                   variable, if <editor> argument not given
         -n
                    perform a trial run with no changes made, equivalent to
                    '$PROG status'
@@ -128,6 +133,16 @@ generate_hash ()
     fi
 }
 
+# Gnerate a snapshot name.
+#
+# @param $1 Path to sink directory.
+# @var HASH the 40 digit snapshot UID.
+# @return SNAPSHOT a snapshot name
+generate_snapshot_name ()
+{
+    SNAPSHOT=$(date -d @$(printf '%d' 0x5${HASH:32:8}) +'%Y-%m-%d %T')
+}
+
 # Generate a snapshot node file.
 #
 # @param $1 Path to sink directory.
@@ -138,10 +153,11 @@ generate_node ()
     NODE="$1/.$PROG/nodes/$HASH"
     touch "$NODE"
     cat <<EOF >> "$NODE"
-Parent  $HEAD
-Date    $(date)
-Source  $(cat $1/.$PROG/SOURCE)
-Size    $(du -sh "$1/.$PROG/trees/$HASH" | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')
+Snapshot $SNAPSHOT
+Parent   $HEAD
+Date     $(date)
+Source   $(cat $1/.$PROG/SOURCE)
+Size     $(du -sh "$1/.$PROG/trees/$HASH" | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')
 EOF
     chmod 0640 "$NODE"
 }
@@ -200,15 +216,17 @@ get_snapshot_child ()
 
 # Deletes a snapshot.
 #
-# @param $1 Path to sink directory.
-# @param $2 UID of snapshot to delete.
+# @param $1 path to sink directory.
+# @param $2 snapshot to delete.
 remove_snapshot ()
 {
     get_snapshot_child "$1" "$(cat $1/.$PROG/HEAD)" $2
     cat "$1/.$PROG/nodes/$SNAPSHOT_HASH" | sed -r 's/(Parent +).*$/\1/' > "$1/.$PROG/nodes/$SNAPSHOT_HASH"
     echo "$SINK_NAME: removing $2"
     rm -f "$1/.$PROG/nodes/$2"
+    rm -f "$1/.$PROG/nodes/$2.msg"
     rm -rf "$1/.$PROG/trees/$2"
+    rm -rf "$1/$(date -d @$(printf '%d' 0x5${2:32:8}) +'%Y-%m-%d %T')"
 }
 
 # Remove the oldest in tree in a set of snapshots.
@@ -260,11 +278,14 @@ perform_snapshot_on_sink ()
     fi
 
     generate_hash "$1"
+    generate_snapshot_name "$1"
     mv "$1/.$PROG/trees/new" "$1/.$PROG/trees/$HASH"
+    ln -s "$1/.$PROG/trees/$HASH" "$1/$SNAPSHOT"
     generate_node "$1"
     push_head "$1"
 
     unlock_dir "$1"
+    echo "$2: new snapshot '$SNAPSHOT'"
     echo "$2: new HEAD $HASH"
     return 0
 }
