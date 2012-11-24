@@ -1,0 +1,112 @@
+#!/bin/bash
+
+source /usr/share/emu/emu-util
+SCRIPT=$(basename $0)
+SOURCE_DIR="$(pwd)"
+
+help ()
+{
+    cat << EOF | less
+NAME
+        $SCRIPT - restore snapshot to source directory
+
+SYNOPSIS
+        $PROG restore [OPTION...] <sink>:<snapshot>
+
+DESCRIPTION
+        Restores the contents of a snapshot to the source directory.
+
+        It uses the same difference and transfer algorithm as $PROG snapshot,
+        except the sink and source have been swapped so that the difference
+        between the content of the sink snapshot and source is written to the
+        source, restoring the state of the source to match that of the snapshot.
+
+OPTIONS
+        -s
+                   make a snapshot at sink prior to restore
+        -V
+                   verify snapshot prior to restore
+        -n
+                   perform a trial run with no changes made
+        -v
+                   increase verbosity
+        -p
+                   show progress during transfer
+        -f
+                   force restore. This causes the program to disregard any
+                   exclusivity locks that the source or sink directories may
+                   have. Not recommended for everyday consumption, but is useful
+                   after a previous snapshot attempt failed
+
+EOF
+}
+
+main ()
+{
+    if [ "$1" = "help" ]
+    then
+        help
+        exit 0
+    fi
+
+    pre_exec_hooks "$SOURCE_DIR"
+    lock_dir "$SOURCE_DIR"
+
+    IN=$(echo "$1" | tr ":" "\n")
+
+    if [[ $(echo "$IN" | wc -l) -ne 2 ]]
+    then
+        if [[ $(ls "$SOURCE_DIR/.$PROG/sinks" | wc -l) -eq 1 ]]
+        then
+            SINK="$(ls $SOURCE_DIR/.$PROG/sinks)"
+        else
+            echo "$SCRIPT: invalid snapshot"
+            exit_with_error "$SOURCE_DIR"
+        fi
+    fi
+
+    if [ "$SINK" = "" ]
+    then
+        SINK=$(echo "$IN" | head -n1)
+    fi
+
+    SINK_DIR="$(cat $SOURCE_DIR/.$PROG/sinks/$SINK 2>/dev/null)"
+    if [[ ! -d "$SINK_DIR" ]]
+    then
+        echo "$SCRIPT: sink '$SINK' does not exist" >&2
+        exit_with_error "$SOURCE_DIR"
+    fi
+
+    lock_dir "$SINK_DIR"
+
+    SNAPSHOT=$(echo "$IN" | tail -n1)
+    if [ "$SNAPSHOT" = "HEAD" ]
+    then
+        SNAPSHOT="$(cat "$SINK_DIR/.$PROG/HEAD")"
+    fi
+
+    SNAPSHOT_DIR="$SINK_DIR/.$PROG/trees/$SNAPSHOT"
+    if [[ ! -d "$SNAPSHOT_DIR" ]]
+    then
+        echo "$SCRIPT: snapshot '$SNAPSHOT' does not exist" >&2
+        exit_with_error "$SOURCE_DIR"
+    fi
+
+    rsync \
+        --delete \
+        --archive \
+        --human-readable \
+        --exclude-from="$SOURCE_DIR/.$PROG/excludes" \
+        "$SNAPSHOT_DIR/" "$SOURCE_DIR"
+    if (( $? ))
+    then
+        echo "$SCRIPT: restore of '$SINK:$SNAPSHOT' failed" >&2
+    fi
+
+    echo "$SCRIPT: source at '$SINK:$SNAPSHOT'"
+
+    unlock_dir "$SINK_DIR"
+    unlock_dir "$SOURCE_DIR"
+    post_exec_hooks "$SOURCE_DIR"
+}
+main $@
