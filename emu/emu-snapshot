@@ -203,7 +203,7 @@ get_snapshot_parent ()
 # @param $1 Path to sink directory.
 # @param $2 Hash of starting point.
 # @param $3 Target hash.
-# @return SNAPSHOT_HASH The has of the last snapshot.
+# @return SNAPSHOT_HASH The hash of the snapshot's child.
 get_snapshot_child ()
 {
     NEXT_SNAPSHOT_HASH="$2"
@@ -220,7 +220,7 @@ get_snapshot_child ()
 # @param $2 snapshot to delete.
 remove_snapshot ()
 {
-    get_snapshot_child "$1" "$(cat $1/.$PROG/HEAD)" $2
+    get_snapshot_child "$1" "$(cat $1/.$PROG/HEAD)" "$2"
     cat "$1/.$PROG/nodes/$SNAPSHOT_HASH" | sed -r 's/(Parent +).*$/\1/' > "$1/.$PROG/nodes/$SNAPSHOT_HASH"
     echo "$SINK_NAME: removing $2"
     rm -f "$1/.$PROG/nodes/$2"
@@ -234,6 +234,7 @@ remove_snapshot ()
 # @param $1 Path to sink directory.
 pop_tail ()
 {
+    # Get the root snapshot (one with no child).
     get_snapshot_child "$1" "$(cat $1/.$PROG/HEAD)"
     remove_snapshot "$1" "$SNAPSHOT_HASH"
 }
