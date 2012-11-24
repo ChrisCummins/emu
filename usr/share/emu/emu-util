@@ -162,12 +162,12 @@ unlock_dir ()
 
 print_sink_details ()
 {
-        SINK_PATH="$(cat $SOURCE_DIR/.$PROG/sinks/$1)"
-        SIZE="$(du -sh $SINK_PATH | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')"
-        HEAD="$(cat $SINK_PATH/.$PROG/HEAD)"
-        SNAPSHOT_COUNT="$(ls $SINK_PATH/.$PROG/trees | wc -l)"
-        LOAD="$(echo $SNAPSHOT_COUNT / $(cat $SINK_PATH/.$PROG/config/SNAPSHOT-COUNT) * 100 | bc -l)"
-        echo "\
+    SINK_PATH="$(cat $SOURCE_DIR/.$PROG/sinks/$1)"
+    SIZE="$(du -sh $SINK_PATH | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')"
+    HEAD="$(cat $SINK_PATH/.$PROG/HEAD)"
+    SNAPSHOT_COUNT="$(ls $SINK_PATH/.$PROG/trees | wc -l)"
+    LOAD="$(echo $SNAPSHOT_COUNT / $(cat $SINK_PATH/.$PROG/config/SNAPSHOT-COUNT) * 100 | bc -l)"
+    echo "\
 * $1
   Path:           $SINK_PATH
   Size:           $SIZE
