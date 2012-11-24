@@ -260,7 +260,7 @@ perform_snapshot_on_sink ()
     lock_dir "$1"
     get_rsync_link "$1"
     pop_tails "$1"
-    echo -n "$2: creating snapshot ($(sink_snapshot_count $1) of "
+    echo -n "$SCRIPT: $2: creating snapshot ($(sink_snapshot_count $1) of "
     echo "$(sink_max_snapshots $1))"
 
     rsync \
@@ -285,8 +285,8 @@ perform_snapshot_on_sink ()
     push_head "$1"
 
     unlock_dir "$1"
-    echo "$2: new snapshot '$SNAPSHOT'"
-    echo "$2: new HEAD $HASH"
+    echo "$SCRIPT: $2: new snapshot '$SNAPSHOT'"
+    echo "$SCRIPT: $2: HEAD at $HASH"
     return 0
 }
 
