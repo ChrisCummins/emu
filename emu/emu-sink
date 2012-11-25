@@ -14,15 +14,19 @@ init_sink ()
     SINK_DIR="$1"
     TEMPLATE_DIR="/usr/local/share/emu/sink-templates"
 
-    mkdir -p "$SINK_DIR/.$PROG"
-    mkdir -p "$SINK_DIR/.$PROG/trees"
-    mkdir -p "$SINK_DIR/.$PROG/nodes"
-    mkdir -p "$SINK_DIR/.$PROG/config"
+    exit_if_no_dir_permissions "$1"
+    mkdir $EMU_VERBOSE -p "$SINK_DIR/.$PROG"
+    mkdir $EMU_VERBOSE -p "$SINK_DIR/.$PROG/trees"
+    mkdir $EMU_VERBOSE -p "$SINK_DIR/.$PROG/nodes"
+    mkdir $EMU_VERBOSE -p "$SINK_DIR/.$PROG/config"
     touch "$SINK_DIR/.$PROG/HEAD"
     echo $(pwd) > "$SINK_DIR/.$PROG/SOURCE"
-    cp -n "$TEMPLATE_DIR/config/SNAPSHOT-COUNT" "$SINK_DIR/.$PROG/config"
+    cp -n $EMU_VERBOSE "$TEMPLATE_DIR/config/SNAPSHOT-COUNT" "$SINK_DIR/.$PROG/config"
 
-    echo "$SCRIPT: Initialized sink at $SINK_DIR/.$PROG"
+    if ! (( $EMU_QUIET ))
+    then
+        echo "$SCRIPT: Initialized sink at $SINK_DIR/.$PROG"
+    fi
 }
 
 add_sink ()
@@ -33,23 +37,32 @@ add_sink ()
         exit 1
     fi
 
+    # Get absolute path.
+    if [ ${2:0:1} != "/" ]
+    then
+        SINK_PATH="$(pwd)/$2"
+    else
+        SINK_PATH="$2"
+    fi
+
     if [[ -f ".$PROG/sinks/$1" ]]
     then
         echo "$SCRIPT: Sink '$1' already exists." >&2
         exit 1
     fi
 
-    if [[ -d "$2/.$PROG" ]]
+    if [[ -d "$SINK_PATH/.$PROG/trees" ]]
     then
-        echo "$SCRIPT: '$2/.$PROG' already exists." >&2
+        echo "$SCRIPT: '$SINK_PATH' is already an emu sink." >&2
         exit 1
     fi
 
-    # Create sinks/remote file.
-    echo "$2" > ".$PROG/sinks/$1"
+    exit_if_no_dir_permissions ".$PROG"
+
+    echo "$SINK_PATH" > ".$PROG/sinks/$1"
 
     # Initialize sink.
-    init_sink "$2"
+    init_sink "$SINK_PATH"
 }
 
 rm_sink ()
@@ -60,8 +73,16 @@ rm_sink ()
         exit 1
     fi
 
-    rm -f ".$PROG/sinks/$1"
-    echo "$SCRIPT: Sink '$1' removed."
+    if (( $EMU_RM_SINK ))
+    then
+        rm $EMU_VERBOSE -rf "$(cat .$PROG/sinks/$1)"
+    fi
+
+    rm $EMU_VERBOSE -f ".$PROG/sinks/$1"
+    if ! (( $EMU_QUIET ))
+    then
+        echo "$SCRIPT: Sink '$1' removed."
+    fi
 }
 
 show_sink ()
@@ -98,15 +119,60 @@ show_sink ()
 
 list_sinks ()
 {
-    ls ".$PROG/sinks"
+    if [ -z $EMU_VERBOSE ]
+    then
+        ls ".$PROG/sinks"
+    else
+        for SINK in $(ls ".$PROG/sinks")
+        do
+            echo "$SINK  ->  $(cat .$PROG/sinks/$SINK)"
+        done
+    fi
 }
 
 main ()
 {
-    COMMAND="$1"
-    shift
+    while getopts ":qvs:Rt:" OPT
+    do
+        case $OPT in
+            q)
+                EMU_QUIET=1
+                ;;
+            v)
+                EMU_VERBOSE="-v"
+                ;;
+            s)
+                EMU_SNAPSHOT_COUNT="$OPTARG"
+                ;;
+            R)
+                EMU_RM_SINK=1
+                ;;
+            t)
+                EMU_SOURCE_TEMPLATE_DIR="$OPTARG"
+                if [ ! -d "$EMU_SOURCE_TEMPLATE_DIR" ]
+                then
+                    echo "$SCRIPT: '$OPTARG' not a directory" >&2
+                    exit 1
+                fi
+                ;;
+            \?)
+                echo "$SCRIPT: invalid option: -$OPTARG" >&2
+                exit 1
+                ;;
+            :)
+                echo "$SCRIPT: option -$OPTARG requires an argument." >&2
+                exit 1
+                ;;
+        esac
+    done
 
-    if [[ "$COMMAND" == "help" ]]
+    # Dispose of args.
+    while [ "${1:0:1}" = "-" ]
+    do
+        shift
+    done
+
+    if [ "$1" = "help" ]
     then
         help
         exit 0
@@ -118,21 +184,24 @@ main ()
         exit_with_error
     fi
 
-    case "$COMMAND" in
+    case "$1" in
         "")
             list_sinks
             ;;
         "add")
+            shift
             add_sink $1 $2
             ;;
         "rm")
+            shift
             rm_sink $@
             ;;
         "show")
+            shift
             show_sink $@
             ;;
         *)
-            no_command_error "$SCRIPT" "$COMMAND"
+            no_command_error "$SCRIPT" "$1"
             ;;
     esac
 
