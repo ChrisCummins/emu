@@ -35,13 +35,18 @@ exit_with_error ()
 
 # Check for write permissions
 #
-# @param $1 (optional) path to the directory.
+# @param $1 path to the directory.
 exit_if_no_dir_permissions ()
 {
+    if ! [ -d "$1" ]
+    then
+        mkdir -p "$1"
+    fi
+
     touch "$1/.emu-permissions-test" &>/dev/null
     if (( $? ))
     then
-        echo "$SCRIPT: insufficient user permissions!" >&2
+        echo "$SCRIPT: insufficient user permissions for '$1'!" >&2
         exit 1
     fi
     cat "$1/.emu-permissions-test" &>/dev/null
@@ -50,7 +55,7 @@ exit_if_no_dir_permissions ()
 
     if (( $RETURN ))
     then
-        echo "$SCRIPT: insufficient user permissions!" >&2
+        echo "$SCRIPT: insufficient user permissions for '$1'!" >&2
         exit 1
     fi
 }
