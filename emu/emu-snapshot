@@ -6,69 +6,7 @@ SOURCE_DIR="$(pwd)"
 
 help ()
 {
-    cat << EOF | less
-NAME
-        $SCRIPT - record a snapshot of the source directory
-
-SYNOPSIS
-        $PROG snapshot [OPTION...] [<sink>...]
-
-DESCRIPTION
-        Store the current contents of the source directory in a new snapshot.
-
-        The difference between the content of the source and the last snapshot
-        in the sink is added to the sink and linked against the existing
-        content, combining to produce a full snapshot of the source
-        directory. This enables $PROG sinks to be very compact, allowing
-        multiple full snapshots to be stored in a space little larger than a
-        single full snapshot.
-
-        $PROG refers to the directory to be backed up as the "source" and the
-        backup destination as the "sink". This is analogous to a electrical
-        sources and sinks, the critical difference being of course that data can
-        flow from the sink back to the source (in the case of a restore).
-
-        Some of the features of the snapshot features are:
-
-        o      supports copying links, devices, owners, groups, and permissions
-
-        o      exclude and exclude-from options in .$PROG/excludes
-
-        o      does not require super-user privileges
-
-        $PROG uses the rsync file-copying tool for its delta-transfer algorithm,
-        which reduces the amount of data sent by sending only the differences
-        between the source files and the existing files in the sink.
-
-        Rsync finds files that need to be transferred using a "quick check"
-        algorithm (by default) that looks for files that have changed in size or
-        in last-modified time.
-
-OPTIONS
-        -m <message>
-                   add a snapshot message <message>
-        -M [<editor>]
-                   open an editor to add a snapshot message (use EDITOR
-                   variable, if <editor> argument not given
-        -n
-                   perform a trial run with no changes made, equivalent to
-                   '$PROG status'
-        -v
-                   increase verbosity
-        -p
-                   show progress during transfer
-        -f
-                   force snapshot. This causes the program to disregard any
-                   exclusivity locks that the source or sink directories may
-                   have. Not recommended for everyday consumption, but is useful
-                   after a previous snapshot attempt failed
-        -F
-                   equivalent to -f force option, but in addition causing $PROG
-                   to kill any process owning a sink or source lock and removing
-                   any in-progress snapshot data. Exercise caution or heads will
-                   explode
-
-EOF
+    man emu-snapshot
 }
 
 # Retrieve all sink files.
