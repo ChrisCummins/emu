@@ -188,14 +188,14 @@ print_sink_details ()
     SIZE="$(du -sh $SINK_PATH | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')"
     HEAD="$(cat $SINK_PATH/.$PROG/HEAD)"
     SNAPSHOT_COUNT="$(ls $SINK_PATH/.$PROG/trees | wc -l)"
-    LOAD="$(echo $SNAPSHOT_COUNT / $(cat $SINK_PATH/.$PROG/config/SNAPSHOT-COUNT) * 100 | bc -l)"
-    echo "\
+    LOAD=$(echo "$SNAPSHOT_COUNT / $(cat $SINK_PATH/.$PROG/config/SNAPSHOT-COUNT) * 100" | bc -l)
+cat <<EOF | less
 * $1
   Path:           $SINK_PATH
   Size:           $SIZE
-  Last snapshot:  $(cat $SINK_PATH/.$PROG/nodes/$HEAD | grep Date | sed -r 's/Date +(.*)/\1/')
+  Last snapshot:  $(cat $SINK_PATH/.$PROG/nodes/$HEAD 2>/dev/null | grep Date | sed -r 's/Date +(.*)/\1/')
   Snapshot count: $SNAPSHOT_COUNT (${LOAD::2}%)
-"
+EOF
 }
 
 # Generate a 32 digit hash of a directory.
