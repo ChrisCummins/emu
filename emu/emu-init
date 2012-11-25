@@ -105,6 +105,12 @@ main ()
         esac
     done
 
+    # Dispose of args.
+    while [ "${1:0:1}" = "-" ]
+    do
+        shift
+    done
+
     if [ "$1" = "help" ]
     then
         help
