@@ -8,43 +8,7 @@ CONF_DIR="$SOURCE_DIR/.$PROG"
 
 help ()
 {
-    cat <<EOF | less
-NAME
-        $SCRIPT - create or reinitialize an existing $PROG source
-
-SYNOPSIS
-        $PROG init [OPTION...] [directory]
-
-DESCRIPTION
-        This command creates an empty $PROG source. This means creating a .$PROG
-        directory with subdirectories for hooks, sink refs and configuration
-        files.
-
-        During the init process, template files are copied from the global
-        templates path, normally /usr/local/share/emu. Use of option -t to
-        specify a template directory will supercede this.
-
-        This command is non-destructive, running it on an existing emu source
-        will not overwrite any existing data. Instead, it can be used to rescue
-        a broken source, as it will silently replace or recreate any missing
-        files. If you have broken a file and would like to revert to the
-        default, delete it and run this command.
-
-OPTIONS
-        -t <template-dir>
-                   specify the directory from which templates will be used
-        -q
-                   only print error and warning messages, all other output will
-                   be suppressed
-        -R
-                   if a file exists in both the template and source directories,
-                   replace the source file with the template
-        -C
-                   clean directory. This undoes the effect of an init, clearing
-                   the .$PROG directory. It does not affect sinks, though it
-                   will remove refs to them
-
-EOF
+    man emu-init
 }
 
 check_permissions ()
