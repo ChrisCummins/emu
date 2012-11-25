@@ -54,5 +54,4 @@ clean:
 	@rm -rfv /tmp/emu
 
 release:
-	@cd .. && tar czf emu-$(VERSION).tar.gz emu
-	@mv -v ../emu-$(VERSION).tar.gz ./
+	@releases/release.sh

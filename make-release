@@ -1,0 +1,50 @@
+#!/bin/bash
+
+if [ "$1" = "" ] || [ "$2" = "" ]
+then
+    cat <<EOF
+Useage: <old> <new>
+EOF
+    exit 0
+fi
+
+FILELIST=$(find ./ -type f \
+    | grep -v '.git' \
+    | grep -v releases/emu-*.tar.gz \
+    | grep -v releases/emu-*.tar.gz.md5 \
+    | grep -v make-release \
+    | grep -v CHANGELOG)
+
+for FILE in $FILELIST
+do
+    sed -i "s/$1/$2/g" $FILE
+done
+
+touch CHANGELOG
+cat <<EOF >> CHANGELOG
+emu-$2 ($(date))
+--------------------------------------------------------------------------------
+EOF
+
+git log \
+    | grep -v Author \
+    | grep -v 'commit' \
+    | grep -v '^$' \
+    | sed -r 's/(Date:.*)/\n\1/' \
+    >> CHANGELOG
+
+echo "" >> CHANGELOG
+
+# Create release tarball.
+cd ..
+tar czf \
+    emu-$2.tar.gz emu \
+    --exclude='emu/.git/*' \
+    --exclude='emu/releases/emu-*.tar.gz' \
+    --exclude='emu/releases/emu-*.tar.gz.md5'
+
+# Generate md5.
+md5sum emu-$2.tar.gz > emu-$2.tar.gz.md5
+mv -v emu-$2.tar.gz emu/releases
+mv -v emu-$2.tar.gz.md5 emu/releases
+cd emu
