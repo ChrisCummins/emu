@@ -1,10 +1,10 @@
 .TH emu-sink 1  "Sunday 25, 2012" "version 0.0.1" "Emu Manual"
 .SH NAME
-emu-sink - Manage emu sinks
+emu\-sink \- Manage emu sinks
 .SH SYNOPSIS
 .B emu sink
-[-v]
-         [add [-s <number>] <sink> <path>]
+[\-v] [\-q]
+         [add [\-s <number>] <sink> <path>]
          [rm <sink>]
          [mv <old> <new>]
          [show <sink>]
@@ -12,6 +12,12 @@ emu-sink - Manage emu sinks
 With no arguments, show a list of existing sinks. Alternatively, use one of the
 following subcommands.
 .SH OPTIONS
+.TP
+\-v
+increase verbosity
+.TP
+\-q
+quiet mode. Suppress non\-error messages
 .TP
 add <sink> <path>
 initializes an empty sink named <sink> in the directory <path>. This means
@@ -24,18 +30,18 @@ attempt to add a sink that has previously be removed with 'emu rm'. In this
 situation, 'emu add' will behave the same way that 'emu init' does in an
 existing source. Additionally the command takes the following options:
 .TP
-    -s <number>
+    \-s <number>
 set the maximum number of snapshots for the new sink. This is a convenience
-option which saves the user editing the .emu/config/SNAPSHOT-COUNT file
+option which saves the user editing the .emu/config/SNAPSHOT\-COUNT file
 themselves. If this argument is ommitted, the default value will be dictated
 by the contents of the
-$EMU_SINK_TEMPLATE_DIR/config/SNAPSHOT-COUNT template file
+$EMU_SINK_TEMPLATE_DIR/config/SNAPSHOT\-COUNT template file
 .TP
 rm <sink>
 remove sink <sink> from the source refs. This does not affect the sink file
-structure and is non-destructive, except with the use of arguments:
+structure and is non\-destructive, except with the use of arguments:
 .TP
-    -R
+    \-R
 force removal of the sink directory itself. This means that all snapshots,
 configurations and all other files in the sink directory will be permanently
 wiped. Use with extreme caution, double up to be safe
