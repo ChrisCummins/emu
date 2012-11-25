@@ -1,0 +1,28 @@
+.TH emu-snapshot 1  "Sunday 25, 2012" "version 0.0.1" "Emu Manual"
+.SH NAME
+emu\-log \- Show sink snapshot logs
+.SH SYNOPSIS
+.B emu log
+[\-n <number>] [\-s] [<sink>:][<snapshot>]...
+.SH DESCRIPTION
+Show emu snapshot logs for one or more sinks. If no <sink> is speficied, show
+logs for all sinks. If a <sink> is specified, show snapshot logs for only that
+sink. By specifying a :<snapshot>, the log for only that snapshot will be
+shown. The command uses the standard <sink>:<snapshot> syntax.
+.SH OPTIONS
+.TP
+\-n <number>
+limit the number of snapshot logs to the given number
+.TP
+\-s
+show a dense summary of only vital information, suitable for reports or logs
+.SH EMU
+Part of the
+.B emu
+(1)
+suite
+.SH AUTHOR
+Chris Cummins <chrisc.101@gmail.com>
+.SH SEE ALSO
+.B emu
+(1)

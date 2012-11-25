@@ -6,28 +6,7 @@ SOURCE_DIR="$(pwd)"
 
 help ()
 {
-    cat <<EOF | less
-NAME
-        $SCRIPT - show sink snapshot logs
-
-SYNOPSIS
-        $PROG log [OPTION...] [<sink>][:<snapshot>]...
-
-DESCRIPTION
-        Show $PROG snapshot logs for one or more sinks. If no <sink> is
-        speficied, show logs for all sinks. If a <sink> is specified, show
-        snapshot logs for only that sink. By specifying a :<snapshot>, the log
-        for only that snapshot will be shown. The command uses the standard
-        <sink>:<snapshot> syntax.
-
-OPTIONS
-        -n <number>
-                   limit the number of snapshot logs to the given number
-        -s
-                   show a dense summary of only vital information, suitable for
-                   reports or logs
-
-EOF
+    man log
 }
 
 print_node_verbose ()
