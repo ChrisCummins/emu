@@ -6,37 +6,7 @@ SOURCE_DIR="$(pwd)"
 
 help ()
 {
-    cat << EOF | less
-NAME
-        $SCRIPT - reset source to snapshot
-
-SYNOPSIS
-        $PROG reset [OPTION...] [<sink>:]<snapshot>
-
-DESCRIPTION
-        Restores the contents of a snapshot to the source directory and sink
-        HEAD. This means that all snapshots made after the given <snapshot> will
-        be discarded.
-
-        If you have a sink with a set of sequential snapshot [A->B->C], running
-        reset against snapshot A will restore the source to snapshot A and
-        discard snapshots B and C, effectively re-winding time.
-
-OPTIONS
-        -V
-                   verify snapshot prior to restore
-        -n
-                   perform a trial run with no changes made
-        -v
-                   increase verbosity
-        -p
-                   show progress during transfer
-        -f
-                   force reset. This causes the program to disregard any
-                   exclusivity locks that the source or sink directories may
-                   have
-
-EOF
+    man emu-reset
 }
 
 main ()

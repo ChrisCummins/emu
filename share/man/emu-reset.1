@@ -1,0 +1,43 @@
+.TH emu-reset 1  "Sunday 25, 2012" "version 0.0.1" "Emu Manual"
+.SH NAME
+emu\-reset \- Reset source to snapshot
+.SH SYNOPSIS
+.B emu reset
+[\-V] [\-n] [\-v] [\-p] [\-f]
+          [<sink>:]<snapshot>
+.SH DESCRIPTION
+
+Resets the contents of a snapshot to the source directory and sink HEAD. This
+means that all snapshots made after the given <snapshot> will be discarded.
+
+If you have a sink with a set of sequential snapshot [A\->B\->C], running reset
+against snapshot A will reset the source to snapshot A and discard snapshots B
+and C, effectively re\-winding time.
+
+.SH OPTIONS
+.TP
+\-V
+verify snapshot prior to reset
+.TP
+\-n
+perform a trial run with no changes made
+.TP
+\-v
+increase verbosity
+.TP
+\-p
+show progress during transfer
+.TP
+\-f
+force reset. This causes the program to disregard any exclusivity locks that
+the source or sink directories may have
+.SH EMU
+Part of the
+.B emu
+(1)
+suite
+.SH AUTHOR
+Chris Cummins <chrisc.101@gmail.com>
+.SH SEE ALSO
+.B emu
+(1)
