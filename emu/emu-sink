@@ -89,7 +89,7 @@ show_sink ()
 {
     if [[ $@ == "" ]]
     then
-        SINKS=$(ls ".$PROG/sinks")
+        SINKS="$(ls .$PROG/sinks)"
     else
         FAILURE=0
         for ARG in $@
