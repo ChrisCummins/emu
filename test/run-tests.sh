@@ -200,12 +200,12 @@ then
 fi
 
 # Execute tests.
-for TEST in $(ls)
+for TEST in $(find . -type f)
 do
-    if [ $TEST != "run-tests.sh" ] && [ $TEST != "." ]
+    if [ $TEST != "./run-tests.sh" ]
     then
         pushd . &>/dev/null
-        echo -n "$TEST"
+        echo -n "${TEST:2}"
         ./$TEST &> $TEST.log
 
         EXIT_CODE=$?
