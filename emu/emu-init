@@ -37,6 +37,9 @@ OPTIONS
                    only print error and warning messages, all other output will
                    be suppressed
         -R
+                   if a file exists in both the template and source directories,
+                   replace the source file with the template
+        -C
                    clean directory. This undoes the effect of an init, clearing
                    the .$PROG directory. It does not affect sinks, though it
                    will remove refs to them
@@ -44,22 +47,35 @@ OPTIONS
 EOF
 }
 
+clean_emu_dir ()
+{
+    if [ ! -d "$SOURCE_DIR/.$PROG/sinks" ]
+    then
+        echo "$SCRIPT: not an $PROG source!" >&2
+        exit 5
+    fi
+
+    rm -rf "$SOURCE_DIR/.$PROG"
+
+    if ! (( $EMU_QUIET ))
+    then
+        echo "$SCRIPT: emptied source in $SOURCE_DIR/.$PROG"
+    fi
+}
+
 create_directories ()
 {
     mkdir -p "$CONF_DIR"
     mkdir -p "$CONF_DIR/config"
+    mkdir -p "$CONF_DIR/hooks"
     mkdir -p "$CONF_DIR/sinks"
     chmod 0755 "$CONF_DIR/sinks"
 }
 
 copy_template_files ()
 {
-    TEMPLATE_DIR="/usr/share/$PROG/source-templates"
-
     # Copy over files from shared templates dir.
-    # If a file already exists, don't overwrite.
-    cp -n "$TEMPLATE_DIR/excludes" "$CONF_DIR"
-    cp -nr "$TEMPLATE_DIR/hooks" "$CONF_DIR"
+    rsync -ah $TEMPLATE_UPDATE "$EMU_TEMPLATE_DIR/" "$SOURCE_DIR/.$PROG/"
 }
 
 init_filesystem ()
@@ -73,24 +89,73 @@ emu_init ()
     if [[ -d .emu ]]
     then
         init_filesystem
-        echo "$SCRIPT: Reinitialized existing source in $CONF_DIR"
+        if ! (( $EMU_QUIET ))
+        then
+            echo "$SCRIPT: Reinitialized existing source in $CONF_DIR"
+        fi
     else
         init_filesystem
-        echo "$SCRIPT: Initialized source in $CONF_DIR"
+        if ! (( $EMU_QUIET ))
+        then
+            echo "$SCRIPT: Initialized source in $CONF_DIR"
+        fi
     fi
 }
 
 
 main ()
 {
+    TEMPLATE_UPDATE="-u"
+
+    while getopts ":qCRt:" OPT
+    do
+        case $OPT in
+            q)
+                EMU_QUIET=1
+                ;;
+            C)
+                EMU_DIR_CLEAN=1
+                ;;
+            R)
+                TEMPLATE_UPDATE=""
+                ;;
+            t)
+                EMU_TEMPLATE_DIR="$OPTARG"
+                if [ ! -d "$EMU_TEMPLATE_DIR" ]
+                then
+                    echo "$SCRIPT: '$OPTARG' not a directory" >&2
+                    exit 1
+                fi
+                ;;
+            \?)
+                echo "$SCRIPT: invalid option: -$OPTARG" >&2
+                exit 1
+                ;;
+            :)
+                echo "$SCRIPT: option -$OPTARG requires an argument." >&2
+                exit 1
+                ;;
+        esac
+    done
+
     if [ "$1" = "help" ]
     then
         help
         exit 0
     fi
 
-    emu_init
+    if (( $EMU_DIR_CLEAN ))
+    then
+        clean_emu_dir
+        exit 0
+    fi
 
+    if [ "$EMU_TEMPLATE_DIR" == "" ]
+    then
+        EMU_TEMPLATE_DIR="/usr/share/$PROG/source-templates"
+    fi
+
+    emu_init
     exit 0
 }
 main $@
