@@ -19,7 +19,10 @@ install_lib:
 install_usr:
 	@cp -rv share/emu /usr/share
 
-install: install_usr install_lib install_exec
+install_doc:
+	@cp -v doc/man/* /usr/share/man/man1
+
+install: install_usr install_lib install_exec install_doc
 
 uninstall_exec:
 	@rm -fv /usr/local/bin/emu
@@ -37,7 +40,10 @@ uninstall_lib:
 uninstall_usr:
 	@rm -rfv /usr/share/emu
 
-uninstall: uninstall_usr uninstall_lib uninstall_exec
+uninstall_doc:
+	@rm -fv /usr/share/man/man1/emu*.1
+
+uninstall: uninstall_usr uninstall_lib uninstall_exec uninstall_doc
 
 check:
 	@bash test/run-tests.sh
