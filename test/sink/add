@@ -1,0 +1,28 @@
+set -ue
+test_setup
+
+cd /tmp/emu/test-source
+echo "emu init -v"
+emu init -v
+echo "emu sink add origin /tmp/emu/test-sink"
+emu sink add origin /tmp/emu/test-sink
+
+assert_fail "emu sink -v add origin /tmp/emu/test-sink"
+
+emu init -v
+emu sink -v add test /tmp/emu/test-new
+
+assert_is_dir "/tmp/emu/test-new"
+assert_dir_is_not_empty "/tmp/emu/test-new"
+assert_is_dir "/tmp/emu/test-new/.emu/config"
+assert_is_dir "/tmp/emu/test-new/.emu/nodes"
+assert_is_dir "/tmp/emu/test-new/.emu/trees"
+
+assert_is_file "/tmp/emu/test-new/.emu/HEAD"
+assert_file_is_empty "/tmp/emu/test-new/.emu/HEAD"
+
+assert_is_file "/tmp/emu/test-new/.emu/SOURCE"
+assert_file_is_not_empty "/tmp/emu/test-new/.emu/SOURCE"
+assert "$(cat /tmp/test-new/.emu/SOURCE) == /tmp/emu/test-source"
+
+test_teardown

@@ -1,0 +1,15 @@
+set -ue
+test_setup
+
+rm -fv /tmp/emu/help
+touch /tmp/emu/help
+emu help sink >> /tmp/emu/help
+assert_file_is_not_empty /tmp/emu/help
+
+rm -fv /tmp/emu/help
+touch /tmp/emu/help
+emu sink help >> /tmp/emu/help
+assert_file_is_not_empty /tmp/emu/help
+rm -fv /tmp/emu/help
+
+test_teardown
