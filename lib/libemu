@@ -33,6 +33,28 @@ exit_with_error ()
     exit 1
 }
 
+# Check for write permissions
+#
+# @param $1 (optional) path to the directory.
+exit_if_no_dir_permissions ()
+{
+    touch "$1/.emu-permissions-test" &>/dev/null
+    if (( $? ))
+    then
+        echo "$SCRIPT: insufficient user permissions!" >&2
+        exit 1
+    fi
+    cat "$1/.emu-permissions-test" &>/dev/null
+    RETURN=$?
+    rm "$1/.emu-permissions-test" &>/dev/null
+
+    if (( $RETURN ))
+    then
+        echo "$SCRIPT: insufficient user permissions!" >&2
+        exit 1
+    fi
+}
+
 # Execute each in a list of executables.
 #
 # @param $1 a list of absolute paths to files.

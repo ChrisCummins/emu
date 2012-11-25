@@ -11,16 +11,6 @@ help ()
     man emu-init
 }
 
-check_permissions ()
-{
-    touch "$SOURCE_DIR/.emu-permissions-test" &>/dev/null
-    if (( $? ))
-    then
-        echo "$SCRIPT: insufficient user permissions!" >&2
-        exit 1
-    fi
-}
-
 clean_emu_dir ()
 {
     if [ ! -d "$SOURCE_DIR/.$PROG/sinks" ]
@@ -126,7 +116,7 @@ main ()
         EMU_SOURCE_TEMPLATE_DIR="/usr/share/$PROG/source-templates"
     fi
 
-    check_permissions
+    exit_if_no_dir_permissions "$SOURCE_DIR"
 
     if (( $EMU_DIR_CLEAN ))
     then
