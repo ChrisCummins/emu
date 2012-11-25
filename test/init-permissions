@@ -1,0 +1,30 @@
+set -eu
+test_setup
+
+EMU=$(which emu)
+
+cd /dev
+set +e
+touch emu-permissions-test
+if ! (( $? ))
+then
+    rm emu-permissions-test
+    echo "User level permissions test failed!" >&2
+    echo "Are you running as root?" >&2
+    exit 1
+fi
+
+emu init
+if ! (( $? ))
+then
+    exit 1
+fi
+set -e
+
+rm -rfv /tmp/emu/test-source
+sudo mkdir -pv /tmp/emu/test-source
+cd /tmp/emu/test-source
+sudo "$EMU"
+sudo rm -rfv /tmp/emu/test-source
+
+test_teardown
