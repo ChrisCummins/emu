@@ -4,17 +4,38 @@
 test_setup ()
 {
     echo "INFO: Running setup..."
+    mkdir -pv /tmp/emu
     mkdir -pv /tmp/emu/test-source
-    mkdir -pv /tmp/emu/test-sink
     echo "INFO: Running test..."
 }
 
 test_teardown ()
 {
     echo "INFO: Running teardown..."
-    rm -rvf /tmp/emu/test-source
-    rm -rvf /tmp/emu/test-sink
+    rm -rvf /tmp/emu
     echo "INFO: Test ended"
+}
+
+assert ()
+{
+    if [ $(test "$1") ]
+    then
+        echo "ERROR: assert '$1' failed!" >&2
+        exit 5
+    else
+        echo "Assert '$1'"
+    fi
+}
+
+assert_not ()
+{
+    if ! [ $(test "$1") ]
+    then
+        echo "ERROR: assert !'$1' failed!" >&2
+        exit 5
+    else
+        echo "Assert !'$1'"
+    fi
 }
 
 assert_zero ()
@@ -42,21 +63,27 @@ assert_non_zero ()
 assert_success ()
 {
     echo "Assert '$1' succeeds"
-    if (( $($1) ))
+    $($1)
+    RETURN=$?
+    if (( $RETURN ))
     then
-        echo "ERROR: assertion '$1' succeeds failed!" >&2
+        echo "ERROR: assertion '$1' succeeds failed! ($RETURN)" >&2
         exit 5
     fi
 }
 
 assert_fail ()
 {
+    set +e
     echo "Assert '$1' fails"
-    if ! (( $($1) ))
+    $($1)
+    RETURN=$?
+    if ! (( $RETURN ))
     then
-        echo "ERROR: assertion '$1' failed!" >&2
+        echo "ERROR: assertion '$1' fails failed! ($RETURN)" >&2
         exit 5
     fi
+    set -e
 }
 
 assert_is_dir ()
@@ -135,7 +162,7 @@ assert_file_is_empty ()
 assert_file_is_not_empty ()
 {
     echo "Assert '$1' is not empty"
-    if [ $(cat "$1" | wc -l) -le 1 ]
+    if [ $(cat "$1" | wc -l) -lt 1 ]
     then
         echo "ERROR: assertion '$1' is not empty failed!" >&2
         exit 5
@@ -166,6 +193,8 @@ assert_dirs_match ()
 
 export -f test_setup
 export -f test_teardown
+export -f assert
+export -f assert_not
 export -f assert_zero
 export -f assert_non_zero
 export -f assert_success
@@ -240,10 +269,11 @@ else
 fi
 
 # Print failed test logs.
-for LOG in $(find . -name "*.log" -printf "%f\n")
+for LOG in $(find . -name "*.log")
 do
+    LOG_NAME="${LOG%.log}"
     echo ""
-    echo "$TEXT_FAIL${LOG%.log}$TEXT_RESET ($(cat $LOG | tail -n-1))"
+    echo "$TEXT_FAIL${LOG_NAME:2}$TEXT_RESET ($(cat $LOG | tail -n-1))"
     cat $LOG | head -n-1
     rm -rf $LOG
 done
