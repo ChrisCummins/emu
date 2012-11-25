@@ -85,7 +85,7 @@ create_directories ()
 copy_template_files ()
 {
     # Copy over files from shared templates dir.
-    rsync $EMU_VERBOSE -ah $TEMPLATE_UPDATE "$EMU_TEMPLATE_DIR/" "$SOURCE_DIR/.$PROG/"
+    rsync $EMU_VERBOSE -ah $TEMPLATE_UPDATE "$EMU_SOURCE_TEMPLATE_DIR/" "$SOURCE_DIR/.$PROG/"
 }
 
 init_filesystem ()
@@ -133,8 +133,8 @@ main ()
                 TEMPLATE_UPDATE=""
                 ;;
             t)
-                EMU_TEMPLATE_DIR="$OPTARG"
-                if [ ! -d "$EMU_TEMPLATE_DIR" ]
+                EMU_SOURCE_TEMPLATE_DIR="$OPTARG"
+                if [ ! -d "$EMU_SOURCE_TEMPLATE_DIR" ]
                 then
                     echo "$SCRIPT: '$OPTARG' not a directory" >&2
                     exit 1
@@ -157,9 +157,9 @@ main ()
         exit 0
     fi
 
-    if [ "$EMU_TEMPLATE_DIR" == "" ]
+    if [ "$EMU_SOURCE_TEMPLATE_DIR" == "" ]
     then
-        EMU_TEMPLATE_DIR="/usr/share/$PROG/source-templates"
+        EMU_SOURCE_TEMPLATE_DIR="/usr/share/$PROG/source-templates"
     fi
 
     check_permissions

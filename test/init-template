@@ -32,6 +32,16 @@ then
 fi
 assert_dirs_match /tmp/emu/test-template /tmp/emu/test-source/.emu
 
+emu init -C
+assert_is_not_dir .emu
+
+EMU_SOURCE_TEMPLATE_DIR=/tmp/emu/test-template emu init
+if [ $(cat .emu/abc | head -n-1) == "abc" ]
+then
+    exit 5
+fi
+assert_dirs_match /tmp/emu/test-template /tmp/emu/test-source/.emu
+
 # Delete template
 rm -rvf /tmp/emu/test-template
 test_teardown
