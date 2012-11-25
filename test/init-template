@@ -1,6 +1,5 @@
 set -eu
 test_setup
-
 cd /tmp/emu/test-source
 
 set +e

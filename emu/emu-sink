@@ -40,8 +40,8 @@ OPTIONS
                     .$PROG/config/SNAPSHOT-COUNT file themselves. If this
                     argument is ommitted, the default value will be dictated by
                     the contents of the
-                    /usr/share/emu/sink-templates/config/SNAPSHOT-COUNT template
-                    file
+                    /usr/local/share/emu/sink-templates/config/SNAPSHOT-COUNT
+                    template file
 
         rm <sink>
                    remove sink <sink> from the source refs. This does not affect
@@ -67,7 +67,7 @@ EOF
 init_sink ()
 {
     SINK_DIR="$1"
-    TEMPLATE_DIR="/usr/share/emu/sink-templates"
+    TEMPLATE_DIR="/usr/local/share/emu/sink-templates"
 
     mkdir -p "$SINK_DIR/.$PROG"
     mkdir -p "$SINK_DIR/.$PROG/trees"

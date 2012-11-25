@@ -17,10 +17,10 @@ install_lib:
 	@cp -v lib/libemu /usr/local/lib
 
 install_usr:
-	@cp -rv share/emu /usr/share
+	@cp -rv share/emu /usr/local/share
 
 install_doc:
-	@cp -v doc/man/* /usr/share/man/man1
+	@cp -v share/man/* /usr/local/share/man/man1
 
 install: install_usr install_lib install_exec install_doc
 
@@ -38,10 +38,10 @@ uninstall_lib:
 	@rm -fv /usr/local/lib/libemu
 
 uninstall_usr:
-	@rm -rfv /usr/share/emu
+	@rm -rfv /usr/local/share/emu
 
 uninstall_doc:
-	@rm -fv /usr/share/man/man1/emu*.1
+	@rm -fv /usr/local/share/man/man1/emu*.1
 
 uninstall: uninstall_usr uninstall_lib uninstall_exec uninstall_doc
 

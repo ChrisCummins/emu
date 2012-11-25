@@ -21,8 +21,8 @@ DESCRIPTION
         files.
 
         During the init process, template files are copied from the global
-        templates path, normally /usr/share/emu. Use of option -t to specify a
-        template directory will supercede this.
+        templates path, normally /usr/local/share/emu. Use of option -t to
+        specify a template directory will supercede this.
 
         This command is non-destructive, running it on an existing emu source
         will not overwrite any existing data. Instead, it can be used to rescue
