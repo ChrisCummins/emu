@@ -1,0 +1,7 @@
+set -eu
+test_setup
+source /usr/local/lib/libemu
+
+assert "$VERSION"
+
+test_teardown
