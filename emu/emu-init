@@ -47,6 +47,16 @@ OPTIONS
 EOF
 }
 
+check_permissions ()
+{
+    touch "$SOURCE_DIR/.emu-permissions-test" &>/dev/null
+    if (( $? ))
+    then
+        echo "$SCRIPT: insufficient user permissions!" >&2
+        exit 1
+    fi
+}
+
 clean_emu_dir ()
 {
     if [ ! -d "$SOURCE_DIR/.$PROG/sinks" ]
@@ -55,7 +65,7 @@ clean_emu_dir ()
         exit 5
     fi
 
-    rm -rf "$SOURCE_DIR/.$PROG"
+    rm $EMU_VERBOSE -rf "$SOURCE_DIR/.$PROG"
 
     if ! (( $EMU_QUIET ))
     then
@@ -65,17 +75,17 @@ clean_emu_dir ()
 
 create_directories ()
 {
-    mkdir -p "$CONF_DIR"
-    mkdir -p "$CONF_DIR/config"
-    mkdir -p "$CONF_DIR/hooks"
-    mkdir -p "$CONF_DIR/sinks"
+    mkdir $EMU_VERBOSE -p "$CONF_DIR"
+    mkdir $EMU_VERBOSE -p "$CONF_DIR/config"
+    mkdir $EMU_VERBOSE -p "$CONF_DIR/hooks"
+    mkdir $EMU_VERBOSE -p "$CONF_DIR/sinks"
     chmod 0755 "$CONF_DIR/sinks"
 }
 
 copy_template_files ()
 {
     # Copy over files from shared templates dir.
-    rsync -ah $TEMPLATE_UPDATE "$EMU_TEMPLATE_DIR/" "$SOURCE_DIR/.$PROG/"
+    rsync $EMU_VERBOSE -ah $TEMPLATE_UPDATE "$EMU_TEMPLATE_DIR/" "$SOURCE_DIR/.$PROG/"
 }
 
 init_filesystem ()
@@ -107,7 +117,7 @@ main ()
 {
     TEMPLATE_UPDATE="-u"
 
-    while getopts ":qCRt:" OPT
+    while getopts ":qvCRt:" OPT
     do
         case $OPT in
             q)
@@ -115,6 +125,9 @@ main ()
                 ;;
             C)
                 EMU_DIR_CLEAN=1
+                ;;
+            v)
+                EMU_VERBOSE="-v"
                 ;;
             R)
                 TEMPLATE_UPDATE=""
@@ -144,15 +157,17 @@ main ()
         exit 0
     fi
 
+    if [ "$EMU_TEMPLATE_DIR" == "" ]
+    then
+        EMU_TEMPLATE_DIR="/usr/share/$PROG/source-templates"
+    fi
+
+    check_permissions
+
     if (( $EMU_DIR_CLEAN ))
     then
         clean_emu_dir
         exit 0
-    fi
-
-    if [ "$EMU_TEMPLATE_DIR" == "" ]
-    then
-        EMU_TEMPLATE_DIR="/usr/share/$PROG/source-templates"
     fi
 
     emu_init
