@@ -6,7 +6,7 @@ SOURCE_DIR="$(pwd)"
 
 help ()
 {
-    man log
+    man emu-log
 }
 
 print_node_verbose ()
