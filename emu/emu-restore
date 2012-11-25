@@ -6,38 +6,7 @@ SOURCE_DIR="$(pwd)"
 
 help ()
 {
-    cat << EOF | less
-NAME
-        $SCRIPT - restore source to snapshot
-
-SYNOPSIS
-        $PROG restore [OPTION...] [<sink>:]<snapshot>
-
-DESCRIPTION
-        Restores the contents of a snapshot to the source directory.
-
-        It uses the same difference and transfer algorithm as $PROG snapshot,
-        except the sink and source have been swapped so that the difference
-        between the content of the sink snapshot and source is written to the
-        source, restoring the state of the source to match that of the snapshot.
-
-OPTIONS
-        -s
-                   make a snapshot at sink prior to restore
-        -V
-                   verify snapshot prior to restore
-        -n
-                   perform a trial run with no changes made
-        -v
-                   increase verbosity
-        -p
-                   show progress during transfer
-        -f
-                   force restore. This causes the program to disregard any
-                   exclusivity locks that the source or sink directories may
-                   have
-
-EOF
+    man emu-restore
 }
 
 main ()

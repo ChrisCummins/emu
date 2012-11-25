@@ -1,0 +1,43 @@
+.TH emu-restore 1  "Sunday 25, 2012" "version 0.0.1" "Emu Manual"
+.SH NAME
+emu\-restore \- restore source to snapshot
+.SH SYNOPSIS
+.B emu restore
+[\-s] [\-V] [\-n] [\-v] [\-p] [\-f] [<sink>:]<snapshot>
+.SH DESCRIPTION
+Restores the contents of a snapshot to the source directory.
+.PP
+It uses the same difference and transfer algorithm as emu snapshot, except the
+sink and source have been swapped so that the difference between the content of
+the sink snapshot and source is written to the source, restoring the state of
+the source to match that of the snapshot.
+.SH OPTIONS
+.TP
+\-s
+make a snapshot at sink prior to restore
+.TP
+\-V
+verify snapshot prior to restore
+.TP
+\-n
+perform a trial run with no changes made
+.TP
+\-v
+increase verbosity
+.TP
+\-p
+show progress during transfer
+.TP
+\-f
+force restore. This makes emu disregard any exclusivity locks that the source or
+sink directories may have
+.SH EMU
+Part of the
+.B emu
+(1)
+suite
+.SH AUTHOR
+Chris Cummins <chrisc.101@gmail.com>
+.SH SEE ALSO
+.B emu
+(1)
