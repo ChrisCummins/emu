@@ -6,14 +6,12 @@ emu\-reset \- Reset source to snapshot
 [\-V] [\-n] [\-v] [\-p] [\-f]
           [<sink>:]<snapshot>
 .SH DESCRIPTION
-
 Resets the contents of a snapshot to the source directory and sink HEAD. This
 means that all snapshots made after the given <snapshot> will be discarded.
-
+.PP
 If you have a sink with a set of sequential snapshot [A\->B\->C], running reset
 against snapshot A will reset the source to snapshot A and discard snapshots B
 and C, effectively re\-winding time.
-
 .SH OPTIONS
 .TP
 \-V
