@@ -1,0 +1,38 @@
+set -eu
+test_setup
+
+cd /tmp/emu/test-source
+
+set +e
+emu init -t/dev/null
+set -e
+assert_is_not_dir .emu
+
+# Setup template
+mkdir -pv /tmp/emu/test-template
+mkdir -pv /tmp/emu/test-template/config
+mkdir -pv /tmp/emu/test-template/hooks
+mkdir -pv /tmp/emu/test-template/sinks
+echo "hello, test!" > /tmp/emu/test-template/abc
+
+emu init -t/tmp/emu/test-template
+assert_dirs_match /tmp/emu/test-template /tmp/emu/test-source/.emu
+
+echo "abc" >> /tmp/emu/test-template/abc
+emu init -t/tmp/emu/test-template
+if [ $(cat .emu/abc | head -n-1) != "abc" ]
+then
+    exit 5
+fi
+assert_dirs_match /tmp/emu/test-template /tmp/emu/test-source/.emu
+
+emu init -t/tmp/emu/test-template -R
+if [ $(cat .emu/abc | head -n-1) == "abc" ]
+then
+    exit 5
+fi
+assert_dirs_match /tmp/emu/test-template /tmp/emu/test-source/.emu
+
+# Delete template
+rm -rvf /tmp/emu/test-template
+test_teardown

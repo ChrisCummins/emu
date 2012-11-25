@@ -1,0 +1,8 @@
+set -eu
+test_setup
+
+cd /tmp/emu/test-source
+assert_non_zero $(emu init | wc -l)
+assert_zero $(emu init -q | wc -l)
+
+test_teardown

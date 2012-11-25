@@ -1,0 +1,11 @@
+set -eu
+test_setup
+
+cd /tmp/emu/test-source
+emu init
+assert_is_dir /tmp/emu/test-source/.emu
+
+emu init -C
+assert_is_not_dir /tmp/emu/test-source/.emu
+
+test_teardown
