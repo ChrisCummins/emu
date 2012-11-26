@@ -1,28 +1,21 @@
 VERSION = 0.0.1
 
 default:
-	@echo "  useage: install|uninstall[_usr|_exec]"
+	@echo "  useage: <install|uninstall>[_share|_lib|_exec|_doc]"
 
 install_exec:
-	@cp -v emu/emu /usr/local/bin/emu
-	@cp -v emu/emu-init /usr/local/bin/emu-init
-	@cp -v emu/emu-log /usr/local/bin/emu-log
-	@cp -v emu/emu-sink /usr/local/bin/emu-reset
-	@cp -v emu/emu-sink /usr/local/bin/emu-restore
-	@cp -v emu/emu-sink /usr/local/bin/emu-sink
-	@cp -v emu/emu-snapshot /usr/local/bin/emu-snapshot
-	@cp -v emu/emu-verify /usr/local/bin/emu-verify
+	@find emu -type f -exec cp -v {} /usr/local/bin \;
 
 install_lib:
-	@cp -v lib/libemu /usr/local/lib
+	@find lib -type f -exec cp -v {} /usr/local/bin \;
 
-install_usr:
+install_share:
 	@cp -rv share/emu /usr/local/share
 
 install_doc:
-	@cp -v share/man/* /usr/local/share/man/man1
+	@find share/man/ -type f -exec cp -v {} /usr/local/share/man/man1 \;
 
-install: install_usr install_lib install_exec install_doc
+install: install_share install_lib install_exec install_doc
 
 uninstall_exec:
 	@rm -fv /usr/local/bin/emu
@@ -37,13 +30,13 @@ uninstall_exec:
 uninstall_lib:
 	@rm -fv /usr/local/lib/libemu
 
-uninstall_usr:
+uninstall_share:
 	@rm -rfv /usr/local/share/emu
 
 uninstall_doc:
 	@rm -fv /usr/local/share/man/man1/emu*.1
 
-uninstall: uninstall_usr uninstall_lib uninstall_exec uninstall_doc
+uninstall: uninstall_share uninstall_lib uninstall_exec uninstall_doc
 
 check:
 	@bash test/run-tests.sh
