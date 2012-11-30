@@ -1,7 +1,30 @@
 #!/bin/bash
-
 PROG="emu"
 VERSION="0.0.1"
+
+emu_echo ()
+{
+    local msg="$1"
+
+    if [ -z $SCRIPT ]
+    then
+        echo "emu: $msg"
+    else
+        echo "$SCRIPT: $msg"
+    fi
+}
+
+emu_error ()
+{
+    local msg="$1"
+
+    if [ -z $SCRIPT ]
+    then
+        echo "emu: $msg" >&2
+    else
+        echo "$SCRIPT: $msg" >&2
+    fi
+}
 
 # Print 'not a command' text and exit.
 #
