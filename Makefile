@@ -7,7 +7,7 @@ install_exec:
 	@find emu -type f -exec cp -v {} /usr/local/bin \;
 
 install_lib:
-	@find lib -type f -exec cp -v {} /usr/local/bin \;
+	@find lib -type f -exec cp -v {} /usr/local/lib \;
 
 install_share:
 	@cp -rv share/emu /usr/local/share
