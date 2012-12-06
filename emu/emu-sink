@@ -201,7 +201,7 @@ main ()
             show_sink $@
             ;;
         *)
-            no_command_error "$SCRIPT" "$1"
+            exit_command_not_found "$1"
             ;;
     esac
 

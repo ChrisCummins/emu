@@ -2,6 +2,9 @@
 PROG="emu"
 VERSION="0.0.1"
 
+# Exit code for command not found error.
+EXIT_COMMAND_NOT_FOUND=127
+
 emu_echo ()
 {
     local msg="$1"
@@ -28,12 +31,13 @@ emu_error ()
 
 # Print 'not a command' text and exit.
 #
-# @param $1 name of calling script.
-# @param $2 name of missing command.
-no_command_error ()
+# @param $1 name of missing command.
+exit_command_not_found ()
 {
-    echo "$1: '$2' is not an $PROG command. See '$PROG help'."
-    exit 1
+    local command=$1
+
+    echo "emu: '$command' is not an $PROG command. See 'emu help'."
+    exit $EXIT_COMMAND_NOT_FOUND
 }
 
 # Tidy up and quit with error condition.
