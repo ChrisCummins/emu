@@ -201,7 +201,7 @@ main ()
             show_sink $@
             ;;
         *)
-            exit_command_not_found "$1"
+            command_not_found "$1"
             ;;
     esac
 

@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # emu version number
-EMU_VERSION="0.0.1"
+export EMU_VERSION="0.0.1"
 
 # exit code for command not found error
-EXIT_COMMAND_NOT_FOUND=127
+export EMU_RETURN_COMMAND_NOT_FOUND=127
 
 _emu_echo ()
 {
@@ -79,15 +79,14 @@ get_source_dir ()
     ls
 }
 
-# Print 'not a command' text and exit.
-#
-# @param $1 name of missing command.
-exit_command_not_found ()
+# print 'not a command' text and exit
+#  @param $1 name of missing command
+command_not_found ()
 {
     local command=$1
 
     emu_echo "'$command' is not an emu command. See 'emu help'."
-    exit $EXIT_COMMAND_NOT_FOUND
+    exit $EMU_RETURN_COMMAND_NOT_FOUND
 }
 
 # Tidy up and quit with error condition.
