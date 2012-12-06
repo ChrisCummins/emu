@@ -1,5 +1,4 @@
 #!/bin/bash
-PROG="emu"
 VERSION="0.0.1"
 
 # Exit code for command not found error.
@@ -85,7 +84,7 @@ exit_command_not_found ()
 {
     local command=$1
 
-    echo "emu: '$command' is not an $PROG command. See 'emu help'."
+    echo "emu: '$command' is not an emu command. See 'emu help'."
     exit $EXIT_COMMAND_NOT_FOUND
 }
 
@@ -160,7 +159,7 @@ exec_list ()
 # @param $1 Path to source directory.
 pre_exec_hooks ()
 {
-    HOOKS=$(find "$1/.$PROG/hooks/exec/" -name '*.pre' 2>/dev/null)
+    HOOKS=$(find "$1/.emu/hooks/exec/" -name '*.pre' 2>/dev/null)
     exec_list $HOOKS
 }
 
@@ -169,7 +168,7 @@ pre_exec_hooks ()
 # @param $1 Path to source directory.
 post_exec_hooks ()
 {
-    HOOKS=$(find "$1/.$PROG/hooks/exec/" -name '*.post' 2>/dev/null)
+    HOOKS=$(find "$1/.emu/hooks/exec/" -name '*.post' 2>/dev/null)
     exec_list $HOOKS
 }
 
@@ -178,7 +177,7 @@ post_exec_hooks ()
 # @param $1 Path to source directory.
 error_exec_hooks ()
 {
-    HOOKS=$(find "$1/.$PROG/hooks/exec/" -name '*.error' 2>/dev/null)
+    HOOKS=$(find "$1/.emu/hooks/exec/" -name '*.error' 2>/dev/null)
     exec_list $HOOKS
 }
 
@@ -187,7 +186,7 @@ error_exec_hooks ()
 # @param $1 Path to sink directory.
 sink_snapshot_count ()
 {
-    echo "$(ls -l "$1/.$PROG/trees" | wc -l)"
+    echo "$(ls -l "$1/.emu/trees" | wc -l)"
 }
 
 # Return the max number of snapshots for sink.
@@ -195,7 +194,7 @@ sink_snapshot_count ()
 # @param $1 Path to sink directory.
 sink_max_snapshots ()
 {
-    echo "$(cat $1/.$PROG/config/SNAPSHOT-COUNT)"
+    echo "$(cat $1/.emu/config/SNAPSHOT-COUNT)"
 }
 
 # Check and block directory. If the directory is already locked, it will block
@@ -208,7 +207,7 @@ sink_max_snapshots ()
 #                        continue indefinitely.
 block_until_dir_free ()
 {
-    if [[ -f "$1/.$PROG/LOCK" ]]
+    if [[ -f "$1/.emu/LOCK" ]]
     then
         BLOCK_COUNTER=$((BLOCK_COUNTER+1))
 
@@ -222,7 +221,7 @@ block_until_dir_free ()
         fi
 
         # Print the PID of blocking process.
-        BLOCK_PID=$(cat "$1/.$PROG/LOCK" | grep PID | sed -r 's/PID: +//')
+        BLOCK_PID=$(cat "$1/.emu/LOCK" | grep PID | sed -r 's/PID: +//')
         echo -en "\r$1 blocking on process: $BLOCK_PID "
 
         # Print status of blocking process.
@@ -248,7 +247,7 @@ lock_dir ()
     BLOCK_COUNTER_MAX=10
 
     block_until_dir_free "$1"
-    echo -e "DATE: $(date)\nPID:  $$" > "$1/.$PROG/LOCK"
+    echo -e "DATE: $(date)\nPID:  $$" > "$1/.emu/LOCK"
 }
 
 # Remove the lock on source directory.
@@ -256,7 +255,7 @@ lock_dir ()
 # @param $1 Path to directory to lock.
 unlock_dir ()
 {
-    LOCK=$(cat "$1/.$PROG/LOCK" 2> /dev/null)
+    LOCK=$(cat "$1/.emu/LOCK" 2> /dev/null)
     if [[ "$LOCK" == "" ]]
     then
         return
@@ -265,7 +264,7 @@ unlock_dir ()
 
     if [[ $$ -eq $LOCK_PID ]]
     then
-        rm -f "$1/.$PROG/LOCK"
+        rm -f "$1/.emu/LOCK"
     else
         echo "$SCRIPT: Cannot free lock $LOCK_PID with key $$" >&2
     fi
@@ -273,16 +272,16 @@ unlock_dir ()
 
 print_sink_details ()
 {
-    SINK_PATH="$(cat $SOURCE_DIR/.$PROG/sinks/$1)"
+    SINK_PATH="$(cat $SOURCE_DIR/.emu/sinks/$1)"
     SIZE="$(du -sh $SINK_PATH | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')"
-    HEAD="$(cat $SINK_PATH/.$PROG/HEAD)"
-    SNAPSHOT_COUNT="$(ls $SINK_PATH/.$PROG/trees | wc -l)"
-    LOAD=$(echo "$SNAPSHOT_COUNT / $(cat $SINK_PATH/.$PROG/config/SNAPSHOT-COUNT) * 100" | bc -l)
+    HEAD="$(cat $SINK_PATH/.emu/HEAD)"
+    SNAPSHOT_COUNT="$(ls $SINK_PATH/.emu/trees | wc -l)"
+    LOAD=$(echo "$SNAPSHOT_COUNT / $(cat $SINK_PATH/.emu/config/SNAPSHOT-COUNT) * 100" | bc -l)
 cat <<EOF | less
 * $1
   Path:           $SINK_PATH
   Size:           $SIZE
-  Last snapshot:  $(cat $SINK_PATH/.$PROG/nodes/$HEAD 2>/dev/null | grep Date | sed -r 's/Date +(.*)/\1/')
+  Last snapshot:  $(cat $SINK_PATH/.emu/nodes/$HEAD 2>/dev/null | grep Date | sed -r 's/Date +(.*)/\1/')
   Snapshot count: $SNAPSHOT_COUNT (${LOAD::2}%)
 EOF
 }

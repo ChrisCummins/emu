@@ -33,10 +33,10 @@ print_nodes ()
 {
     print_sink_details $1 >> .emu_log
 
-    SINK_PATH="$(cat $SOURCE_DIR/.$PROG/sinks/$1)"
-    for NODE in $(ls "$SINK_DIR/.$PROG/nodes" | sort -r)
+    SINK_PATH="$(cat $SOURCE_DIR/.emu/sinks/$1)"
+    for NODE in $(ls "$SINK_DIR/.emu/nodes" | sort -r)
     do
-        NODE_PATH="$SINK_PATH/.$PROG/nodes/$NODE"
+        NODE_PATH="$SINK_PATH/.emu/nodes/$NODE"
         DATE="$(cat $NODE_PATH | grep Date | sed -r 's/Date +(.*)/\1/')"
         SIZE="$(cat $NODE_PATH | grep Size | sed -r 's/Size +(.*)/\1/')"
 
@@ -62,7 +62,7 @@ main ()
         exit_with_error "$SOURCE_DIR"
     fi
 
-    SINK_DIR="$(cat $SOURCE_DIR/.$PROG/sinks/$1 2>/dev/null)"
+    SINK_DIR="$(cat $SOURCE_DIR/.emu/sinks/$1 2>/dev/null)"
     if [[ ! -d "$SINK_DIR" ]]
     then
         emu_error "sink '$1' does not exist"

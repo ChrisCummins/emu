@@ -11,7 +11,7 @@ NAME
         $SCRIPT - verify the contents of a sink snapshot
 
 SYNOPSIS
-        $PROG snapshot [OPTION...] [<sink>:]<snapshot>
+        emu snapshot [OPTION...] [<sink>:]<snapshot>
 
 DESCRIPTION
         Performs a checksum of a snapshot within a sink directory, and reports
@@ -48,7 +48,7 @@ HASH ALGORITHM
         required reading every byte within the directory, and for especially
         large sources, this can be unrealistically time consuming.
 
-        The algorithm that $PROG uses forgoes checksumming every file within a
+        The algorithm that emu uses forgoes checksumming every file within a
         directory, trading in the ability for perfect hasing for a 2600%
         execution time decrease.
 
@@ -69,9 +69,9 @@ main ()
 
     if [[ $(echo "$IN" | wc -l) -ne 2 ]]
     then
-        if [[ $(ls "$SOURCE_DIR/.$PROG/sinks" | wc -l) -eq 1 ]]
+        if [[ $(ls "$SOURCE_DIR/.emu/sinks" | wc -l) -eq 1 ]]
         then
-            SINK="$(ls $SOURCE_DIR/.$PROG/sinks)"
+            SINK="$(ls $SOURCE_DIR/.emu/sinks)"
         else
             emu_error "invalid snapshot"
             exit_with_error "$SOURCE_DIR"
@@ -83,7 +83,7 @@ main ()
         SINK=$(echo "$IN" | head -n1)
     fi
 
-    SINK_DIR="$(cat $SOURCE_DIR/.$PROG/sinks/$SINK 2>/dev/null)"
+    SINK_DIR="$(cat $SOURCE_DIR/.emu/sinks/$SINK 2>/dev/null)"
     if [[ ! -d "$SINK_DIR" ]]
     then
         emu_error "sink '$SINK' does not exist"
@@ -91,7 +91,7 @@ main ()
     fi
 
     SNAPSHOT=$(echo "$IN" | tail -n1)
-    SNAPSHOT_DIR="$SINK_DIR/.$PROG/trees/$SNAPSHOT"
+    SNAPSHOT_DIR="$SINK_DIR/.emu/trees/$SNAPSHOT"
     if [[ ! -d "$SNAPSHOT_DIR" ]]
     then
         emu_error "snapshot '$SNAPSHOT' does not exist"

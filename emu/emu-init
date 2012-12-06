@@ -3,7 +3,7 @@
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
 SOURCE_DIR="$(pwd)"
-CONF_DIR="$SOURCE_DIR/.$PROG"
+CONF_DIR="$SOURCE_DIR/.emu"
 
 help ()
 {
@@ -12,17 +12,17 @@ help ()
 
 clean_emu_dir ()
 {
-    if [ ! -d "$SOURCE_DIR/.$PROG/sinks" ]
+    if [ ! -d "$SOURCE_DIR/.emu/sinks" ]
     then
         emu_error "not an emu source"
         exit 5
     fi
 
-    rm $EMU_VERBOSE -rf "$SOURCE_DIR/.$PROG"
+    rm $EMU_VERBOSE -rf "$SOURCE_DIR/.emu"
 
     if ! (( $EMU_QUIET ))
     then
-        emu_echo "emptied source in $SOURCE_DIR/.$PROG"
+        emu_echo "emptied source in $SOURCE_DIR/.emu"
     fi
 }
 
@@ -38,7 +38,7 @@ create_directories ()
 copy_template_files ()
 {
     # Copy over files from shared templates dir.
-    rsync $EMU_VERBOSE -ah $TEMPLATE_UPDATE "$EMU_SOURCE_TEMPLATE_DIR/" "$SOURCE_DIR/.$PROG/"
+    rsync $EMU_VERBOSE -ah $TEMPLATE_UPDATE "$EMU_SOURCE_TEMPLATE_DIR/" "$SOURCE_DIR/.emu/"
 }
 
 init_filesystem ()
@@ -118,7 +118,7 @@ main ()
 
     if [ "$EMU_SOURCE_TEMPLATE_DIR" == "" ]
     then
-        EMU_SOURCE_TEMPLATE_DIR="/usr/share/$PROG/source-templates"
+        EMU_SOURCE_TEMPLATE_DIR="/usr/share/emu/source-templates"
     fi
 
     exit_if_no_dir_permissions "$SOURCE_DIR"
