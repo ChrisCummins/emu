@@ -84,7 +84,7 @@ exit_command_not_found ()
 {
     local command=$1
 
-    echo "emu: '$command' is not an emu command. See 'emu help'."
+    emu_echo "'$command' is not an emu command. See 'emu help'."
     exit $EXIT_COMMAND_NOT_FOUND
 }
 
@@ -127,7 +127,7 @@ exit_if_no_dir_permissions ()
     touch "$dir/.emu-permissions-test" &>/dev/null
     if (( $? ))
     then
-        echo "$SCRIPT: insufficient user permissions for '$dir'!" >&2
+        emu_error "insufficient user permissions for '$dir'"
         exit 1
     fi
     cat "$dir/.emu-permissions-test" &>/dev/null
@@ -136,7 +136,7 @@ exit_if_no_dir_permissions ()
 
     if (( $return ))
     then
-        echo "$SCRIPT: insufficient user permissions for '$dir'!" >&2
+        emu_error "insufficient user permissions for '$dir'"
         exit 1
     fi
 }
@@ -215,7 +215,7 @@ block_until_dir_free ()
         then
             if [[ $BLOCK_COUNTER -gt $BLOCK_COUNTER_MAX ]]
             then
-                echo -e "\n$SCRIPT: failed to get exclusive access to directory:\n  $1" >&2
+                emu_error "failed to get exclusive access to directory:\n  $1"
                 exit_with_error
             fi
         fi
@@ -266,7 +266,7 @@ unlock_dir ()
     then
         rm -f "$1/.emu/LOCK"
     else
-        echo "$SCRIPT: Cannot free lock $LOCK_PID with key $$" >&2
+        emu_error "cannot free lock $LOCK_PID with key $$"
     fi
 }
 
@@ -313,9 +313,7 @@ verify_node ()
     then
         return 0
     else
-        echo "$SCRIPT: verification failed!" >&2
-        echo "  Expected: $NODE_HASH" >&2
-        echo "  Actual:   $HASH" >&2
+        emu_error "verification failed!\n  Expected: $NODE_HASH\n  Actual:   $HASH"
         return 1
     fi
 
