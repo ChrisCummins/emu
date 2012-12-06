@@ -91,11 +91,11 @@ do
             exit 0
             ;;
         \?)
-            echo "Invalid option: -$OPTARG" >&2
+            emu_error "invalid option: -$OPTARG"
             exit $EXIT_INVALID_ARGS
             ;;
         :)
-            echo "Option -$OPTARG requires an argument." >&2
+            emu_error "option -$OPTARG requires an argument."
             exit $EXIT_INVALID_ARGS
             ;;
     esac
