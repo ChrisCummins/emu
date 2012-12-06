@@ -1,7 +1,9 @@
 #!/bin/bash
-VERSION="0.0.1"
 
-# Exit code for command not found error.
+# emu version number
+EMU_VERSION="0.0.1"
+
+# exit code for command not found error
 EXIT_COMMAND_NOT_FOUND=127
 
 _emu_echo ()

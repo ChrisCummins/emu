@@ -28,7 +28,7 @@ help_command ()
 # Print the version number.
 version ()
 {
-    emu_echo "version $VERSION"
+    emu_echo "version $EMU_VERSION"
 }
 
 print_emu ()
