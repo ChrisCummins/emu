@@ -45,16 +45,19 @@ exit_command_not_found ()
 # @param $1 Path to source directory.
 exit_with_error ()
 {
-    error_exec_hooks "$1"
-    unlock_dir "$1"
+    local source_dir="$1"
 
-    # Unlock all sink files.
-    for SINK_FILE in "$1/.$PROG/sinks"
+    error_exec_hooks "$source_dir"
+    unlock_dir "$source_dir"
+
+    # Unlock all sinks.
+    for sink_file in "$source_dir/.emu/sinks"
     do
-        if [[ -f "$SINK_FILE" ]]
+        if [[ -f "$sink_file" ]]
         then
-            SINK="$(cat $SINK_FILE)"
-            unlock_dir "$SINK"
+            local sink="$(cat $sink_file)"
+
+            unlock_dir "$sink"
         fi
     done
     exit 1
@@ -62,27 +65,30 @@ exit_with_error ()
 
 # Check for write permissions
 #
+# @var $SCRIPT (optional) echo prefix.
 # @param $1 path to the directory.
 exit_if_no_dir_permissions ()
 {
-    if ! [ -d "$1" ]
+    local dir="$1"
+
+    if ! [ -d "$dir" ]
     then
-        mkdir -p "$1"
+        mkdir -p "$dir"
     fi
 
-    touch "$1/.emu-permissions-test" &>/dev/null
+    touch "$dir/.emu-permissions-test" &>/dev/null
     if (( $? ))
     then
-        echo "$SCRIPT: insufficient user permissions for '$1'!" >&2
+        echo "$SCRIPT: insufficient user permissions for '$dir'!" >&2
         exit 1
     fi
-    cat "$1/.emu-permissions-test" &>/dev/null
-    RETURN=$?
-    rm "$1/.emu-permissions-test" &>/dev/null
+    cat "$dir/.emu-permissions-test" &>/dev/null
+    local return=$?
+    rm -f "$dir/.emu-permissions-test" &>/dev/null
 
-    if (( $RETURN ))
+    if (( $return ))
     then
-        echo "$SCRIPT: insufficient user permissions for '$1'!" >&2
+        echo "$SCRIPT: insufficient user permissions for '$dir'!" >&2
         exit 1
     fi
 }
@@ -92,9 +98,11 @@ exit_if_no_dir_permissions ()
 # @param $1 a list of absolute paths to files.
 exec_list ()
 {
-    for EXEC in "$1"
+    local list="$1"
+
+    for exec in "$list"
     do
-        $EXEC
+        $exec
     done
 }
 
