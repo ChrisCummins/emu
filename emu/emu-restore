@@ -28,7 +28,7 @@ main ()
         then
             SINK="$(ls $SOURCE_DIR/.$PROG/sinks)"
         else
-            echo "$SCRIPT: invalid snapshot"
+            emu_error "invalid snapshot"
             exit_with_error "$SOURCE_DIR"
         fi
     fi
@@ -41,7 +41,7 @@ main ()
     SINK_DIR="$(cat $SOURCE_DIR/.$PROG/sinks/$SINK 2>/dev/null)"
     if [[ ! -d "$SINK_DIR" ]]
     then
-        echo "$SCRIPT: sink '$SINK' does not exist" >&2
+        emu_error "sink '$SINK' does not exist"
         exit_with_error "$SOURCE_DIR"
     fi
 
@@ -56,7 +56,7 @@ main ()
     SNAPSHOT_DIR="$SINK_DIR/.$PROG/trees/$SNAPSHOT"
     if [[ ! -d "$SNAPSHOT_DIR" ]]
     then
-        echo "$SCRIPT: snapshot '$SNAPSHOT' does not exist" >&2
+        emu_error "snapshot '$SNAPSHOT' does not exist"
         exit_with_error "$SOURCE_DIR"
     fi
 
@@ -68,10 +68,10 @@ main ()
         "$SNAPSHOT_DIR/" "$SOURCE_DIR"
     if (( $? ))
     then
-        echo "$SCRIPT: restore of '$SINK:$SNAPSHOT' failed" >&2
+        emu_error "restore of '$SINK:$SNAPSHOT' failed"
     fi
 
-    echo "$SCRIPT: SOURCE at '$SINK:$SNAPSHOT'"
+    emu_echo "SOURCE at '$SINK:$SNAPSHOT'"
 
     unlock_dir "$SINK_DIR"
     unlock_dir "$SOURCE_DIR"

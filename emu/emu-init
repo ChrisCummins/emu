@@ -15,7 +15,7 @@ clean_emu_dir ()
 {
     if [ ! -d "$SOURCE_DIR/.$PROG/sinks" ]
     then
-        echo "$SCRIPT: not an $PROG source!" >&2
+        emu_error "not an emu source!"
         exit 5
     fi
 
@@ -23,7 +23,7 @@ clean_emu_dir ()
 
     if ! (( $EMU_QUIET ))
     then
-        echo "$SCRIPT: emptied source in $SOURCE_DIR/.$PROG"
+        emu_echo "emptied source in $SOURCE_DIR/.$PROG"
     fi
 }
 
@@ -55,13 +55,13 @@ emu_init ()
         init_filesystem
         if ! (( $EMU_QUIET ))
         then
-            echo "$SCRIPT: Reinitialized existing source in $CONF_DIR"
+            emu_echo "reinitialized existing source in $CONF_DIR"
         fi
     else
         init_filesystem
         if ! (( $EMU_QUIET ))
         then
-            echo "$SCRIPT: Initialized source in $CONF_DIR"
+            emu_echo "initialized source in $CONF_DIR"
         fi
     fi
 }
@@ -90,16 +90,16 @@ main ()
                 EMU_SOURCE_TEMPLATE_DIR="$OPTARG"
                 if [ ! -d "$EMU_SOURCE_TEMPLATE_DIR" ]
                 then
-                    echo "$SCRIPT: '$OPTARG' not a directory" >&2
+                    emu_error "'$OPTARG' not a directory"
                     exit 1
                 fi
                 ;;
             \?)
-                echo "$SCRIPT: invalid option: -$OPTARG" >&2
+                emu_error "invalid option: -$OPTARG"
                 exit 1
                 ;;
             :)
-                echo "$SCRIPT: option -$OPTARG requires an argument." >&2
+                emu_error "option -$OPTARG requires an argument"
                 exit 1
                 ;;
         esac

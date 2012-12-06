@@ -25,7 +25,7 @@ init_sink ()
 
     if ! (( $EMU_QUIET ))
     then
-        echo "$SCRIPT: Initialized sink at $SINK_DIR/.$PROG"
+        emu_echo "initialized sink at $SINK_DIR/.$PROG"
     fi
 }
 
@@ -47,13 +47,13 @@ add_sink ()
 
     if [[ -f ".$PROG/sinks/$1" ]]
     then
-        echo "$SCRIPT: Sink '$1' already exists." >&2
+        emu_error "sink '$1' already exists"
         exit 1
     fi
 
     if [[ -d "$SINK_PATH/.$PROG/trees" ]]
     then
-        echo "$SCRIPT: '$SINK_PATH' is already an emu sink." >&2
+        emu_error "'$SINK_PATH' is already an emu sink"
         exit 1
     fi
 
@@ -69,7 +69,7 @@ rm_sink ()
 {
     if [[ ! -f ".$PROG/sinks/$1" ]]
     then
-        echo "$SCRIPT: Sink '$1' does not exist." >&2
+        emu_error "sink '$1' does not exist."
         exit 1
     fi
 
@@ -81,7 +81,7 @@ rm_sink ()
     rm $EMU_VERBOSE -f ".$PROG/sinks/$1"
     if ! (( $EMU_QUIET ))
     then
-        echo "$SCRIPT: Sink '$1' removed."
+        emu_echo "sink '$1' removed."
     fi
 }
 
@@ -98,7 +98,7 @@ show_sink ()
             then
                 SINKS="$SINKS\n$ARG"
             else
-                echo "$SCRIPT: Sink '$ARG' does not exist!" >&2
+                emu_error "sink '$ARG' does not exist!"
                 FAILURE=1
             fi
 
@@ -151,16 +151,16 @@ main ()
                 EMU_SOURCE_TEMPLATE_DIR="$OPTARG"
                 if [ ! -d "$EMU_SOURCE_TEMPLATE_DIR" ]
                 then
-                    echo "$SCRIPT: '$OPTARG' not a directory" >&2
+                    emu_error "'$OPTARG' not a directory"
                     exit 1
                 fi
                 ;;
             \?)
-                echo "$SCRIPT: invalid option: -$OPTARG" >&2
+                emu_error "invalid option: -$OPTARG"
                 exit 1
                 ;;
             :)
-                echo "$SCRIPT: option -$OPTARG requires an argument." >&2
+                emu_error "option -$OPTARG requires an argument"
                 exit 1
                 ;;
         esac
@@ -180,7 +180,7 @@ main ()
 
     if [ ! -d "$SOURCE_DIR/.$PROG/sinks" ]
     then
-        echo "$SCRIPT: not an $PROG source!" >&2
+        emu_error "not an $PROG source!"
         exit_with_error
     fi
 

@@ -58,14 +58,14 @@ main ()
 
     if [[ "$1" == "" ]]
     then
-        echo "$SCRIPT: no sink specified"
+        emu_error "no sink specified"
         exit_with_error "$SOURCE_DIR"
     fi
 
     SINK_DIR="$(cat $SOURCE_DIR/.$PROG/sinks/$1 2>/dev/null)"
     if [[ ! -d "$SINK_DIR" ]]
     then
-        echo "$SCRIPT: sink '$1' does not exist" >&2
+        emu_error "$SCRIPT: sink '$1' does not exist"
         exit_with_error "$SOURCE_DIR"
     fi
 

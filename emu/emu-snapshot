@@ -18,7 +18,7 @@ get_all_sinks ()
 
     if [[ "$SINK_FILES" == "" ]]
     then
-        echo "$SCRIPT: no sinks! Add one with '$PROG sink add <name> <path>'" >&2
+        emu_error "no sinks! Add one with '$PROG sink add <name> <path>'"
         exit_with_error
     fi
 
@@ -28,7 +28,7 @@ get_all_sinks ()
         SINK="$(cat $SINK_FILE)"
         if [[ ! -d "$SINK/.$PROG" ]]
         then
-            echo -e "$SCRIPT: sink does not exist:\n  $SINK\n" >&2
+            emu_error "sink does not exist:\n  $SINK\n"
             exit_with_error
         fi
     done
@@ -46,7 +46,7 @@ get_sinks ()
         SINK_FILE="$(find $SOURCE_DIR/.$PROG/sinks/ -name $ARG)"
         if [[ "$SINK_FILE" == "" ]]
         then
-            echo "$SCRIPT: sink '$ARG' not found!" >&2
+            emu_error "sink '$ARG' not found!"
             exit_with_error
         fi
         SINK_FILES="$SINK_FILES\n$SINK_FILE"
@@ -224,8 +224,8 @@ perform_snapshot_on_sink ()
     push_head "$1"
 
     unlock_dir "$1"
-    echo "$SCRIPT: $2: new snapshot '$SNAPSHOT'"
-    echo "$SCRIPT: $2: HEAD at $HASH"
+    emu_echo "$2: new snapshot '$SNAPSHOT'"
+    emu_echo "$2: HEAD at $HASH"
     return 0
 }
 
@@ -245,7 +245,7 @@ perform_snapshots ()
         if (( $? ))
         then
             SNAPSHOT_FAILED=1
-            echo "$SCRIPT: snapshot to '$SINK_NAME' failed" >&2
+            emu_error "snapshot to '$SINK_NAME' failed"
         fi
     done
 
@@ -271,7 +271,7 @@ main ()
     perform_snapshots
     if (( $? ))
     then
-        echo "$SCRIPT: at least one snapshot failed!" >&2
+        emu_error "at least one snapshot failed!"
         exit_with_error
     fi
     unlock_dir "$SOURCE_DIR"

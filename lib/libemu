@@ -5,28 +5,39 @@ VERSION="0.0.1"
 # Exit code for command not found error.
 EXIT_COMMAND_NOT_FOUND=127
 
+# Echo emu standard output.
+#
+# @param $1 msg.
 emu_echo ()
 {
     local msg="$1"
 
     if [ -z $SCRIPT ]
     then
-        echo "emu: $msg"
+        echo -e "emu: $msg"
     else
-        echo "$SCRIPT: $msg"
+        echo -e "$SCRIPT: $msg"
     fi
 }
 
+# Echo emu error output.
+#
+# @param $1 msg.
 emu_error ()
 {
     local msg="$1"
 
     if [ -z $SCRIPT ]
     then
-        echo "emu: $msg" >&2
+        echo -e "emu: $msg" >&2
     else
-        echo "$SCRIPT: $msg" >&2
+        echo -e "$SCRIPT: $msg" >&2
     fi
+}
+
+get_source_dir ()
+{
+    ls
 }
 
 # Print 'not a command' text and exit.
