@@ -6,7 +6,7 @@ SOURCE_DIR="$(pwd)"
 
 help ()
 {
-    man emu-sink
+    man $(basename "$0")
 }
 
 init_sink ()
@@ -69,7 +69,7 @@ rm_sink ()
 {
     if [[ ! -f ".$PROG/sinks/$1" ]]
     then
-        emu_error "sink '$1' does not exist."
+        emu_error "sink '$1' does not exist"
         exit 1
     fi
 
@@ -81,7 +81,7 @@ rm_sink ()
     rm $EMU_VERBOSE -f ".$PROG/sinks/$1"
     if ! (( $EMU_QUIET ))
     then
-        emu_echo "sink '$1' removed."
+        emu_echo "sink '$1' removed"
     fi
 }
 
@@ -98,7 +98,7 @@ show_sink ()
             then
                 SINKS="$SINKS\n$ARG"
             else
-                emu_error "sink '$ARG' does not exist!"
+                emu_error "sink '$ARG' does not exist"
                 FAILURE=1
             fi
 
@@ -180,7 +180,7 @@ main ()
 
     if [ ! -d "$SOURCE_DIR/.$PROG/sinks" ]
     then
-        emu_error "not an $PROG source!"
+        emu_error "not an emu source"
         exit_with_error
     fi
 

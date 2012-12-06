@@ -14,7 +14,7 @@ clean_emu_dir ()
 {
     if [ ! -d "$SOURCE_DIR/.$PROG/sinks" ]
     then
-        emu_error "not an emu source!"
+        emu_error "not an emu source"
         exit 5
     fi
 

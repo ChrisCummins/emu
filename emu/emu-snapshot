@@ -270,7 +270,7 @@ main ()
     perform_snapshots
     if (( $? ))
     then
-        emu_error "at least one snapshot failed!"
+        emu_error "at least one snapshot failed"
         exit_with_error
     fi
     unlock_dir "$SOURCE_DIR"

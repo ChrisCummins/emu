@@ -95,7 +95,7 @@ do
             exit $EXIT_INVALID_ARGS
             ;;
         :)
-            emu_error "option -$OPTARG requires an argument."
+            emu_error "option -$OPTARG requires an argument"
             exit $EXIT_INVALID_ARGS
             ;;
     esac

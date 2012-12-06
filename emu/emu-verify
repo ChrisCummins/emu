@@ -99,7 +99,7 @@ main ()
     fi
 
     $(verify_node "$SNAPSHOT_DIR")
-    emu_echo "passed"
+    emu_echo "pass"
 
     post_exec_hooks "$SOURCE_DIR"
     exit 0
