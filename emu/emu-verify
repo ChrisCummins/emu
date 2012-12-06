@@ -1,7 +1,7 @@
 #!/bin/bash
 
 source /usr/local/lib/libemu
-SCRIPT=$(basename $0)
+EMU_ECHO_PREFIX=$(basename "$0")
 SOURCE_DIR="$(pwd)"
 
 help ()
@@ -99,7 +99,7 @@ main ()
     fi
 
     $(verify_node "$SNAPSHOT_DIR")
-    emu_echo "passed"
+    emu_echo "pass"
 
     post_exec_hooks "$SOURCE_DIR"
     exit 0

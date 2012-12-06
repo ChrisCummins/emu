@@ -1,8 +1,7 @@
 #!/bin/sh
 
 source /usr/local/lib/libemu
-SCRIPT=$(basename $0)
-
+EMU_ECHO_PREFIX=$(basename "$0")
 SOURCE_DIR="$(pwd)"
 CONF_DIR="$SOURCE_DIR/.$PROG"
 
@@ -15,7 +14,7 @@ clean_emu_dir ()
 {
     if [ ! -d "$SOURCE_DIR/.$PROG/sinks" ]
     then
-        emu_error "not an emu source!"
+        emu_error "not an emu source"
         exit 5
     fi
 
