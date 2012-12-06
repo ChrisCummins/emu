@@ -8,30 +8,32 @@ EXIT_COMMAND_NOT_FOUND=127
 # Echo emu standard output.
 #
 # @param $1 msg.
+# @var EMU_ECHO_PREFIX (optional) output prefix.
 emu_echo ()
 {
     local msg="$1"
 
-    if [ -z $SCRIPT ]
+    if [ -z $EMU_ECHO_PREFIX ]
     then
         echo -e "emu: $msg"
     else
-        echo -e "$SCRIPT: $msg"
+        echo -e "$EMU_ECHO_PREFIX: $msg"
     fi
 }
 
 # Echo emu error output.
 #
 # @param $1 msg.
+# @var EMU_ECHO_PREFIX (optional) output prefix.
 emu_error ()
 {
     local msg="$1"
 
-    if [ -z $SCRIPT ]
+    if [ -z $EMU_ECHO_PREFIX ]
     then
         echo -e "emu: $msg" >&2
     else
-        echo -e "$SCRIPT: $msg" >&2
+        echo -e "$EMU_ECHO_PREFIX: $msg" >&2
     fi
 }
 

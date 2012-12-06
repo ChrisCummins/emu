@@ -1,7 +1,7 @@
 #!/bin/sh
 
 source /usr/local/lib/libemu
-SCRIPT=$(basename $0)
+EMU_ECHO_PREFIX=$(basename "$0")
 SOURCE_DIR="$(pwd)"
 
 help ()
@@ -199,8 +199,7 @@ perform_snapshot_on_sink ()
     lock_dir "$1"
     get_rsync_link "$1"
     pop_tails "$1"
-    echo -n "$SCRIPT: $2: creating snapshot ($(sink_snapshot_count $1) of "
-    echo "$(sink_max_snapshots $1))"
+    emu_echo "$2: creating snapshot ($(sink_snapshot_count $1) of $(sink_max_snapshots $1))"
 
     rsync \
         --delete \
