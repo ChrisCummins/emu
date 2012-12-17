@@ -1,8 +1,6 @@
 QUIET_ = @
 QUIET = $(QUIET_$(V))
 
-VERSION = 0.0.1
-
 CP := cp -v
 RM := rm -fv
 
