@@ -3,6 +3,8 @@ QUIET = $(QUIET_$(V))
 
 VERSION = 0.0.1
 
+.PHONY: default
+
 default:
 	$(QUIET) echo "  useage: <install|uninstall>[_share|_lib|_exec|_doc]"
 
@@ -41,10 +43,10 @@ uninstall_doc:
 
 uninstall: uninstall_share uninstall_lib uninstall_exec uninstall_doc
 
-check:
-	$(QUIET) bash test/run-tests.sh
+.PHONY: test check clean release
 
-test: check
+test check:
+	$(QUIET) bash test/run-tests.sh
 
 clean:
 	$(QUIET) rm -rfv /tmp/emu
