@@ -3,43 +3,46 @@ QUIET = $(QUIET_$(V))
 
 VERSION = 0.0.1
 
+CP := cp -v
+RM := rm -fv
+
 .PHONY: default
 
 default:
 	$(QUIET) echo "  useage: <install|uninstall>[_share|_lib|_exec|_doc]"
 
 install_exec:
-	$(QUIET) find emu -type f -exec cp -v {} /usr/local/bin \;
+	$(QUIET) find emu -type f -exec $(CP) {} /usr/local/bin \;
 
 install_lib:
-	$(QUIET) find lib -type f -exec cp -v {} /usr/local/lib \;
+	$(QUIET) find lib -type f -exec $(CP) {} /usr/local/lib \;
 
 install_share:
-	$(QUIET) cp -rv share/emu /usr/local/share
+	$(QUIET) $(CP) -r share/emu /usr/local/share
 
 install_doc:
-	$(QUIET) find share/man/ -type f -exec cp -v {} /usr/local/share/man/man1 \;
+	$(QUIET) find share/man/ -type f -exec $(CP) {} /usr/local/share/man/man1 \;
 
 install: install_share install_lib install_exec install_doc
 
 uninstall_exec:
-	$(QUIET) rm -fv /usr/local/bin/emu
-	$(QUIET) rm -fv /usr/local/bin/emu-init
-	$(QUIET) rm -fv /usr/local/bin/emu-log
-	$(QUIET) rm -fv /usr/local/bin/emu-reset
-	$(QUIET) rm -fv /usr/local/bin/emu-restore
-	$(QUIET) rm -fv /usr/local/bin/emu-sink
-	$(QUIET) rm -fv /usr/local/bin/emu-snapshot
-	$(QUIET) rm -fv /usr/local/bin/emu-verify
+	$(QUIET) $(RM) /usr/local/bin/emu
+	$(QUIET) $(RM) /usr/local/bin/emu-init
+	$(QUIET) $(RM) /usr/local/bin/emu-log
+	$(QUIET) $(RM) /usr/local/bin/emu-reset
+	$(QUIET) $(RM) /usr/local/bin/emu-restore
+	$(QUIET) $(RM) /usr/local/bin/emu-sink
+	$(QUIET) $(RM) /usr/local/bin/emu-snapshot
+	$(QUIET) $(RM) /usr/local/bin/emu-verify
 
 uninstall_lib:
-	$(QUIET) rm -fv /usr/local/lib/libemu
+	$(QUIET) $(RM) /usr/local/lib/libemu
 
 uninstall_share:
-	$(QUIET) rm -rfv /usr/local/share/emu
+	$(QUIET) $(RM) -r /usr/local/share/emu
 
 uninstall_doc:
-	$(QUIET) rm -fv /usr/local/share/man/man1/emu*.1
+	$(QUIET) $(RM) /usr/local/share/man/man1/emu*.1
 
 uninstall: uninstall_share uninstall_lib uninstall_exec uninstall_doc
 
