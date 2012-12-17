@@ -89,9 +89,8 @@ command_not_found ()
     exit $EMU_RETURN_COMMAND_NOT_FOUND
 }
 
-# Tidy up and quit with error condition.
-#
-# @param $1 Path to source directory.
+# tidy up and quit with error condition
+#  @param $1 path to source directory
 exit_with_error ()
 {
     local source_dir="$1"
@@ -99,7 +98,7 @@ exit_with_error ()
     error_exec_hooks "$source_dir"
     unlock_dir "$source_dir"
 
-    # Unlock all sinks.
+    # unlock all sinks
     for sink_file in "$source_dir/.emu/sinks"
     do
         if [[ -f "$sink_file" ]]

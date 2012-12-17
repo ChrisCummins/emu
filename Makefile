@@ -7,7 +7,7 @@ RM := rm -fv
 .PHONY: help
 
 help:
-	$(QUIET) echo "  useage: <install|uninstall>[_share|_lib|_exec|_doc]"
+	$(QUIET) echo "  usage: <install|uninstall>[_share|_lib|_exec|_doc]"
 
 install_exec:
 	$(QUIET) find emu -type f -exec $(CP) {} /usr/local/bin \;
