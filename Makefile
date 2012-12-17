@@ -4,9 +4,9 @@ QUIET = $(QUIET_$(V))
 CP := cp -v
 RM := rm -fv
 
-.PHONY: default
+.PHONY: help
 
-default:
+help:
 	$(QUIET) echo "  useage: <install|uninstall>[_share|_lib|_exec|_doc]"
 
 install_exec:
