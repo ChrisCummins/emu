@@ -1,30 +1,71 @@
 #!/bin/bash
 
-if [ "$1" = "" ] || [ "$2" = "" ]
+VERSION=$1
+OLD_VERSION=$(cat lib/libemu | grep EMU_VERSION | sed -r 's/.+EMU_VERSION="(\w\.\w\.\w)".*/\1/')
+
+# check for correct args
+if [ -z $VERSION ]
 then
     cat <<EOF
-Usage: <old-version> <new-version>
+Usage: <version-number>
 
-Automatic release tool.
+Automatic release tool, generates release tarball and replaces references to the
+old version number with the new one. For example, if the current version is
+0.2.2 and you would like to make a release 0.2.3, run:
+
+  $ ./mkrelease 0.2.3
+
+This will substitute relevant references to 0.2.2 with 0.2.3, and generate two files:
+
+  releases/emu-0.2.3.tar.gz
+  releases/emu-0.2.3.tar.gz.md5
+
+Additionally, the CHANGELOG file will have a 0.2.3 entry added.
 EOF
-    exit 0
+    exit 1
 fi
 
+# check that old version number is valid
+if [[ -z "$OLD_VERSION" ]]
+then
+    echo "Could not get old version number!"
+    exit 1
+fi
+
+# generate file list
 FILELIST=$(find ./ -type f \
     | grep -v '.git' \
     | grep -v releases/emu-*.tar.gz \
     | grep -v releases/emu-*.tar.gz.md5 \
-    | grep -v make-release \
+    | grep -v mkrelease \
     | grep -v CHANGELOG)
 
-for FILE in $FILELIST
+# update references to version in filelist
+for f in $FILELIST
 do
-    sed -i "s/$1/$2/g" $FILE
+    sed -i "s/$OLD_VERSION/$VERSION/g" $f
 done
 
+# generate man list
+MANLIST=$(find ./share/man -type f)
+
+# update man page headers
+for f in $MANLIST
+do
+    base=$(basename $f)
+    file=${base%.*}
+    ext=${base##*.}
+    date=$(date +'%B %d, %Y')
+    cat $f | sed "1s/.*/.TH $file $ext  \"$date\" \"version $VERSION\" \"Emu Manual\"/" > $f.tmp
+    rm -f $f
+    mv $f.tmp $f
+done
+
+# update changelog
 touch CHANGELOG
+
 cat <<EOF >> CHANGELOG
-emu-$2 ($(date))
+emu-$VERSION ($(date))
 --------------------------------------------------------------------------------
 EOF
 
@@ -37,16 +78,16 @@ git log \
 
 echo "" >> CHANGELOG
 
-# Create release tarball.
+# create a release tarball
 cd ..
 tar czf \
-    emu-$2.tar.gz emu \
+    emu-$VERSION.tar.gz emu \
     --exclude='emu/.git/*' \
     --exclude='emu/releases/emu-*.tar.gz' \
     --exclude='emu/releases/emu-*.tar.gz.md5'
 
-# Generate md5.
-md5sum emu-$2.tar.gz > emu-$2.tar.gz.md5
-mv -v emu-$2.tar.gz emu/releases
-mv -v emu-$2.tar.gz.md5 emu/releases
+# generate md5
+md5sum emu-$VERSION.tar.gz > emu-$VERSION.tar.gz.md5
+mv -v emu-$VERSION.tar.gz emu/releases
+mv -v emu-$VERSION.tar.gz.md5 emu/releases
 cd emu
