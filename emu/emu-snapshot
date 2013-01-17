@@ -163,19 +163,23 @@ remove_snapshot ()
 #  @param $1 Path to sink directory
 pop_tail ()
 {
+    local sink_dir="$1"
+
     # Get the root snapshot (one with no child).
-    get_snapshot_child "$1" "$(cat $1/.emu/HEAD)"
-    remove_snapshot "$1" "$SNAPSHOT_HASH"
+    get_snapshot_child "$sink_dir" "$(cat $sink_dir/.emu/HEAD)"
+    remove_snapshot "$sink_dir" "$SNAPSHOT_HASH"
 }
 
 # push the latest snapshot to HEAD
 #  @param $1 Path to sink directory
 pop_tails ()
 {
-    while [[ $(sink_snapshot_count "$1") -ge $(sink_max_snapshots "$1") ]]
+    local sink_dir="$1"
+
+    while [[ $(sink_snapshot_count "$sink_dir") -ge $(sink_max_snapshots "$sink_dir") ]]
     do
-        NEXT_SNAPSHOT_HASH="$(cat $1/.emu/HEAD)"
-        pop_tail "$1"
+        NEXT_SNAPSHOT_HASH="$(cat $sink_dir/.emu/HEAD)"
+        pop_tail "$sink_dir"
     done
 }
 
@@ -186,11 +190,12 @@ pop_tails ()
 perform_snapshot_on_sink ()
 {
     local sink_dir="$1"
+    local sink_name="$2"
 
     lock_dir "$sink_dir"
     get_rsync_link "$sink_dir"
     pop_tails "$sink_dir"
-    emu_echo "$2: creating snapshot ($(sink_snapshot_count $1) of $(sink_max_snapshots $1))"
+    emu_echo "$sink_name: creating snapshot ($(sink_snapshot_count $sink_dir) of $(sink_max_snapshots $sink_dir))"
 
     rsync \
         --delete \
@@ -199,23 +204,24 @@ perform_snapshot_on_sink ()
         --human-readable \
         --exclude-from="$SOURCE_DIR/.emu/excludes" \
         "$RSYNC_LINK" \
-        "$SOURCE_DIR/" "$1/.emu/trees/new"
+        "$SOURCE_DIR/" "$sink_dir/.emu/trees/new"
     if (( $? ))
     then
-        unlock_dir "$1"
-        return 3
+        unlock_dir "$sink_dir"
+        return 1
     fi
 
-    generate_hash "$1"
-    generate_snapshot_name "$1"
-    mv "$1/.emu/trees/new" "$1/.emu/trees/$HASH"
-    ln -s "$1/.emu/trees/$HASH" "$1/$SNAPSHOT"
-    generate_node "$1"
-    push_head "$1"
+    generate_hash "$sink_dir"
+    generate_snapshot_name "$sink_dir"
+    mv "$sink_dir/.emu/trees/new" "$sink_dir/.emu/trees/$HASH"
+    ln -s "$sink_dir/.emu/trees/$HASH" "$sink_dir/$SNAPSHOT"
+    generate_node "$sink_dir"
+    push_head "$sink_dir"
 
-    unlock_dir "$1"
-    emu_echo "$2: new snapshot '$SNAPSHOT'"
-    emu_echo "$2: HEAD at $HASH"
+    unlock_dir "$sink_dir"
+    emu_echo "$sink_name: new snapshot '$SNAPSHOT'"
+    emu_echo "$sink_name: HEAD at $HASH"
+
     return 0
 }
 
@@ -243,7 +249,7 @@ perform_snapshots ()
 
 main ()
 {
-    while getopts ":Mvm:" OPT
+    while getopts "nm:MvpfF" OPT
     do
         case $OPT in
             n)
@@ -272,7 +278,7 @@ main ()
             f)
                 EMU_SNAPSHOT_FORCE=1
                 ;;
-            p)
+            F)
                 EMU_SNAPSHOT_UBER_FORCE=1
                 ;;
             \?)
