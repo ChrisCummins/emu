@@ -1,0 +1,11 @@
+set -e
+test_setup
+source /usr/local/lib/libemu
+
+cd /tmp/emu/test-source
+
+emu init -v
+
+lock_dir
+
+test_teardown
