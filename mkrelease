@@ -3,7 +3,9 @@
 if [ "$1" = "" ] || [ "$2" = "" ]
 then
     cat <<EOF
-Useage: <old> <new>
+Usage: <old-version> <new-version>
+
+Automatic release tool.
 EOF
     exit 0
 fi

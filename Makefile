@@ -51,6 +51,3 @@ test check:
 
 clean:
 	rm -rfv /tmp/emu
-
-release:
-	$(QUIET) releases/release.sh
