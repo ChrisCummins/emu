@@ -3,9 +3,6 @@
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
 
-# FIXME: Remove this!
-VERSION="0.0.2"
-
 # Print the help text.
 help ()
 {
