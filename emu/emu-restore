@@ -2,7 +2,6 @@
 
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
-SOURCE_DIR="$(pwd)"
 
 help ()
 {
@@ -14,8 +13,10 @@ main ()
     if [ "$1" = "help" ]
     then
         help
-        exit 0
+        exit $EMU_EXIT
     fi
+
+    get_source_dir_or_fail
 
     pre_exec_hooks "$SOURCE_DIR"
     lock_dir "$SOURCE_DIR"
