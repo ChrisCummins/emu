@@ -31,38 +31,39 @@ init_sink ()
 
 add_sink ()
 {
-    if [[ "$1" == "" ]] || [[ "$2" == "" ]]
+    local sink_name="$1"
+    local sink_path="$2"
+
+    if [ -z "$sink_name" ] || [ -z "$sink_path" ]
     then
         help
-        exit 1
+        exit $EMU_EXIT_INCORRECT_COMMAND
     fi
 
-    # Get absolute path.
-    if [ ${2:0:1} != "/" ]
+    if [[ -f ".emu/sinks/$sink_name" ]]
     then
-        SINK_PATH="$(pwd)/$2"
-    else
-        SINK_PATH="$2"
-    fi
-
-    if [[ -f ".emu/sinks/$1" ]]
-    then
-        emu_error "sink '$1' already exists"
-        exit 1
-    fi
-
-    if [[ -d "$SINK_PATH/.emu/trees" ]]
-    then
-        emu_error "'$SINK_PATH' is already an emu sink"
+        emu_error "sink '$sink_name' already exists"
         exit 1
     fi
 
     exit_if_no_dir_permissions ".emu"
 
-    echo "$SINK_PATH" > ".emu/sinks/$1"
+    # get absolute path
+    mkdir -p "$sink_path"
+    sink_path="$(get_absolute_path "$sink_path")"
+    pushd . &>/dev/null
+    cd "$sink_path"
+    if is_sink
+    then
+        emu_error "'$sink_path' is already an emu sink"
+        exit $EMU_EXIT_ERROR
+    fi
+    popd &>/dev/null
 
-    # Initialize sink.
-    init_sink "$SINK_PATH"
+    echo "$sink_path" > ".emu/sinks/$sink_name"
+
+    # initialize sink
+    init_sink "$sink_path"
 }
 
 rm_sink ()
