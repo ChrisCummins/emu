@@ -1,15 +1,18 @@
 #!/bin/bash
 
-#### VARIABLES
+## VARIABLES ###################################################################
 
-export EMU_VERSION="0.0.2"
+export EMU_VERSION="0.0.3"
 
 # exit codes
+export EMU_EXIT=0
 export EMU_EXIT_ERROR=1
 export EMU_EXIT_INSUFFICIENT_PERMISSIONS=2
+export EMU_EXIT_BLOCKED=3
+export EMU_EXIT_INCORRECT_COMMAND=126
 export EMU_EXIT_COMMAND_NOT_FOUND=127
 
-#### PRIVATE
+## ECHO ########################################################################
 
 _emu_echo ()
 {
@@ -30,8 +33,6 @@ _emu_echo ()
     echo $reset_color >&$stream
     echo -n $emu_prefix_color >&$stream
 }
-
-#### PUBLIC
 
 # print a message
 #  @param $1                         msg
@@ -81,11 +82,7 @@ emu_error ()
     return 0
 }
 
-# TODO: implement
-get_source_dir ()
-{
-    ls
-}
+## ERRORS ######################################################################
 
 # print 'not a command' text and exit
 #  @param $1 name of missing command
@@ -97,26 +94,58 @@ command_not_found ()
     exit $EMU_EXIT_COMMAND_NOT_FOUND
 }
 
-# tidy up and quit with error condition
-#  @param $1 path to source directory
-exit_with_error ()
+# panic, execute hooks and prepare for crash
+emu_panic ()
 {
-    local source_dir="$1"
+    if [ -z "$SOURCE_DIR" ]
+    then
+        get_source_dir
+    fi
 
-    error_exec_hooks "$source_dir"
-    unlock_dir "$source_dir"
+    if [ -n "$SOURCE_DIR" ] && is_source "$SOURCE_DIR"
+    then
+        error_exec_hooks "$SOURCE_DIR"
+        unlock_dir "$SOURCE_DIR"
 
-    # unlock all sinks
-    for sink_file in "$source_dir/.emu/sinks"
-    do
-        if [[ -f "$sink_file" ]]
+        # unlock all sinks
+        for sink_file in "$SOURCE_DIR/.emu/sinks"
+        do
+            if [[ -f "$sink_file" ]]
+            then
+                local sink="$(cat $sink_file)"
+
+                unlock_dir "$sink"
+            fi
+        done
+    fi
+}
+
+## DIRECTORIES #################################################################
+
+# Returns the absolute path of a given directory
+#  @param  $1 (optional) path to directory
+#  @return    absolute path
+get_absolute_path ()
+{
+    local dir="$1"
+
+    if [ -z "$dir" ]
+    then
+        dir="$(pwd -P)"
+    else
+        # get absolute path
+        if [ ${dir:0:1} != "/" ]
         then
-            local sink="$(cat $sink_file)"
-
-            unlock_dir "$sink"
+            # relative path
+            dir="$(pwd)/$dir"
         fi
-    done
-    exit $EMU_EXIT_ERROR
+        pushd . &>/dev/null
+        cd "$dir"
+        dir="$(pwd -P)"
+        popd &>/dev/null
+    fi
+
+    echo "$dir"
 }
 
 # check for write permissions
@@ -148,54 +177,160 @@ exit_if_no_dir_permissions ()
     fi
 }
 
-# execute each in a list of executables
-#  @param $1 a list of absolute paths to files
-exec_list ()
+# returns whether a directory is a source or not
+#  @param $1 (optional) path to directory
+is_source ()
 {
-    local list="$1"
+    local dir="$1"
 
-    for exec in "$list"
-    do
-        $exec
-    done
+    if [ -z "$dir" ]
+    then
+        dir="$(pwd)"
+    fi
+
+    if [[ -f "$dir/.emu/excludes" ]] \
+        && [[ -d "$dir/.emu/hooks" ]] \
+        && [[ -d "$dir/.emu/sinks" ]]
+    then
+        return 0
+    else
+        return 15
+    fi
 }
 
-# execute pre-execution hooks
-#  @param $1 Path to source directory
-pre_exec_hooks ()
+_test_source_dir ()
 {
-    HOOKS=$(find "$1/.emu/hooks/exec/" -name '*.pre' 2>/dev/null)
-    exec_list $HOOKS
+    dir="$(pwd -P)"
+
+    if ! is_source "$dir"
+    then
+        if [[ "$dir" != "/" ]]
+        then
+            cd ..
+            get_source_dir
+        else
+            # reached top of tree (/), source dir not found
+            SOURCE_DIR=""
+        fi
+    else
+        SOURCE_DIR="$dir"
+    fi
 }
 
-# execute post-execution hooks
-#  @param $1 Path to source directory
-post_exec_hooks ()
+# recurse up a directory tree, looking for an emu source
+#  @param   $1          (optional) The directory to start the search for the
+#                       source in
+#  @preturn $SOURCE_DIR The source directory, or empty if not found
+get_source_dir ()
 {
-    HOOKS=$(find "$1/.emu/hooks/exec/" -name '*.post' 2>/dev/null)
-    exec_list $HOOKS
+    local dir="$1"
+
+    if [ -z "$dir" ]
+    then
+        dir="$(pwd)"
+    fi
+
+    pushd . &>/dev/null
+    # navigate to and recurse the directory tree
+    cd "$dir"
+    if _test_source_dir
+    then
+        r=0
+    else
+        r=1
+    fi
+
+    # return to starting position
+    popd &>/dev/null
+
+    return $r
 }
 
-# execute error condition hooks
-#  @param $1 Path to source directory
-error_exec_hooks ()
+get_source_dir_if_empty ()
 {
-    HOOKS=$(find "$1/.emu/hooks/exec/" -name '*.error' 2>/dev/null)
-    exec_list $HOOKS
+    if [ -z "$SOURCE_DIR" ]
+    then
+        get_source_dir
+    fi
 }
 
-# return the number of snapshots in sink
-#  @param $1 Path to sink directory
-sink_snapshot_count ()
+# looks for an emu source, if it doesn't find one, it exits
+get_source_dir_or_fail ()
 {
-    echo "$(ls -l "$1/.emu/trees" | wc -l)"
+    get_source_dir
+    if [ -z "$SOURCE_DIR" ]
+    then
+        emu_panic
+        exit $EMU_EXIT_ERROR
+    fi
 }
 
-# return the max number of snapshots for sink
-#  @param $1 Path to sink directory
-sink_max_snapshots ()
+# returns whether a directory is a sink or not
+#  @param $1 (optional) path to directory
+is_sink ()
 {
-    echo "$(cat $1/.emu/config/SNAPSHOT-COUNT)"
+    local dir="$1"
+
+    if [ -z "$dir" ]
+    then
+        dir="$(pwd)"
+    fi
+
+    if [[ -f "$dir/.emu/HEAD" ]] \
+        && [[ -d "$dir/.emu/nodes" ]]
+    then
+        return 0
+    else
+        return 15
+    fi
+}
+
+_test_sink_dir ()
+{
+    dir="$(pwd -P)"
+
+    if ! is_sink "$dir"
+    then
+        if [[ "$dir" != "/" ]]
+        then
+            cd ..
+            get_sink_dir
+        else
+            # reached top of tree (/), sink dir not found
+            SINK_DIR=""
+        fi
+    else
+        SINK_DIR="$dir"
+    fi
+}
+
+# recurse up a directory tree, looking for an emu sink
+#  @param   $1        (optional) The directory to start the search for the
+#                     sink in
+#  @preturn $SINK_DIR The sink directory, or empty if not found
+get_sink_dir ()
+{
+    local dir="$1"
+
+    if [ -z "$dir" ]
+    then
+        dir="$(pwd)"
+    fi
+
+    pushd . &>/dev/null
+    # navigate to and recurse the directory tree
+    cd "$dir"
+    if _test_sink_dir
+    then
+        r=0
+    else
+        r=1
+    fi
+
+    # return to starting position
+    popd &>/dev/null
+
+    return $r
 }
 
 # check and block directory. If the directory is already locked, it will block
@@ -216,7 +351,8 @@ block_until_dir_free ()
             if [[ $BLOCK_COUNTER -gt $BLOCK_COUNTER_MAX ]]
             then
                 emu_error "failed to get exclusive access to directory:\n  $1"
-                exit_with_error "$SOURCE_DIR"
+                emu_panic
+                exit $EMU_EXIT_BLOCKED
             fi
         fi
 
@@ -238,22 +374,36 @@ block_until_dir_free ()
 }
 
 # lock the specified directory
-#  @param $1 Path to the directory to lock
+#  @param $1 (optional) Path to the directory to lock
 lock_dir ()
 {
+    local dir="$1"
+
+    if [ -z "$dir" ]
+    then
+        dir="$(pwd -P)"
+    fi
+
     BLOCK_SLEEP_TIME=1
     BLOCK_COUNTER=0
     BLOCK_COUNTER_MAX=10
 
-    block_until_dir_free "$1"
-    echo -e "DATE: $(date)\nPID:  $$" > "$1/.emu/LOCK"
+    block_until_dir_free "$dir"
+    echo -e "DATE: $(date)\nPID:  $$" > "$dir/.emu/LOCK"
 }
 
 # remove the lock on source directory
-#  @param $1 Path to directory to lock
+#  @param $1 (optional) Path to directory to lock
 unlock_dir ()
 {
-    LOCK=$(cat "$1/.emu/LOCK" 2> /dev/null)
+    local dir="$1"
+
+    if [ -z "$dir" ]
+    then
+        dir="$(pwd -P)"
+    fi
+
+    LOCK=$(cat "$dir/.emu/LOCK" 2> /dev/null)
     if [[ "$LOCK" == "" ]]
     then
         return
@@ -262,27 +412,10 @@ unlock_dir ()
 
     if [[ $$ -eq $LOCK_PID ]]
     then
-        rm -f "$1/.emu/LOCK"
+        rm -f "$dir/.emu/LOCK"
     else
         emu_error "cannot free lock $LOCK_PID with key $$"
     fi
-}
-
-# TODO: documentation
-print_sink_details ()
-{
-    SINK_PATH="$(cat $SOURCE_DIR/.emu/sinks/$1)"
-    SIZE="$(du -sh $SINK_PATH | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')"
-    HEAD="$(cat $SINK_PATH/.emu/HEAD)"
-    SNAPSHOT_COUNT="$(ls $SINK_PATH/.emu/trees | wc -l)"
-    LOAD=$(echo "$SNAPSHOT_COUNT / $(cat $SINK_PATH/.emu/config/SNAPSHOT-COUNT) * 100" | bc -l)
-cat <<EOF | less
-* $1
-  Path:           $SINK_PATH
-  Size:           $SIZE
-  Last snapshot:  $(cat $SINK_PATH/.emu/nodes/$HEAD 2>/dev/null | grep Date | sed -r 's/Date +(.*)/\1/')
-  Snapshot count: $SNAPSHOT_COUNT (${LOAD::2}%)
-EOF
 }
 
 # generate a 32 digit hash of a directory
@@ -297,6 +430,84 @@ hash_directory ()
     popd > /dev/null
     echo $HASH
 }
+
+## HOOKS #################################################################
+
+_exec_hooks_list ()
+{
+    local ext="$1"
+
+    get_source_dir_if_empty
+    local hooks_list="$(find "$SOURCE_DIR/.emu/hooks/exec/" -name '*.'$ext 2>/dev/null)"
+    echo "hooks list: $hooks_list"
+
+    for exec in $hooks_list
+    do
+        $exec
+    done
+}
+
+# execute pre-execution hooks
+pre_exec_hooks ()
+{
+    _exec_hooks_list "pre"
+}
+
+# execute post-execution hooks
+post_exec_hooks ()
+{
+    _exec_hooks_list "post"
+}
+
+# execute error condition hooks
+error_exec_hooks ()
+{
+    _exec_hooks_list "error"
+}
+
+## SINKS #######################################################################
+
+# return the number of snapshots in sink
+#  @param $1 Path to sink directory
+sink_snapshot_count ()
+{
+    echo "$(ls -l "$1/.emu/trees" | wc -l)"
+}
+
+# return the max number of snapshots for sink
+#  @param $1 Path to sink directory
+sink_max_snapshots ()
+{
+    echo "$(cat $1/.emu/config/SNAPSHOT-COUNT)"
+}
+
+# prints details about a given sink
+#  @param $1          name of the sink
+#  @var   $SOURCE_DIR (optional) path of source directory
+print_sink_details ()
+{
+    local sink_name="$1"
+
+    if [ -z "$SOURCE_DIR" ]
+    then
+        get_source_dir
+    fi
+
+    local sink_path="$(cat $SOURCE_DIR/.emu/sinks/$sink_name)"
+    local size="$(du -sh $sink_path | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')"
+    local head="$(cat $sink_path/.emu/HEAD)"
+    local snapshot_count="$(ls $sink_path/.emu/trees | wc -l)"
+    local load=$(echo "$snapshot_count / $(cat $sink_path/.emu/config/SNAPSHOT-COUNT) * 100" | bc -l)
+cat <<EOF | less
+* $1
+  Path:           $sink_path
+  Size:           $size
+  Last snapshot:  $(cat $sink_path/.emu/nodes/$head 2>/dev/null | grep Date | sed -r 's/Date +(.*)/\1/')
+  Snapshot count: $snapshot_count (${load::2}%)
+EOF
+}
+
+## SNAPSHOTS ###################################################################
 
 # calculate and compare the snapshot hash against the node hash
 #  @param $1 Path to snapshot
@@ -313,8 +524,6 @@ verify_node ()
         emu_error "verification failed!\n  Expected: $NODE_HASH\n  Actual:   $HASH"
         return 1
     fi
-
-    exit_with_error "$SOURCE_DIR"
 }
 
 # lookup info from an emu node

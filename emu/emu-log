@@ -59,14 +59,16 @@ main ()
     if [[ "$1" == "" ]]
     then
         emu_error "no sink specified"
-        exit_with_error "$SOURCE_DIR"
+        emu_panic
+        exit $EMU_EXIT_INCORRECT_COMMAND
     fi
 
     SINK_DIR="$(cat $SOURCE_DIR/.emu/sinks/$1 2>/dev/null)"
     if [[ ! -d "$SINK_DIR" ]]
     then
         emu_error "sink '$1' does not exist"
-        exit_with_error "$SOURCE_DIR"
+        emu_panic
+        exit $EMU_EXIT_ERROR
     fi
 
     print_nodes "$1"

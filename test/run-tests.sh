@@ -62,6 +62,7 @@ assert_non_zero ()
 
 assert_success ()
 {
+    set +e
     echo "Assert '$1' succeeds"
     $($1)
     RETURN=$?
@@ -70,6 +71,7 @@ assert_success ()
         echo "ERROR: assertion '$1' succeeds failed! ($RETURN)" >&2
         exit 5
     fi
+    set -e
 }
 
 assert_fail ()
@@ -82,6 +84,8 @@ assert_fail ()
     then
         echo "ERROR: assertion '$1' fails failed! ($RETURN)" >&2
         exit 5
+    else
+        echo "Assertion succeeded ($RETURN)"
     fi
     set -e
 }
@@ -191,24 +195,57 @@ assert_dirs_match ()
     fi
 }
 
+assert_string_is_empty ()
+{
+    echo "Assert string is empty '$1'"
+    if [ -n "$1" ]
+    then
+        echo "ERROR: assertion '$1' is empty failed!" >&2
+        exit 5
+    fi
+}
+
+assert_string_is_not_empty ()
+{
+    echo "Assert string is not empty '$1'"
+    if [ -z "$1" ]
+    then
+        echo "ERROR: assertion '$1' is not empty failed!" >&2
+        exit 5
+    fi
+}
+
+assert_strings_match ()
+{
+    echo "Assert strings match: '$1', '$2'"
+    if [[ "$1" != "$2" ]]
+    then
+        echo "ERROR: assert strings match failed!" >&2
+        exit 5
+    fi
+}
+
 export -f test_setup
 export -f test_teardown
 export -f assert
-export -f assert_not
-export -f assert_zero
-export -f assert_non_zero
-export -f assert_success
-export -f assert_fail
-export -f assert_is_dir
-export -f assert_is_not_dir
-export -f assert_is_file
-export -f assert_is_not_file
 export -f assert_dir_is_empty
 export -f assert_dir_is_not_empty
+export -f assert_dirs_match
+export -f assert_fail
 export -f assert_file_is_empty
 export -f assert_file_is_not_empty
 export -f assert_files_match
-export -f assert_dirs_match
+export -f assert_is_dir
+export -f assert_is_file
+export -f assert_is_not_dir
+export -f assert_is_not_file
+export -f assert_non_zero
+export -f assert_not
+export -f assert_string_is_empty
+export -f assert_string_is_not_empty
+export -f assert_strings_match
+export -f assert_success
+export -f assert_zero
 
 cd test
 
