@@ -2,7 +2,7 @@
 
 #### VARIABLES
 
-export EMU_VERSION="0.0.1"
+export EMU_VERSION="0.0.2"
 
 # exit codes
 export EMU_EXIT_ERROR=1

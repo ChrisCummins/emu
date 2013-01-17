@@ -376,3 +376,36 @@ Date:   Thu Nov 8 16:44:09 2012 +0000
 
 Date:   Thu Nov 8 16:15:18 2012 +0000
     Init repo.
+
+emu-0.0.2 (Thu Jan 17 12:51:58 GMT 2013)
+--------------------------------------------------------------------------------
+Merge: 23ebb22 21cd0f8
+
+Date:   Thu Jan 17 12:50:11 2013 +0000
+    Merge branch 'wip/changelog' into next
+
+Date:   Thu Jan 17 12:50:03 2013 +0000
+    mkrelease: fix newline spacing in CHANGELOG
+
+Date:   Thu Jan 17 12:48:42 2013 +0000
+    mkrelease: fix CHANGELOG
+
+Merge: 8918e6f 6c77715
+
+Date:   Thu Jan 17 12:43:44 2013 +0000
+    Merge branch 'wip/mkrelease' into next
+
+Date:   Thu Jan 17 12:43:25 2013 +0000
+    mkrelease: update documentation
+
+Date:   Thu Jan 17 12:40:14 2013 +0000
+    mkrelease: rework script
+
+    * Now only requires one arg
+
+Date:   Thu Jan 17 12:07:56 2013 +0000
+    doc: fix typo
+Merge: 92c2e39 703f631
+
+Date:   Thu Jan 17 12:05:52 2013 +0000
+    Merge branch 'release/v0.0.1' into next
