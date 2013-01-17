@@ -92,25 +92,37 @@ command_not_found ()
     exit $EMU_EXIT_COMMAND_NOT_FOUND
 }
 
+# panic!!
+#  @env SOURCE_DIR needed for executing hooks
+emu_panic ()
+{
+    if [ -z "$SOURCE_DIR" ]
+    then
+        get_source_dir
+    fi
+
+    if [ -n "$SOURCE_DIR" ] && is_source "$SOURCE_DIR"
+    then
+        error_exec_hooks "$SOURCE_DIR"
+        unlock_dir "$SOURCE_DIR"
+
+        # unlock all sinks
+        for sink_file in "$SOURCE_DIR/.emu/sinks"
+        do
+            if [[ -f "$sink_file" ]]
+            then
+                local sink="$(cat $sink_file)"
+
+                unlock_dir "$sink"
+            fi
+        done
+    fi
+}
+
 # tidy up and quit with error condition
-#  @param $1 path to source directory
 exit_with_error ()
 {
-    local source_dir="$1"
-
-    error_exec_hooks "$source_dir"
-    unlock_dir "$source_dir"
-
-    # unlock all sinks
-    for sink_file in "$source_dir/.emu/sinks"
-    do
-        if [[ -f "$sink_file" ]]
-        then
-            local sink="$(cat $sink_file)"
-
-            unlock_dir "$sink"
-        fi
-    done
+    emu_panic
     exit $EMU_EXIT_ERROR
 }
 
@@ -326,7 +338,7 @@ block_until_dir_free ()
             if [[ $BLOCK_COUNTER -gt $BLOCK_COUNTER_MAX ]]
             then
                 emu_error "failed to get exclusive access to directory:\n  $1"
-                exit_with_error "$SINK_DIR"
+                exit_with_error
             fi
         fi
 
@@ -487,7 +499,7 @@ verify_node ()
         return 1
     fi
 
-    exit_with_error "$SOURCE_DIR"
+    exit_with_error
 }
 
 # lookup info from an emu node
