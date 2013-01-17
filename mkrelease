@@ -78,17 +78,3 @@ git log $OLD_VERSION.. \
 
 echo "" >> CHANGELOG
 echo "" >> CHANGELOG
-
-# create a release tarball
-cd ..
-tar czf \
-    emu-$VERSION.tar.gz emu \
-    --exclude='emu/.git/*' \
-    --exclude='emu/releases/emu-*.tar.gz' \
-    --exclude='emu/releases/emu-*.tar.gz.md5'
-
-# generate md5
-md5sum emu-$VERSION.tar.gz > emu-$VERSION.tar.gz.md5
-mv -v emu-$VERSION.tar.gz emu/releases
-mv -v emu-$VERSION.tar.gz.md5 emu/releases
-cd emu
