@@ -8,16 +8,16 @@ help:
 
 # installer
 install-exec:
-	find emu -type f -exec cp {} /usr/local/bin \;
+	find emu -type f -exec cp -v {} /usr/local/bin \;
 
 install-lib:
-	find lib -type f -exec cp {} /usr/local/lib \;
+	find lib -type f -exec cp -v {} /usr/local/lib \;
 
 install-share:
 	cp -r share/emu /usr/local/share
 
 install-doc:
-	find share/man/ -type f -exec cp {} /usr/local/share/man/man1 \;
+	find share/man/ -type f -exec cp -v {} /usr/local/share/man/man1 \;
 
 install: install-share install-lib install-exec install-doc
 
