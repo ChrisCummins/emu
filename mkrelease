@@ -69,7 +69,7 @@ emu-$VERSION ($(date))
 --------------------------------------------------------------------------------
 EOF
 
-git log \
+git log $OLD_VERSION.. \
     | grep -v Author \
     | grep -v 'commit' \
     | grep -v '^$' \
