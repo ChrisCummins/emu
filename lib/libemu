@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#### VARIABLES
+## VARIABLES ###################################################################
 
 export EMU_VERSION="0.0.2"
 
@@ -9,7 +9,7 @@ export EMU_EXIT_ERROR=1
 export EMU_EXIT_INSUFFICIENT_PERMISSIONS=2
 export EMU_EXIT_COMMAND_NOT_FOUND=127
 
-#### PRIVATE
+## ECHO ########################################################################
 
 _emu_echo ()
 {
@@ -30,8 +30,6 @@ _emu_echo ()
     echo $reset_color >&$stream
     echo -n $emu_prefix_color >&$stream
 }
-
-#### PUBLIC
 
 # print a message
 #  @param $1                         msg
@@ -81,11 +79,7 @@ emu_error ()
     return 0
 }
 
-# TODO: implement
-get_source_dir ()
-{
-    ls
-}
+## ERRORS ######################################################################
 
 # print 'not a command' text and exit
 #  @param $1 name of missing command
@@ -119,6 +113,8 @@ exit_with_error ()
     exit $EMU_EXIT_ERROR
 }
 
+## DIRECTORIES #################################################################
+
 # check for write permissions
 #  @var   $SCRIPT (optional) echo prefix
 #  @param $1                 path to the directory
@@ -148,54 +144,16 @@ exit_if_no_dir_permissions ()
     fi
 }
 
-# execute each in a list of executables
-#  @param $1 a list of absolute paths to files
-exec_list ()
+is_emu_source ()
 {
-    local list="$1"
-
-    for exec in "$list"
-    do
-        $exec
-    done
+    echo ""
 }
 
-# execute pre-execution hooks
-#  @param $1 Path to source directory
-pre_exec_hooks ()
+# TODO: implement
+get_source_dir ()
 {
-    HOOKS=$(find "$1/.emu/hooks/exec/" -name '*.pre' 2>/dev/null)
-    exec_list $HOOKS
-}
-
-# execute post-execution hooks
-#  @param $1 Path to source directory
-post_exec_hooks ()
-{
-    HOOKS=$(find "$1/.emu/hooks/exec/" -name '*.post' 2>/dev/null)
-    exec_list $HOOKS
-}
-
-# execute error condition hooks
-#  @param $1 Path to source directory
-error_exec_hooks ()
-{
-    HOOKS=$(find "$1/.emu/hooks/exec/" -name '*.error' 2>/dev/null)
-    exec_list $HOOKS
-}
-
-# return the number of snapshots in sink
-#  @param $1 Path to sink directory
-sink_snapshot_count ()
-{
-    echo "$(ls -l "$1/.emu/trees" | wc -l)"
-}
-
-# return the max number of snapshots for sink
-#  @param $1 Path to sink directory
-sink_max_snapshots ()
-{
-    echo "$(cat $1/.emu/config/SNAPSHOT-COUNT)"
+    ls
+    SOURCE_DIR=""
 }
 
 # check and block directory. If the directory is already locked, it will block
@@ -268,6 +226,71 @@ unlock_dir ()
     fi
 }
 
+# generate a 32 digit hash of a directory
+#  @param $1 Path to directory
+hash_directory ()
+{
+    pushd . > /dev/null
+    cd "$1"
+    HASH=$(find . -type f -printf '%T@ %p\n' 2>/dev/null|sort -k 1nr \
+        |sed 's/^[^ ]* //'|head -n10|md5sum)
+    HASH=${HASH:0:32}
+    popd > /dev/null
+    echo $HASH
+}
+
+## HOOKS #################################################################
+
+_exec_list ()
+{
+    local list="$1"
+
+    for exec in "$list"
+    do
+        $exec
+    done
+}
+
+# execute pre-execution hooks
+#  @param $1 Path to source directory
+pre_exec_hooks ()
+{
+    HOOKS=$(find "$1/.emu/hooks/exec/" -name '*.pre' 2>/dev/null)
+    _exec_list $HOOKS
+}
+
+# execute post-execution hooks
+#  @param $1 Path to source directory
+post_exec_hooks ()
+{
+    HOOKS=$(find "$1/.emu/hooks/exec/" -name '*.post' 2>/dev/null)
+    _exec_list $HOOKS
+}
+
+# execute error condition hooks
+#  @param $1 Path to source directory
+error_exec_hooks ()
+{
+    HOOKS=$(find "$1/.emu/hooks/exec/" -name '*.error' 2>/dev/null)
+    _exec_list $HOOKS
+}
+
+## SINKS #######################################################################
+
+# return the number of snapshots in sink
+#  @param $1 Path to sink directory
+sink_snapshot_count ()
+{
+    echo "$(ls -l "$1/.emu/trees" | wc -l)"
+}
+
+# return the max number of snapshots for sink
+#  @param $1 Path to sink directory
+sink_max_snapshots ()
+{
+    echo "$(cat $1/.emu/config/SNAPSHOT-COUNT)"
+}
+
 # TODO: documentation
 print_sink_details ()
 {
@@ -285,18 +308,7 @@ cat <<EOF | less
 EOF
 }
 
-# generate a 32 digit hash of a directory
-#  @param $1 Path to directory
-hash_directory ()
-{
-    pushd . > /dev/null
-    cd "$1"
-    HASH=$(find . -type f -printf '%T@ %p\n' 2>/dev/null|sort -k 1nr \
-        |sed 's/^[^ ]* //'|head -n10|md5sum)
-    HASH=${HASH:0:32}
-    popd > /dev/null
-    echo $HASH
-}
+## SNAPSHOTS ###################################################################
 
 # calculate and compare the snapshot hash against the node hash
 #  @param $1 Path to snapshot
