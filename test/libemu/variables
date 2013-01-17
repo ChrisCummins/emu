@@ -2,6 +2,6 @@ set -eu
 test_setup
 source /usr/local/lib/libemu
 
-assert "$VERSION"
+assert "$EMU_VERSION"
 
 test_teardown
