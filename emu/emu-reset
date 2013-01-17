@@ -29,7 +29,8 @@ main ()
             SINK="$(ls $SOURCE_DIR/.emu/sinks)"
         else
             emu_error "invalid snapshot"
-            exit_with_error
+            emu_panic
+            exit $EMU_EXIT_INCORRECT_COMMAND
         fi
     fi
 
@@ -42,7 +43,8 @@ main ()
     if [[ ! -d "$SINK_DIR" ]]
     then
         emu_error "sink '$SINK' does not exist"
-        exit_with_error
+        emu_panic
+        exit $EMU_EXIT_ERROR
     fi
 
     SNAPSHOT=$(echo "$IN" | tail -n1)
@@ -55,7 +57,8 @@ main ()
     if [[ ! -d "$SNAPSHOT_DIR" ]]
     then
         emu_error "snapshot '$SNAPSHOT' does not exist"
-        exit_with_error
+        emu_panic
+        exit $EMU_EXIT_ERROR
     fi
 
     post_exec_hooks "$SOURCE_DIR"

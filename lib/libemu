@@ -5,8 +5,10 @@
 export EMU_VERSION="0.0.2"
 
 # exit codes
+export EMU_EXIT=0
 export EMU_EXIT_ERROR=1
 export EMU_EXIT_INSUFFICIENT_PERMISSIONS=2
+export EMU_EXIT_BLOCKED=3
 export EMU_EXIT_INCORRECT_COMMAND=126
 export EMU_EXIT_COMMAND_NOT_FOUND=127
 
@@ -116,13 +118,6 @@ emu_panic ()
             fi
         done
     fi
-}
-
-# tidy up and quit with error condition
-exit_with_error ()
-{
-    emu_panic
-    exit $EMU_EXIT_ERROR
 }
 
 ## DIRECTORIES #################################################################
@@ -356,7 +351,8 @@ block_until_dir_free ()
             if [[ $BLOCK_COUNTER -gt $BLOCK_COUNTER_MAX ]]
             then
                 emu_error "failed to get exclusive access to directory:\n  $1"
-                exit_with_error
+                emu_panic
+                exit $EMU_EXIT_BLOCKED
             fi
         fi
 
@@ -528,8 +524,6 @@ verify_node ()
         emu_error "verification failed!\n  Expected: $NODE_HASH\n  Actual:   $HASH"
         return 1
     fi
-
-    exit_with_error
 }
 
 # lookup info from an emu node

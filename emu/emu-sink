@@ -104,7 +104,8 @@ show_sink ()
 
             if [[ FAILURE -ne 0 ]]
             then
-                exit_with_error
+                emu_panic
+                exit $EMU_EXIT_ERROR
             fi
 
             SINKS="$(echo -e SINKS | tail -n+2)"
@@ -183,7 +184,8 @@ main ()
     if [ ! -d "$SOURCE_DIR/.emu/sinks" ]
     then
         emu_error "not an emu source"
-        exit_with_error
+        emu_panic
+        exit $EMU_EXIT_INCORRECT_COMMAND
     fi
 
     case "$1" in

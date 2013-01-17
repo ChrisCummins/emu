@@ -19,7 +19,8 @@ get_all_sinks ()
     if [[ "$SINK_FILES" == "" ]]
     then
         emu_error "no sinks! Add one with 'emu sink add <name> <path>'"
-        exit_with_error
+        emu_panic
+        exit $EMU_EXIT_INCORRECT_COMMAND
     fi
 
     # Check for all sync files.
@@ -29,7 +30,8 @@ get_all_sinks ()
         if [[ ! -d "$SINK/.emu" ]]
         then
             emu_error "sink does not exist:\n  $SINK\n"
-            exit_with_error
+            emu_panic
+            exit $EMU_EXIT_ERROR
         fi
     done
 }
@@ -47,7 +49,8 @@ get_sinks ()
         if [[ "$SINK_FILE" == "" ]]
         then
             emu_error "sink '$ARG' not found!"
-            exit_with_error
+            emu_panic
+            exit $EMU_EXIT_INCORRECT_COMMAND
         fi
         SINK_FILES="$SINK_FILES\n$SINK_FILE"
     done
@@ -271,7 +274,8 @@ main ()
     if (( $? ))
     then
         emu_error "at least one snapshot failed"
-        exit_with_error
+        emu_panic
+        exit $EMU_EXIT_ERROR
     fi
     unlock_dir "$SOURCE_DIR"
     post_exec_hooks "$SOURCE_DIR"
