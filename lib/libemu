@@ -5,8 +5,9 @@
 export EMU_VERSION="0.0.1"
 
 # exit codes
-export EMU_RETURN_ERROR=1
-export EMU_RETURN_COMMAND_NOT_FOUND=127
+export EMU_EXIT_ERROR=1
+export EMU_EXIT_INSUFFICIENT_PERMISSIONS=2
+export EMU_EXIT_COMMAND_NOT_FOUND=127
 
 #### PRIVATE
 
@@ -93,7 +94,7 @@ command_not_found ()
     local command=$1
 
     emu_echo "'$command' is not an emu command. See 'emu help'."
-    exit $EMU_RETURN_COMMAND_NOT_FOUND
+    exit $EMU_EXIT_COMMAND_NOT_FOUND
 }
 
 # tidy up and quit with error condition
@@ -115,7 +116,7 @@ exit_with_error ()
             unlock_dir "$sink"
         fi
     done
-    exit $EMU_RETURN_ERROR
+    exit $EMU_EXIT_ERROR
 }
 
 # check for write permissions
@@ -134,7 +135,7 @@ exit_if_no_dir_permissions ()
     if (( $? ))
     then
         emu_error "insufficient user permissions for '$dir'"
-        exit 1
+        exit $EMU_EXIT_INSUFFICIENT_PERMISSIONS
     fi
     cat "$dir/.emu-permissions-test" &>/dev/null
     local return=$?
@@ -143,7 +144,7 @@ exit_if_no_dir_permissions ()
     if (( $return ))
     then
         emu_error "insufficient user permissions for '$dir'"
-        exit 1
+        exit $EMU_EXIT_INSUFFICIENT_PERMISSIONS
     fi
 }
 
@@ -215,7 +216,7 @@ block_until_dir_free ()
             if [[ $BLOCK_COUNTER -gt $BLOCK_COUNTER_MAX ]]
             then
                 emu_error "failed to get exclusive access to directory:\n  $1"
-                exit_with_error
+                exit_with_error "$SOURCE_DIR"
             fi
         fi
 
