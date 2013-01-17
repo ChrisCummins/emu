@@ -2,7 +2,6 @@
 
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
-SOURCE_DIR="$(pwd)"
 
 help ()
 {
@@ -18,7 +17,8 @@ main ()
     fi
 
     emu restore $@
-    pre_exec_hooks "$SOURCE_DIR"
+    get_source_dir_or_fail
+    pre_exec_hooks
 
     IN=$(echo "$1" | tr ":" "\n")
 
