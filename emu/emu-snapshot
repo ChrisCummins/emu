@@ -2,7 +2,6 @@
 
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
-SOURCE_DIR="$(pwd)"
 
 help ()
 {
@@ -262,14 +261,18 @@ main ()
         exit 0
     fi
 
-    pre_exec_hooks "$SOURCE_DIR"
+    get_source_dir_or_fail
+    pre_exec_hooks
+
     if [[ "$@" == "" ]]
     then
         get_all_sinks
     else
         get_sinks $@
     fi
+
     lock_dir "$SOURCE_DIR"
+
     perform_snapshots
     if (( $? ))
     then
@@ -277,7 +280,8 @@ main ()
         emu_panic
         exit $EMU_EXIT_ERROR
     fi
+
     unlock_dir "$SOURCE_DIR"
-    post_exec_hooks "$SOURCE_DIR"
+    post_exec_hooks
 }
 main $@
