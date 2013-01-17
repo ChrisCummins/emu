@@ -443,20 +443,29 @@ sink_max_snapshots ()
     echo "$(cat $1/.emu/config/SNAPSHOT-COUNT)"
 }
 
-# TODO: documentation
+# prints details about a given sink
+#  @param $1          name of the sink
+#  @var   $SOURCE_DIR (optional) path of source directory
 print_sink_details ()
 {
-    SINK_PATH="$(cat $SOURCE_DIR/.emu/sinks/$1)"
-    SIZE="$(du -sh $SINK_PATH | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')"
-    HEAD="$(cat $SINK_PATH/.emu/HEAD)"
-    SNAPSHOT_COUNT="$(ls $SINK_PATH/.emu/trees | wc -l)"
-    LOAD=$(echo "$SNAPSHOT_COUNT / $(cat $SINK_PATH/.emu/config/SNAPSHOT-COUNT) * 100" | bc -l)
+    local sink_name="$1"
+
+    if [ -z "$SOURCE_DIR" ]
+    then
+        get_source_dir
+    fi
+
+    local sink_path="$(cat $SOURCE_DIR/.emu/sinks/$sink_name)"
+    local size="$(du -sh $sink_path | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')"
+    local head="$(cat $sink_path/.emu/HEAD)"
+    local snapshot_count="$(ls $sink_path/.emu/trees | wc -l)"
+    local load=$(echo "$snapshot_count / $(cat $sink_path/.emu/config/SNAPSHOT-COUNT) * 100" | bc -l)
 cat <<EOF | less
 * $1
-  Path:           $SINK_PATH
-  Size:           $SIZE
-  Last snapshot:  $(cat $SINK_PATH/.emu/nodes/$HEAD 2>/dev/null | grep Date | sed -r 's/Date +(.*)/\1/')
-  Snapshot count: $SNAPSHOT_COUNT (${LOAD::2}%)
+  Path:           $sink_path
+  Size:           $size
+  Last snapshot:  $(cat $sink_path/.emu/nodes/$head 2>/dev/null | grep Date | sed -r 's/Date +(.*)/\1/')
+  Snapshot count: $snapshot_count (${load::2}%)
 EOF
 }
 
