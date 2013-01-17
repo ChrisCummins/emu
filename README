@@ -1,9 +1,9 @@
-README for emu version 0.0.1
+README for emu version 0.0.2
 --------------------------------------------------------------------------------
 Copyright (C) 2012 Chris Cummins <chrisc.101@gmail.com>
 See the end of this file for license conditions.
 
-This directory tree holds version 0.0.1 of emu, a simple, rotating backup
+This directory tree holds version 0.0.2 of emu, a simple, rotating backup
 program. Emu takes advantages of some of the many tools available on UNIX-like
 systems to transparently and simply record snapshots of a file system. It does
 not store data in proprietary file formats, nor does it hide anything from the
