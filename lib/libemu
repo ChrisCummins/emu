@@ -92,8 +92,7 @@ command_not_found ()
     exit $EMU_EXIT_COMMAND_NOT_FOUND
 }
 
-# panic!!
-#  @env SOURCE_DIR needed for executing hooks
+# panic, execute hooks and prepare for crash
 emu_panic ()
 {
     if [ -z "$SOURCE_DIR" ]
@@ -250,6 +249,25 @@ get_source_dir ()
     popd &>/dev/null
 
     return $r
+}
+
+get_source_dir_if_empty ()
+{
+    if [ -z "$SOURCE_DIR" ]
+    then
+        get_source_dir
+    fi
+}
+
+# looks for an emu source, if it doesn't find one, it exits
+get_source_dir_or_fail ()
+{
+    get_source_dir
+    if [ -z "$SOURCE_DIR" ]
+    then
+        emu_panic
+        exit $EMU_EXIT_ERROR
+    fi
 }
 
 # returns whether a directory is a sink or not
@@ -419,38 +437,36 @@ hash_directory ()
 
 ## HOOKS #################################################################
 
-_exec_list ()
+_exec_hooks_list ()
 {
-    local list="$1"
+    local ext="$1"
 
-    for exec in "$list"
+    get_source_dir_if_empty
+    local hooks_list="$(find "$SOURCE_DIR/.emu/hooks/exec/" -name '*.'$ext 2>/dev/null)"
+    echo "hooks list: $hooks_list"
+
+    for exec in $hooks_list
     do
         $exec
     done
 }
 
 # execute pre-execution hooks
-#  @param $1 Path to source directory
 pre_exec_hooks ()
 {
-    HOOKS=$(find "$1/.emu/hooks/exec/" -name '*.pre' 2>/dev/null)
-    _exec_list $HOOKS
+    _exec_hooks_list "pre"
 }
 
 # execute post-execution hooks
-#  @param $1 Path to source directory
 post_exec_hooks ()
 {
-    HOOKS=$(find "$1/.emu/hooks/exec/" -name '*.post' 2>/dev/null)
-    _exec_list $HOOKS
+    _exec_hooks_list "post"
 }
 
 # execute error condition hooks
-#  @param $1 Path to source directory
 error_exec_hooks ()
 {
-    HOOKS=$(find "$1/.emu/hooks/exec/" -name '*.error' 2>/dev/null)
-    _exec_list $HOOKS
+    _exec_hooks_list "error"
 }
 
 ## SINKS #######################################################################
