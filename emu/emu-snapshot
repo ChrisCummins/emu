@@ -243,6 +243,55 @@ perform_snapshots ()
 
 main ()
 {
+    while getopts ":Mvm:" OPT
+    do
+        case $OPT in
+            n)
+                EMU_DRY_RUN=1
+                ;;
+            m)
+                SNAPSHOT_MESSAGE=$OPTARG
+                ;;
+            M)
+                if [ -z $EDITOR ]
+                then
+                    emu_error "EDITOR variable not specified"
+                    exit $EMU_EXIT_INCORRECT_COMMAND
+                fi
+
+                $EDITOR EMU_SNAPSHOT_MSG
+                SNAPSHOT_MESSAGE=$(cat EMU_SNAPSHOT_MSG)
+                rm -f EMU_SNAPSHOT_MSG
+                ;;
+            v)
+                EMU_VERBOSE="-v"
+                ;;
+            p)
+                EMU_PROGRESS=1
+                ;;
+            f)
+                EMU_SNAPSHOT_FORCE=1
+                ;;
+            p)
+                EMU_SNAPSHOT_UBER_FORCE=1
+                ;;
+            \?)
+                emu_error "invalid option: -$OPTARG"
+                exit 1
+                ;;
+            :)
+                emu_error "option -$OPTARG requires an argument"
+                exit 1
+                ;;
+        esac
+    done
+
+    # dispose of args
+    while [ "${1:0:1}" = "-" ]
+    do
+        shift
+    done
+
     if [ "$1" = "help" ]
     then
         help
