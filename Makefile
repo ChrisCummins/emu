@@ -7,23 +7,25 @@ RM := rm -fv
 .PHONY: help
 
 help:
-	$(QUIET) echo "  usage: <install|uninstall>[_share|_lib|_exec|_doc]"
+	$(QUIET) echo "  usage: <install|uninstall>[-<share|lib|exec|doc>]"
 
-install_exec:
+# installer
+install-exec:
 	$(QUIET) find emu -type f -exec $(CP) {} /usr/local/bin \;
 
-install_lib:
+install-lib:
 	$(QUIET) find lib -type f -exec $(CP) {} /usr/local/lib \;
 
-install_share:
+install-share:
 	$(QUIET) $(CP) -r share/emu /usr/local/share
 
-install_doc:
+install-doc:
 	$(QUIET) find share/man/ -type f -exec $(CP) {} /usr/local/share/man/man1 \;
 
-install: install_share install_lib install_exec install_doc
+install: install-share install-lib install-exec install-doc
 
-uninstall_exec:
+# uninstaller
+uninstall-exec:
 	$(QUIET) $(RM) /usr/local/bin/emu
 	$(QUIET) $(RM) /usr/local/bin/emu-init
 	$(QUIET) $(RM) /usr/local/bin/emu-log
@@ -33,17 +35,18 @@ uninstall_exec:
 	$(QUIET) $(RM) /usr/local/bin/emu-snapshot
 	$(QUIET) $(RM) /usr/local/bin/emu-verify
 
-uninstall_lib:
+uninstall-lib:
 	$(QUIET) $(RM) /usr/local/lib/libemu
 
-uninstall_share:
+uninstall-share:
 	$(QUIET) $(RM) -r /usr/local/share/emu
 
-uninstall_doc:
+uninstall-doc:
 	$(QUIET) $(RM) /usr/local/share/man/man1/emu*.1
 
-uninstall: uninstall_share uninstall_lib uninstall_exec uninstall_doc
+uninstall: uninstall-share uninstall-lib uninstall-exec uninstall-doc
 
+# misc
 .PHONY: test check clean release
 
 test check:
