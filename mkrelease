@@ -33,17 +33,18 @@ then
 fi
 
 # generate file list
-FILELIST=$(find ./ -type f \
+FILELIST=$(find . -type f \
     | grep -v '.git' \
-    | grep -v releases/emu-*.tar.gz \
-    | grep -v releases/emu-*.tar.gz.md5 \
-    | grep -v mkrelease \
-    | grep -v CHANGELOG)
+    | grep -v 'releases/emu-*.tar.gz' \
+    | grep -v 'releases/emu-*.tar.gz.md5' \
+    | grep -v 'mkrelease' \
+    | grep -v 'mktar' \
+    | grep -v 'CHANGELOG')
 
 # update references to version in filelist
-for f in $FILELIST
+for file in $FILELIST
 do
-    sed -i "s/$OLD_VERSION/$VERSION/g" $f
+    sed -i "s/$OLD_VERSION/$VERSION/g" $file
 done
 
 # generate man list
