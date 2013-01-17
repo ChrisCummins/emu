@@ -360,22 +360,36 @@ block_until_dir_free ()
 }
 
 # lock the specified directory
-#  @param $1 Path to the directory to lock
+#  @param $1 (optional) Path to the directory to lock
 lock_dir ()
 {
+    local dir="$1"
+
+    if [ -z "$dir" ]
+    then
+        dir="$(pwd -P)"
+    fi
+
     BLOCK_SLEEP_TIME=1
     BLOCK_COUNTER=0
     BLOCK_COUNTER_MAX=10
 
-    block_until_dir_free "$1"
-    echo -e "DATE: $(date)\nPID:  $$" > "$1/.emu/LOCK"
+    block_until_dir_free "$dir"
+    echo -e "DATE: $(date)\nPID:  $$" > "$dir/.emu/LOCK"
 }
 
 # remove the lock on source directory
-#  @param $1 Path to directory to lock
+#  @param $1 (optional) Path to directory to lock
 unlock_dir ()
 {
-    LOCK=$(cat "$1/.emu/LOCK" 2> /dev/null)
+    local dir="$1"
+
+    if [ -z "$dir" ]
+    then
+        dir="$(pwd -P)"
+    fi
+
+    LOCK=$(cat "$dir/.emu/LOCK" 2> /dev/null)
     if [[ "$LOCK" == "" ]]
     then
         return
@@ -384,7 +398,7 @@ unlock_dir ()
 
     if [[ $$ -eq $LOCK_PID ]]
     then
-        rm -f "$1/.emu/LOCK"
+        rm -f "$dir/.emu/LOCK"
     else
         emu_error "cannot free lock $LOCK_PID with key $$"
     fi
