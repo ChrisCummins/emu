@@ -7,6 +7,7 @@ export EMU_VERSION="0.0.2"
 # exit codes
 export EMU_EXIT_ERROR=1
 export EMU_EXIT_INSUFFICIENT_PERMISSIONS=2
+export EMU_EXIT_INCORRECT_COMMAND=126
 export EMU_EXIT_COMMAND_NOT_FOUND=127
 
 ## ECHO ########################################################################
