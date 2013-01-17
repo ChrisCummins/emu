@@ -1,0 +1,15 @@
+set -eu
+test_setup
+
+rm -fv /tmp/emu/help /tmp/emu/help2
+touch /tmp/emu/help
+emu help restore >> /tmp/emu/help
+assert_file_is_not_empty /tmp/emu/help
+
+touch /tmp/emu/help2
+emu restore help >> /tmp/emu/help2
+assert_file_is_not_empty /tmp/emu/help2
+
+assert_files_match /tmp/emu/help /tmp/emu/help2
+
+test_teardown
