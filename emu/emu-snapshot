@@ -258,7 +258,7 @@ main ()
     if [ "$1" = "help" ]
     then
         help
-        exit 0
+        exit $EMU_EXIT
     fi
 
     get_source_dir_or_fail
