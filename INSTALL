@@ -1,0 +1,25 @@
+INSTALLATION INSTRUCTIONS for emu version 0.0.1
+--------------------------------------------------------------------------------
+For most users, entering the following command at a terminal from this directory
+will perform all the necessary installation tasks:
+
+    $ sudo make install && make check
+
+DETAILED INSTRUCTIONS
+--------------------------------------------------------------------------------
+Emu consists of several modules, i.e., the executables, the library, the shared
+files, and the documentation. There are make install/uninstall rules for each of
+these. Consult the make help for further information:
+
+    $ make help
+
+To install all of the emu modules simultaneously, execute 'make install' as the
+root user. This will install all of the program files and executables in the
+filesystem, under the /usr/local prefix. At this point in time there is no
+support for installing emu in other directories (patches and pull requests
+welcome!).
+
+Emu comes with a test suite which can be executed using 'make check'. Emu must
+be installed first. NOTE that some of the tests require root permissions, these
+are granted using the sudo package, so you may be prompted for your sudo
+password.

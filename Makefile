@@ -1,50 +1,53 @@
-VERSION = 0.0.1
+QUIET_ = @
+QUIET = $(QUIET_$(V))
 
-default:
-	@echo "  useage: <install|uninstall>[_share|_lib|_exec|_doc]"
+.PHONY: help
 
-install_exec:
-	@find emu -type f -exec cp -v {} /usr/local/bin \;
+help:
+	$(QUIET) echo "  usage: <install|uninstall>[-<share|lib|exec|doc>]"
 
-install_lib:
-	@find lib -type f -exec cp -v {} /usr/local/lib \;
+# installer
+install-exec:
+	find emu -type f -exec cp {} /usr/local/bin \;
 
-install_share:
-	@cp -rv share/emu /usr/local/share
+install-lib:
+	find lib -type f -exec cp {} /usr/local/lib \;
 
-install_doc:
-	@find share/man/ -type f -exec cp -v {} /usr/local/share/man/man1 \;
+install-share:
+	cp -r share/emu /usr/local/share
 
-install: install_share install_lib install_exec install_doc
+install-doc:
+	find share/man/ -type f -exec cp {} /usr/local/share/man/man1 \;
 
-uninstall_exec:
-	@rm -fv /usr/local/bin/emu
-	@rm -fv /usr/local/bin/emu-init
-	@rm -fv /usr/local/bin/emu-log
-	@rm -fv /usr/local/bin/emu-reset
-	@rm -fv /usr/local/bin/emu-restore
-	@rm -fv /usr/local/bin/emu-sink
-	@rm -fv /usr/local/bin/emu-snapshot
-	@rm -fv /usr/local/bin/emu-verify
+install: install-share install-lib install-exec install-doc
 
-uninstall_lib:
-	@rm -fv /usr/local/lib/libemu
+# uninstaller
+uninstall-exec:
+	rm -f /usr/local/bin/emu
+	rm -f /usr/local/bin/emu-init
+	rm -f /usr/local/bin/emu-log
+	rm -f /usr/local/bin/emu-reset
+	rm -f /usr/local/bin/emu-restore
+	rm -f /usr/local/bin/emu-sink
+	rm -f /usr/local/bin/emu-snapshot
+	rm -f /usr/local/bin/emu-verify
 
-uninstall_share:
-	@rm -rfv /usr/local/share/emu
+uninstall-lib:
+	rm -f /usr/local/lib/libemu
 
-uninstall_doc:
-	@rm -fv /usr/local/share/man/man1/emu*.1
+uninstall-share:
+	rm -fr /usr/local/share/emu
 
-uninstall: uninstall_share uninstall_lib uninstall_exec uninstall_doc
+uninstall-doc:
+	rm -f /usr/local/share/man/man1/emu*.1
 
-check:
-	@bash test/run-tests.sh
+uninstall: uninstall-share uninstall-lib uninstall-exec uninstall-doc
 
-test: check
+# misc
+.PHONY: test check clean release
+
+test check:
+	$(QUIET) bash test/run-tests.sh
 
 clean:
-	@rm -rfv /tmp/emu
-
-release:
-	@releases/release.sh
+	rm -rfv /tmp/emu

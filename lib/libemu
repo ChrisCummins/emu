@@ -1,59 +1,104 @@
 #!/bin/bash
-PROG="emu"
-VERSION="0.0.1"
 
-# Exit code for command not found error.
-EXIT_COMMAND_NOT_FOUND=127
+#### VARIABLES
 
-# Echo emu standard output.
-#
-# @param $1 msg.
+export EMU_VERSION="0.0.1"
+
+# exit codes
+export EMU_EXIT_ERROR=1
+export EMU_EXIT_INSUFFICIENT_PERMISSIONS=2
+export EMU_EXIT_COMMAND_NOT_FOUND=127
+
+#### PRIVATE
+
+_emu_echo ()
+{
+    local msg="$1"
+    local stream=$2
+    local emu_message_color="$(tput sgr0)"
+    local reset_color="$(tput sgr0)"
+
+    echo -n $emu_prefix_color >&$stream
+    if [ -z $EMU_ECHO_PREFIX ]
+    then
+        echo -n "emu" >&$stream
+    else
+        echo -n "$EMU_ECHO_PREFIX" >&$stream
+    fi
+    echo -n $emu_message_color >&$stream
+    echo -ne ": $msg" >&$stream
+    echo $reset_color >&$stream
+    echo -n $emu_prefix_color >&$stream
+}
+
+#### PUBLIC
+
+# print a message
+#  @param $1                         msg
+#  @var   EMU_ECHO_PREFIX (optional) output prefix
 emu_echo ()
 {
     local msg="$1"
 
-    if [ -z $SCRIPT ]
+    if [ $(which tput 2>/dev/null) ]
     then
-        echo -e "emu: $msg"
-    else
-        echo -e "$SCRIPT: $msg"
+        local emu_prefix_color="$(tput setaf 2)"
     fi
+
+    _emu_echo "$msg" 1
+    return 0
 }
 
-# Echo emu error output.
-#
-# @param $1 msg.
+# print a warning message
+#  @param $1                         msg
+#  @var   EMU_ECHO_PREFIX (optional) output prefix
+emu_warning ()
+{
+    local msg="$1"
+
+    if [ $(which tput 2>/dev/null) ]
+    then
+        local emu_prefix_color="$(tput setaf 3)"
+    fi
+
+    _emu_echo "$msg" 2
+    return 0
+}
+
+# print an error message
+#  @param $1                         msg
+#  @var   EMU_ECHO_PREFIX (optional) output prefix
 emu_error ()
 {
     local msg="$1"
 
-    if [ -z $SCRIPT ]
+    if [ $(which tput 2>/dev/null) ]
     then
-        echo -e "emu: $msg" >&2
-    else
-        echo -e "$SCRIPT: $msg" >&2
+        local emu_prefix_color="$(tput setaf 1)"
     fi
+
+    _emu_echo "$msg" 2
+    return 0
 }
 
+# TODO: implement
 get_source_dir ()
 {
     ls
 }
 
-# Print 'not a command' text and exit.
-#
-# @param $1 name of missing command.
-exit_command_not_found ()
+# print 'not a command' text and exit
+#  @param $1 name of missing command
+command_not_found ()
 {
     local command=$1
 
-    echo "emu: '$command' is not an $PROG command. See 'emu help'."
-    exit $EXIT_COMMAND_NOT_FOUND
+    emu_echo "'$command' is not an emu command. See 'emu help'."
+    exit $EMU_EXIT_COMMAND_NOT_FOUND
 }
 
-# Tidy up and quit with error condition.
-#
-# @param $1 Path to source directory.
+# tidy up and quit with error condition
+#  @param $1 path to source directory
 exit_with_error ()
 {
     local source_dir="$1"
@@ -61,7 +106,7 @@ exit_with_error ()
     error_exec_hooks "$source_dir"
     unlock_dir "$source_dir"
 
-    # Unlock all sinks.
+    # unlock all sinks
     for sink_file in "$source_dir/.emu/sinks"
     do
         if [[ -f "$sink_file" ]]
@@ -71,13 +116,12 @@ exit_with_error ()
             unlock_dir "$sink"
         fi
     done
-    exit 1
+    exit $EMU_EXIT_ERROR
 }
 
-# Check for write permissions
-#
-# @var $SCRIPT (optional) echo prefix.
-# @param $1 path to the directory.
+# check for write permissions
+#  @var   $SCRIPT (optional) echo prefix
+#  @param $1                 path to the directory
 exit_if_no_dir_permissions ()
 {
     local dir="$1"
@@ -90,8 +134,8 @@ exit_if_no_dir_permissions ()
     touch "$dir/.emu-permissions-test" &>/dev/null
     if (( $? ))
     then
-        echo "$SCRIPT: insufficient user permissions for '$dir'!" >&2
-        exit 1
+        emu_error "insufficient user permissions for '$dir'"
+        exit $EMU_EXIT_INSUFFICIENT_PERMISSIONS
     fi
     cat "$dir/.emu-permissions-test" &>/dev/null
     local return=$?
@@ -99,14 +143,13 @@ exit_if_no_dir_permissions ()
 
     if (( $return ))
     then
-        echo "$SCRIPT: insufficient user permissions for '$dir'!" >&2
-        exit 1
+        emu_error "insufficient user permissions for '$dir'"
+        exit $EMU_EXIT_INSUFFICIENT_PERMISSIONS
     fi
 }
 
-# Execute each in a list of executables.
-#
-# @param $1 a list of absolute paths to files.
+# execute each in a list of executables
+#  @param $1 a list of absolute paths to files
 exec_list ()
 {
     local list="$1"
@@ -117,60 +160,54 @@ exec_list ()
     done
 }
 
-# Execute pre-execution hooks.
-#
-# @param $1 Path to source directory.
+# execute pre-execution hooks
+#  @param $1 Path to source directory
 pre_exec_hooks ()
 {
-    HOOKS=$(find "$1/.$PROG/hooks/exec/" -name '*.pre' 2>/dev/null)
+    HOOKS=$(find "$1/.emu/hooks/exec/" -name '*.pre' 2>/dev/null)
     exec_list $HOOKS
 }
 
-# Execute post-execution hooks.
-#
-# @param $1 Path to source directory.
+# execute post-execution hooks
+#  @param $1 Path to source directory
 post_exec_hooks ()
 {
-    HOOKS=$(find "$1/.$PROG/hooks/exec/" -name '*.post' 2>/dev/null)
+    HOOKS=$(find "$1/.emu/hooks/exec/" -name '*.post' 2>/dev/null)
     exec_list $HOOKS
 }
 
-# Execute error condition hooks.
-#
-# @param $1 Path to source directory.
+# execute error condition hooks
+#  @param $1 Path to source directory
 error_exec_hooks ()
 {
-    HOOKS=$(find "$1/.$PROG/hooks/exec/" -name '*.error' 2>/dev/null)
+    HOOKS=$(find "$1/.emu/hooks/exec/" -name '*.error' 2>/dev/null)
     exec_list $HOOKS
 }
 
-# Return the number of snapshots in sink.
-#
-# @param $1 Path to sink directory.
+# return the number of snapshots in sink
+#  @param $1 Path to sink directory
 sink_snapshot_count ()
 {
-    echo "$(ls -l "$1/.$PROG/trees" | wc -l)"
+    echo "$(ls -l "$1/.emu/trees" | wc -l)"
 }
 
-# Return the max number of snapshots for sink.
-#
-# @param $1 Path to sink directory.
+# return the max number of snapshots for sink
+#  @param $1 Path to sink directory
 sink_max_snapshots ()
 {
-    echo "$(cat $1/.$PROG/config/SNAPSHOT-COUNT)"
+    echo "$(cat $1/.emu/config/SNAPSHOT-COUNT)"
 }
 
-# Check and block directory. If the directory is already locked, it will block
-# and poll periodically until free.
-#
-# @param $1 Path to directory to block on.
-# @var BLOCK_SLEEP_TIME Time to sleep between block attempts (s).
-# @var BLOCK_COUNTER Numeric Variable which must be initialised to 0.
-# @var BLOCK_COUNTER_MAX Maximum number of attempts before failing, or -1 to
-#                        continue indefinitely.
+# check and block directory. If the directory is already locked, it will block
+# and poll periodically until free
+#  @param $1                Path to directory to block on
+#  @var   BLOCK_SLEEP_TIME  Time to sleep between block attempts (s)
+#  @var   BLOCK_COUNTER     Numeric Variable which must be initialised to 0
+#  @var   BLOCK_COUNTER_MAX Maximum number of attempts before failing, or -1 to
+#                           continue indefinitely
 block_until_dir_free ()
 {
-    if [[ -f "$1/.$PROG/LOCK" ]]
+    if [[ -f "$1/.emu/LOCK" ]]
     then
         BLOCK_COUNTER=$((BLOCK_COUNTER+1))
 
@@ -178,16 +215,16 @@ block_until_dir_free ()
         then
             if [[ $BLOCK_COUNTER -gt $BLOCK_COUNTER_MAX ]]
             then
-                echo -e "\n$SCRIPT: failed to get exclusive access to directory:\n  $1" >&2
-                exit_with_error
+                emu_error "failed to get exclusive access to directory:\n  $1"
+                exit_with_error "$SOURCE_DIR"
             fi
         fi
 
-        # Print the PID of blocking process.
-        BLOCK_PID=$(cat "$1/.$PROG/LOCK" | grep PID | sed -r 's/PID: +//')
+        # print the PID of blocking process
+        BLOCK_PID=$(cat "$1/.emu/LOCK" | grep PID | sed -r 's/PID: +//')
         echo -en "\r$1 blocking on process: $BLOCK_PID "
 
-        # Print status of blocking process.
+        # print status of blocking process
         BLOCK_STATUS=$(ps -p "$BLOCK_PID")
         if (( $? ))
         then
@@ -200,9 +237,8 @@ block_until_dir_free ()
     fi
 }
 
-# Lock the specified directory.
-#
-# @param $1 Path to the directory to lock.
+# lock the specified directory
+#  @param $1 Path to the directory to lock
 lock_dir ()
 {
     BLOCK_SLEEP_TIME=1
@@ -210,15 +246,14 @@ lock_dir ()
     BLOCK_COUNTER_MAX=10
 
     block_until_dir_free "$1"
-    echo -e "DATE: $(date)\nPID:  $$" > "$1/.$PROG/LOCK"
+    echo -e "DATE: $(date)\nPID:  $$" > "$1/.emu/LOCK"
 }
 
-# Remove the lock on source directory.
-#
-# @param $1 Path to directory to lock.
+# remove the lock on source directory
+#  @param $1 Path to directory to lock
 unlock_dir ()
 {
-    LOCK=$(cat "$1/.$PROG/LOCK" 2> /dev/null)
+    LOCK=$(cat "$1/.emu/LOCK" 2> /dev/null)
     if [[ "$LOCK" == "" ]]
     then
         return
@@ -227,31 +262,31 @@ unlock_dir ()
 
     if [[ $$ -eq $LOCK_PID ]]
     then
-        rm -f "$1/.$PROG/LOCK"
+        rm -f "$1/.emu/LOCK"
     else
-        echo "$SCRIPT: Cannot free lock $LOCK_PID with key $$" >&2
+        emu_error "cannot free lock $LOCK_PID with key $$"
     fi
 }
 
+# TODO: documentation
 print_sink_details ()
 {
-    SINK_PATH="$(cat $SOURCE_DIR/.$PROG/sinks/$1)"
+    SINK_PATH="$(cat $SOURCE_DIR/.emu/sinks/$1)"
     SIZE="$(du -sh $SINK_PATH | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')"
-    HEAD="$(cat $SINK_PATH/.$PROG/HEAD)"
-    SNAPSHOT_COUNT="$(ls $SINK_PATH/.$PROG/trees | wc -l)"
-    LOAD=$(echo "$SNAPSHOT_COUNT / $(cat $SINK_PATH/.$PROG/config/SNAPSHOT-COUNT) * 100" | bc -l)
+    HEAD="$(cat $SINK_PATH/.emu/HEAD)"
+    SNAPSHOT_COUNT="$(ls $SINK_PATH/.emu/trees | wc -l)"
+    LOAD=$(echo "$SNAPSHOT_COUNT / $(cat $SINK_PATH/.emu/config/SNAPSHOT-COUNT) * 100" | bc -l)
 cat <<EOF | less
 * $1
   Path:           $SINK_PATH
   Size:           $SIZE
-  Last snapshot:  $(cat $SINK_PATH/.$PROG/nodes/$HEAD 2>/dev/null | grep Date | sed -r 's/Date +(.*)/\1/')
+  Last snapshot:  $(cat $SINK_PATH/.emu/nodes/$HEAD 2>/dev/null | grep Date | sed -r 's/Date +(.*)/\1/')
   Snapshot count: $SNAPSHOT_COUNT (${LOAD::2}%)
 EOF
 }
 
-# Generate a 32 digit hash of a directory.
-#
-# @param $1 Path to directory.
+# generate a 32 digit hash of a directory
+#  @param $1 Path to directory
 hash_directory ()
 {
     pushd . > /dev/null
@@ -263,9 +298,8 @@ hash_directory ()
     echo $HASH
 }
 
-# Calculate and compare the snapshot hash against the node hash.
-#
-# @param $1 Path to snapshot.
+# calculate and compare the snapshot hash against the node hash
+#  @param $1 Path to snapshot
 verify_node ()
 {
     NODE=$(basename "$1")
@@ -276,20 +310,17 @@ verify_node ()
     then
         return 0
     else
-        echo "$SCRIPT: verification failed!" >&2
-        echo "  Expected: $NODE_HASH" >&2
-        echo "  Actual:   $HASH" >&2
+        emu_error "verification failed!\n  Expected: $NODE_HASH\n  Actual:   $HASH"
         return 1
     fi
 
     exit_with_error "$SOURCE_DIR"
 }
 
-# Lookup info from an emu node
-#
-# @param $1 Node path
-# @param $2 Key
-# @return Value for key, or empty string if not found
+# lookup info from an emu node
+#  @param  $1 Node path
+#  @param  $2 Key
+#  @return    Value for key, or empty string if not found
 lookup_node_key ()
 {
     echo "$(cat $1 2>/dev/null | grep $2 | sed -r 's/'$2' +(.*)/\1/')"

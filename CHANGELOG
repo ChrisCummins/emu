@@ -1,0 +1,378 @@
+emu-0.0.1 (Thu Jan 17 11:51:54 GMT 2013)
+--------------------------------------------------------------------------------
+
+Date:   Thu Jan 17 11:51:32 2013 +0000
+    Rename make-release mkrelease
+
+Date:   Thu Jan 17 11:50:12 2013 +0000
+    make: remove release rule
+
+Date:   Thu Jan 17 11:47:45 2013 +0000
+    Add release documentation
+
+Date:   Thu Jan 17 11:32:08 2013 +0000
+    libemu: exit code vars
+
+Date:   Thu Jan 17 11:27:21 2013 +0000
+    libemu: update documentation
+
+Date:   Thu Jan 17 11:15:07 2013 +0000
+    make: Don't use $(QUIET) without good cause
+
+Date:   Thu Jan 17 11:12:20 2013 +0000
+    make: use '-' to separate words in rules
+
+Date:   Thu Jan 17 11:10:30 2013 +0000
+    test: Fix libemu var name
+
+Date:   Mon Dec 17 16:11:32 2012 +0000
+    make: Fix typo
+
+Date:   Mon Dec 17 16:11:04 2012 +0000
+    make: Rename 'default' to 'help'
+
+Date:   Mon Dec 17 16:10:23 2012 +0000
+    make: Remove 'VERSION' var
+
+Date:   Mon Dec 17 16:09:37 2012 +0000
+    make: Use portability variables
+
+Date:   Mon Dec 17 16:07:16 2012 +0000
+    make: Assign phony rules
+
+Date:   Mon Dec 17 16:06:33 2012 +0000
+    Use conventional $(QUIET) Makefile assignment
+
+    - make V=1 will now be verbose
+
+Date:   Thu Dec 6 20:56:11 2012 +0000
+    libemu: Refactor command_not_found
+
+Date:   Thu Dec 6 20:54:59 2012 +0000
+    Add global constant $EMU_VERSION
+
+Date:   Thu Dec 6 20:53:40 2012 +0000
+    libemu: Correct echo usage
+
+Date:   Thu Dec 6 20:50:10 2012 +0000
+    test: Add libemu echo test
+
+Date:   Thu Dec 6 20:42:05 2012 +0000
+    Remove $PROG variable
+
+    - Refactor '$PROG' -> 'emu'
+Merge: 2b4a93e 53ac6b2
+
+Date:   Thu Dec 6 20:37:48 2012 +0000
+    Merge branch 'wip/echo' into next
+
+Date:   Thu Dec 6 20:36:49 2012 +0000
+    libemu: Standardise echo functions
+
+    - There are three functions providing message printing for emu:
+      emu_echo(), emu_warning() and emu_error().
+
+Date:   Thu Dec 6 20:08:54 2012 +0000
+    Tidy use of emu_echo and emu_error
+
+    - Messages begin with lowercase letter.
+
+    - Message do not end in a full stop or other punctuation.
+
+Date:   Thu Dec 6 20:05:54 2012 +0000
+    emu: Fix error output
+
+Date:   Thu Dec 6 20:05:27 2012 +0000
+    Add EMU_ECHO_PREFIX constant
+
+Date:   Thu Dec 6 17:06:26 2012 +0000
+    libemu: Add emu_echo() and emu_error() functions
+
+Date:   Thu Dec 6 17:06:12 2012 +0000
+    Fix makefile lib target location
+
+Date:   Thu Dec 6 14:12:38 2012 +0000
+    libemu: Refactor with 'local' variables
+
+Date:   Thu Dec 6 14:10:05 2012 +0000
+    libemu: Adds exit_command_not_found()
+
+Date:   Fri Nov 30 15:59:16 2012 +0000
+    libemu: Add emu_echo() and emu_error()
+
+Date:   Mon Nov 26 22:54:10 2012 +0000
+    Fix Makefile rules
+
+Date:   Sun Nov 25 21:38:18 2012 +0000
+    Add make-release
+
+Date:   Sun Nov 25 20:34:52 2012 +0000
+    sink: Update man page
+
+Date:   Sun Nov 25 20:34:43 2012 +0000
+    libemu: Add unit tests
+
+Date:   Sun Nov 25 20:34:38 2012 +0000
+    sink: Add unit tests
+
+Date:   Sun Nov 25 20:34:25 2012 +0000
+    test: Add extra assertions
+
+Date:   Sun Nov 25 20:33:57 2012 +0000
+    libemu: Fix permissions test
+
+Date:   Sun Nov 25 20:33:28 2012 +0000
+    sink: Fix sinks list
+
+Date:   Sun Nov 25 20:33:12 2012 +0000
+    init: Fix command args
+
+Date:   Sun Nov 25 16:25:19 2012 +0000
+    libemu: Fix print_sink_details()
+
+Date:   Sun Nov 25 15:17:44 2012 +0000
+    sink: Add relative path support
+
+Date:   Sun Nov 25 13:17:27 2012 +0000
+    test: Use subdirectories for unit tests
+
+Date:   Sun Nov 25 13:10:29 2012 +0000
+    libemu: Add exit_if_no_dir_permissions()
+
+Date:   Sun Nov 25 13:05:11 2012 +0000
+    sink: Add man page
+
+Date:   Sun Nov 25 12:51:14 2012 +0000
+    emu: Add hook man page description
+
+Date:   Sun Nov 25 12:51:05 2012 +0000
+    reset: Fix man page whitespace
+
+Date:   Sun Nov 25 12:50:54 2012 +0000
+    restore: Add man page
+
+Date:   Sun Nov 25 03:05:44 2012 +0000
+    log: Fix man page
+
+Date:   Sun Nov 25 03:05:32 2012 +0000
+    reset: Add man page
+
+Date:   Sun Nov 25 02:58:03 2012 +0000
+    log: Add man page
+
+Date:   Sun Nov 25 02:53:00 2012 +0000
+    snapshot: Add man page
+
+Date:   Sun Nov 25 02:52:45 2012 +0000
+    init: Fix man page
+
+Date:   Sun Nov 25 02:52:21 2012 +0000
+    emu: Use man page
+
+Date:   Sun Nov 25 02:21:06 2012 +0000
+    init: Use man page documentation
+
+Date:   Sun Nov 25 02:20:42 2012 +0000
+    init: Use ENV variable
+
+Date:   Sun Nov 25 01:57:25 2012 +0000
+    Change /usr/share to /usr/local/share
+
+Date:   Sun Nov 25 01:51:11 2012 +0000
+    init: Add permissions check/test
+
+Date:   Sun Nov 25 01:49:59 2012 +0000
+    Add Makefile doc rule
+
+Date:   Sun Nov 25 01:48:36 2012 +0000
+    init: Implement verbosity
+
+Date:   Sun Nov 25 00:55:13 2012 +0000
+    Changed Makefile verbosity
+
+Date:   Sun Nov 25 00:37:55 2012 +0000
+    init: Implement unit tests
+
+Date:   Sun Nov 25 00:36:05 2012 +0000
+    init: Implement command args
+
+Date:   Sat Nov 24 21:40:34 2012 +0000
+    Add test-suite and Makefile rule
+
+    - '$ make check' executes the test suite.
+
+    - Tests are individual executables in the test/ directory.
+
+    - Tests should be as verbose as possible, with a 'running-commentary' of
+      progress printed to stdout and errors printed to stderr.
+
+    - If a test fails, it should exit as soon as possible ('set -e' in bash
+      scripts).
+
+    - test/run-tests.sh executes the tests and prints a summary of the
+      results.
+
+Date:   Sat Nov 24 17:24:21 2012 +0000
+    Change directory layout
+
+    - emu-util has been renamed libemu
+    - use /usr/local/lib for libemu
+
+Date:   Sat Nov 24 17:09:07 2012 +0000
+    restore: fixed stdout
+
+Date:   Sat Nov 24 16:50:02 2012 +0000
+    snapshot: just some fixes
+
+Date:   Sat Nov 24 16:49:40 2012 +0000
+    restore: fix help
+
+Date:   Sat Nov 24 16:49:29 2012 +0000
+    emu: add 'clean' description
+
+Date:   Sat Nov 24 16:33:04 2012 +0000
+    snapshot: Change stdout
+
+Date:   Sat Nov 24 16:32:53 2012 +0000
+    reset: First implementation
+
+Date:   Sat Nov 24 16:32:42 2012 +0000
+    verify: Add single sink command syntax
+
+Date:   Sat Nov 24 16:04:48 2012 +0000
+    util: Fix indendation
+
+Date:   Sat Nov 24 16:04:21 2012 +0000
+    snapshot: Add snapshot name support
+
+Date:   Sat Nov 24 15:14:33 2012 +0000
+    emu: Add reset description
+
+Date:   Sat Nov 24 14:43:36 2012 +0000
+    util: Add lookup_node_key()
+
+Date:   Fri Nov 23 21:58:07 2012 +0000
+    snapshot: Turn off rsync verbosity
+
+Date:   Fri Nov 23 21:57:53 2012 +0000
+    snapshot: Fix hash blocking
+
+Date:   Fri Nov 23 21:57:30 2012 +0000
+    sink: Fix help
+
+Date:   Fri Nov 23 21:57:10 2012 +0000
+    log: Add brief print mode
+
+Date:   Fri Nov 23 21:56:55 2012 +0000
+    emu: Add restore help
+
+Date:   Fri Nov 23 21:30:38 2012 +0000
+    Add project Makefile
+
+Date:   Fri Nov 23 21:30:32 2012 +0000
+    Add usr/share/emu files
+
+Date:   Fri Nov 23 21:30:15 2012 +0000
+    env: Fix emu source path
+
+Date:   Fri Nov 23 21:29:59 2012 +0000
+    Improved help documentation
+
+Date:   Fri Nov 23 20:39:25 2012 +0000
+    sink: Add help
+
+Date:   Fri Nov 23 19:30:36 2012 +0000
+    verify: Add help doc
+
+Date:   Fri Nov 23 01:48:21 2012 +0000
+    Better documentation
+
+Date:   Thu Nov 22 23:55:05 2012 +0000
+    verify: Complete implementation
+
+Date:   Thu Nov 22 23:54:48 2012 +0000
+    snapshot: Refactor hash generation
+
+Date:   Thu Nov 22 22:05:53 2012 +0000
+    verify: First implementation
+
+Date:   Thu Nov 22 22:05:47 2012 +0000
+    log: First implementation
+
+Date:   Thu Nov 22 22:05:41 2012 +0000
+    snapshot: Fix main
+
+Date:   Thu Nov 22 22:05:31 2012 +0000
+    sink: Refactor
+
+Date:   Thu Nov 22 21:03:49 2012 +0000
+    sink: Add main
+
+Date:   Thu Nov 22 20:34:27 2012 +0000
+    Refactor functions to emu-util
+
+Date:   Thu Nov 22 20:25:53 2012 +0000
+    snapshot: Add main
+
+Date:   Thu Nov 22 20:25:08 2012 +0000
+    snapshot: fix output order
+
+Date:   Thu Nov 22 20:19:34 2012 +0000
+    sink: Improve 'show' implementation
+
+Date:   Thu Nov 22 19:48:16 2012 +0000
+    snapshot: Fit exit_with_error
+
+Date:   Thu Nov 22 19:44:21 2012 +0000
+    snapshot: change permissions of node to 0640
+
+Date:   Thu Nov 22 19:44:05 2012 +0000
+    snapshot: Add support for sink args
+
+Date:   Thu Nov 22 19:28:51 2012 +0000
+    Add env script
+
+Date:   Thu Nov 22 19:22:58 2012 +0000
+    snapshot: Implement recursive pop tails
+
+Date:   Thu Nov 22 19:22:33 2012 +0000
+    sink: Add nodes directory
+
+Date:   Thu Nov 22 15:53:51 2012 +0000
+    Add 'config' directories
+
+Date:   Thu Nov 22 15:36:13 2012 +0000
+    snapshot: First implementation
+
+Date:   Thu Nov 22 15:35:35 2012 +0000
+    sink: Add no-command error
+
+Date:   Thu Nov 22 15:35:23 2012 +0000
+    sink: Fix add sink output
+
+Date:   Thu Nov 22 15:35:06 2012 +0000
+    sink: source emu-util
+
+Date:   Thu Nov 22 15:34:56 2012 +0000
+    init: source emu-util
+
+Date:   Thu Nov 22 15:34:46 2012 +0000
+    emu: Add ASCII emu 'bonus'
+
+Date:   Thu Nov 22 11:14:28 2012 +0000
+    sink: help documentation
+
+Date:   Thu Nov 22 11:13:21 2012 +0000
+    emu: Add documentation
+
+Date:   Thu Nov 8 17:44:21 2012 +0000
+    sink: intialise sink dir
+
+Date:   Thu Nov 8 17:11:14 2012 +0000
+    sink: Implement basic functionality
+
+Date:   Thu Nov 8 16:44:09 2012 +0000
+    init: Implement functionality.
+
+Date:   Thu Nov 8 16:15:18 2012 +0000
+    Init repo.

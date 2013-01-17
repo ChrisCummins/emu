@@ -1,0 +1,82 @@
+README for emu version 0.0.1
+--------------------------------------------------------------------------------
+Copyright (C) 2012 Chris Cummins <chrisc.101@gmail.com>
+See the end of this file for license conditions.
+
+This directory tree holds version 0.0.1 of emu, a simple, rotating backup
+program. Emu takes advantages of some of the many tools available on UNIX-like
+systems to transparently and simply record snapshots of a file system. It does
+not store data in proprietary file formats, nor does it hide anything from the
+user, and its simplicity makes it incredibly fast. See the HOW IT WORKS section
+below for a detailed description.
+
+The file INSTALL in this directory contains installation instructions.
+
+REQUIREMENTS
+--------------------------------------------------------------------------------
+Emu has very few run time dependencies, and should run out-of-the-box on most
+GNU/Linux distributions and Mac OSX. If you are unsure that your system will
+suport emu, it is recommended that the test suite be ran after installation, as
+this will pick up on most system incompatabilities. On most systems:
+
+    $ sudo make install && make test
+
+BACKGROUND
+--------------------------------------------------------------------------------
+A snapshot backup system is one in which multiple full "snapshots" of a file
+system are built up incrementally, allowing the user to see, explore or restore
+the state of the filesystem from any one snapshot. Emu refers to the filesystem
+that is to be backed up as a "source". The destination for these source
+snapshots is referred to as a "sink". This is analogous tox electrical sources
+and sinks, the critical difference being of course that data can flow from an
+emu sink to the source (in the case of a restore).
+
+There are many different ways of creating snapshot backups. The first technique
+- the "tarball approach" - is to create a full copy of the source filesystem for
+each snapshot, and to store them in a common location. This is the least
+efficient means of backup creation possible, as the size of the sink dataset
+becomes a linear multiple of the size of the source. So two snapshots require
+double the space of a single snapshot. However, this technique is robust, as the
+independence of the sanpshots means that the loss of one will not affect any
+others.
+
+The second technique is the "incremental approach"; in which the difference
+between the last snapshot and the current source are stored so that when
+combined with the previous snapshots, the full state of the source can be
+created. This massively reduces the data bandwidth requirements, but this "daisy
+chaining" of snapshots is fragile (removing a single link breaks the full
+chain), and the extra computation required to reverse engineer a source from a
+set of snapshots can make snapshots and restorations more time consuming.
+
+The technique that emu uses combines the strenghts of the tarball and
+incremental approaches to produce a robust sink with minimal data bandwidth
+requirements and fast execution times.
+
+HOW IT WORKS
+--------------------------------------------------------------------------------
+One of the key features of emu is the way in which snapshots are stored within a
+sink.
+
+There is a 1-n relationship of sources to sinks. That means that for any
+filesystem that the user wishes to backup, there may be as many backup
+destinations as they wish. This enables multiple redundancy in the case of
+catastrophic data loss.
+
+LICENSE
+--------------------------------------------------------------------------------
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

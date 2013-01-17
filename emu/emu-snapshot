@@ -1,7 +1,7 @@
 #!/bin/sh
 
 source /usr/local/lib/libemu
-SCRIPT=$(basename $0)
+EMU_ECHO_PREFIX=$(basename "$0")
 SOURCE_DIR="$(pwd)"
 
 help ()
@@ -14,11 +14,11 @@ help ()
 # @return SINK_FILES List of paths to sink files.
 get_all_sinks ()
 {
-    SINK_FILES="$(find $SOURCE_DIR/.$PROG/sinks/ | tail -n+2)"
+    SINK_FILES="$(find $SOURCE_DIR/.emu/sinks/ | tail -n+2)"
 
     if [[ "$SINK_FILES" == "" ]]
     then
-        emu_error "no sinks! Add one with '$PROG sink add <name> <path>'"
+        emu_error "no sinks! Add one with 'emu sink add <name> <path>'"
         exit_with_error
     fi
 
@@ -26,7 +26,7 @@ get_all_sinks ()
     for SINK_FILE in $SINK_FILES
     do
         SINK="$(cat $SINK_FILE)"
-        if [[ ! -d "$SINK/.$PROG" ]]
+        if [[ ! -d "$SINK/.emu" ]]
         then
             emu_error "sink does not exist:\n  $SINK\n"
             exit_with_error
@@ -43,7 +43,7 @@ get_sinks ()
     SINK_FILES[$#]=$@
     for ARG in $@
     do
-        SINK_FILE="$(find $SOURCE_DIR/.$PROG/sinks/ -name $ARG)"
+        SINK_FILE="$(find $SOURCE_DIR/.emu/sinks/ -name $ARG)"
         if [[ "$SINK_FILE" == "" ]]
         then
             emu_error "sink '$ARG' not found!"
@@ -60,11 +60,11 @@ get_sinks ()
 # @return HASH a 40 digit snapshot UID.
 generate_hash ()
 {
-    HASH=$(hash_directory "$1/.$PROG/trees/new")
+    HASH=$(hash_directory "$1/.emu/trees/new")
     HASH=$HASH$(printf '%x\n' $(date +'%s') | tail -c8)
 
     # Check if hash exists, and if so, wait.
-    if [[ -f "$1/.$PROG/nodes/$HASH" ]]
+    if [[ -f "$1/.emu/nodes/$HASH" ]]
     then
         sleep 1
         generate_hash "$1"
@@ -88,14 +88,14 @@ generate_snapshot_name ()
 # @var $HASH The 40 digit snapshot UID.
 generate_node ()
 {
-    NODE="$1/.$PROG/nodes/$HASH"
+    NODE="$1/.emu/nodes/$HASH"
     touch "$NODE"
     cat <<EOF >> "$NODE"
 Snapshot $SNAPSHOT
 Parent   $HEAD
 Date     $(date)
-Source   $(cat $1/.$PROG/SOURCE)
-Size     $(du -sh "$1/.$PROG/trees/$HASH" | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')
+Source   $(cat $1/.emu/SOURCE)
+Size     $(du -sh "$1/.emu/trees/$HASH" | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')
 EOF
     chmod 0640 "$NODE"
 }
@@ -107,10 +107,10 @@ EOF
 # @return RSYNC_LINK The rsync link command, pointed to head.
 get_rsync_link ()
 {
-    HEAD="$(cat $1/.$PROG/HEAD)"
-    if [[ "$HEAD" != "" ]] && [[ -d "$1/.$PROG/trees/$HEAD" ]]
+    HEAD="$(cat $1/.emu/HEAD)"
+    if [[ "$HEAD" != "" ]] && [[ -d "$1/.emu/trees/$HEAD" ]]
     then
-        RSYNC_LINK="--link-dest=$1/.$PROG/trees/$HEAD"
+        RSYNC_LINK="--link-dest=$1/.emu/trees/$HEAD"
     else
         RSYNC_LINK=""
     fi
@@ -122,8 +122,8 @@ get_rsync_link ()
 # @var HASH The UID of the latest snapshot.
 push_head ()
 {
-    rm -f "$1/.$PROG/HEAD"
-    echo "$HASH" > "$1/.$PROG/HEAD"
+    rm -f "$1/.emu/HEAD"
+    echo "$HASH" > "$1/.emu/HEAD"
 }
 
 # Fetch the parent of the current snapshot.
@@ -133,7 +133,7 @@ push_head ()
 # @return Next hash, or empty string if NULL.
 get_snapshot_parent ()
 {
-    echo "$(cat $1/.$PROG/nodes/$2 2>/dev/null | grep Parent | sed -r 's/Parent +//')"
+    echo "$(cat $1/.emu/nodes/$2 2>/dev/null | grep Parent | sed -r 's/Parent +//')"
 }
 
 # Fetch the child of the current snapshot.
@@ -158,12 +158,12 @@ get_snapshot_child ()
 # @param $2 snapshot to delete.
 remove_snapshot ()
 {
-    get_snapshot_child "$1" "$(cat $1/.$PROG/HEAD)" "$2"
-    cat "$1/.$PROG/nodes/$SNAPSHOT_HASH" | sed -r 's/(Parent +).*$/\1/' > "$1/.$PROG/nodes/$SNAPSHOT_HASH"
+    get_snapshot_child "$1" "$(cat $1/.emu/HEAD)" "$2"
+    cat "$1/.emu/nodes/$SNAPSHOT_HASH" | sed -r 's/(Parent +).*$/\1/' > "$1/.emu/nodes/$SNAPSHOT_HASH"
     echo "$SINK_NAME: removing $2"
-    rm -f "$1/.$PROG/nodes/$2"
-    rm -f "$1/.$PROG/nodes/$2.msg"
-    rm -rf "$1/.$PROG/trees/$2"
+    rm -f "$1/.emu/nodes/$2"
+    rm -f "$1/.emu/nodes/$2.msg"
+    rm -rf "$1/.emu/trees/$2"
     rm -rf "$1/$(date -d @$(printf '%d' 0x5${2:32:8}) +'%Y-%m-%d %T')"
 }
 
@@ -173,7 +173,7 @@ remove_snapshot ()
 pop_tail ()
 {
     # Get the root snapshot (one with no child).
-    get_snapshot_child "$1" "$(cat $1/.$PROG/HEAD)"
+    get_snapshot_child "$1" "$(cat $1/.emu/HEAD)"
     remove_snapshot "$1" "$SNAPSHOT_HASH"
 }
 
@@ -184,7 +184,7 @@ pop_tails ()
 {
     while [[ $(sink_snapshot_count "$1") -ge $(sink_max_snapshots "$1") ]]
     do
-        NEXT_SNAPSHOT_HASH="$(cat $1/.$PROG/HEAD)"
+        NEXT_SNAPSHOT_HASH="$(cat $1/.emu/HEAD)"
         pop_tail "$1"
     done
 }
@@ -199,17 +199,16 @@ perform_snapshot_on_sink ()
     lock_dir "$1"
     get_rsync_link "$1"
     pop_tails "$1"
-    echo -n "$SCRIPT: $2: creating snapshot ($(sink_snapshot_count $1) of "
-    echo "$(sink_max_snapshots $1))"
+    emu_echo "$2: creating snapshot ($(sink_snapshot_count $1) of $(sink_max_snapshots $1))"
 
     rsync \
         --delete \
         --delete-excluded \
         --archive \
         --human-readable \
-        --exclude-from="$SOURCE_DIR/.$PROG/excludes" \
+        --exclude-from="$SOURCE_DIR/.emu/excludes" \
         "$RSYNC_LINK" \
-        "$SOURCE_DIR/" "$1/.$PROG/trees/new"
+        "$SOURCE_DIR/" "$1/.emu/trees/new"
     if (( $? ))
     then
         unlock_dir "$1"
@@ -218,8 +217,8 @@ perform_snapshot_on_sink ()
 
     generate_hash "$1"
     generate_snapshot_name "$1"
-    mv "$1/.$PROG/trees/new" "$1/.$PROG/trees/$HASH"
-    ln -s "$1/.$PROG/trees/$HASH" "$1/$SNAPSHOT"
+    mv "$1/.emu/trees/new" "$1/.emu/trees/$HASH"
+    ln -s "$1/.emu/trees/$HASH" "$1/$SNAPSHOT"
     generate_node "$1"
     push_head "$1"
 
@@ -271,7 +270,7 @@ main ()
     perform_snapshots
     if (( $? ))
     then
-        emu_error "at least one snapshot failed!"
+        emu_error "at least one snapshot failed"
         exit_with_error
     fi
     unlock_dir "$SOURCE_DIR"

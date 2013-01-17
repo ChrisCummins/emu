@@ -1,0 +1,8 @@
+set -e
+test_setup
+source /usr/local/lib/libemu
+
+emu_echo "test-string" | grep "test-string"
+EMU_ECHO_PREFIX="test-prefix" emu_echo "test-string" | grep "test-string" | grep "test-prefix"
+
+test_teardown

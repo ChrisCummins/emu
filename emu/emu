@@ -1,7 +1,8 @@
 #!/bin/sh
 
 source /usr/local/lib/libemu
-SCRIPT=$(basename $0)
+EMU_ECHO_PREFIX=$(basename "$0")
+
 VERSION="0.0.1"
 
 # Print the help text.
@@ -14,8 +15,8 @@ help_command ()
 {
     if [[ $1 != "" ]]
     then
-        EXEC=$SCRIPT-$1
-        command -v $EXEC >/dev/null 2>&1 || { exit_command_not_found "$1"; }
+        EXEC=emu-$1
+        command -v $EXEC >/dev/null 2>&1 || { command_not_found "$1"; }
         $EXEC help
         exit 0
     else
@@ -27,7 +28,7 @@ help_command ()
 # Print the version number.
 version ()
 {
-    echo "$SCRIPT version $VERSION"
+    emu_echo "version $EMU_VERSION"
 }
 
 print_emu ()
@@ -90,11 +91,11 @@ do
             exit 0
             ;;
         \?)
-            echo "Invalid option: -$OPTARG" >&2
+            emu_error "invalid option: -$OPTARG"
             exit $EXIT_INVALID_ARGS
             ;;
         :)
-            echo "Option -$OPTARG requires an argument." >&2
+            emu_error "option -$OPTARG requires an argument"
             exit $EXIT_INVALID_ARGS
             ;;
     esac
@@ -120,8 +121,8 @@ case $COMMAND in
         ;;
     *)
         # Execute command.
-        EXEC=$SCRIPT-$COMMAND
-        command -v $EXEC >/dev/null 2>&1 || { exit_command_not_found "$COMMAND"; }
+        EXEC=emu-$COMMAND
+        command -v $EXEC >/dev/null 2>&1 || { command_not_found "$COMMAND"; }
         $EXEC $@
         exit $?
         ;;
