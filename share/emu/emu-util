@@ -1,7 +1,8 @@
 #!/bin/bash
 
 PROG="emu"
-VERSION="0.0.1"
+# FIXME: What is this??
+VERSION="0.0.2"
 
 # Print 'not a command' text and exit.
 #
