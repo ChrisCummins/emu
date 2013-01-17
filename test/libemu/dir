@@ -4,6 +4,14 @@ source /usr/local/lib/libemu
 
 cd /tmp/emu/test-source
 
+# test absolute paths
+pushd .
+mkdir -pv a/b/c
+assert_strings_match "/tmp/emu/test-source/a" $(get_absolute_path a)
+assert_strings_match "/tmp/emu/test-source/a/b" $(get_absolute_path a/b)
+assert_strings_match "/tmp/emu/test-source/a/b/c" $(get_absolute_path a/b/c)
+popd
+
 # test empty source
 set +e
 get_source_dir
@@ -65,7 +73,7 @@ assert_fail is_sink
 
 # test populated sink
 cd ../test-source
-emu sink add -v ../test-sink
+emu sink -v add test ../test-sink
 cd ../test-sink
 get_sink_dir
 set +e
