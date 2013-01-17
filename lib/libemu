@@ -115,6 +115,32 @@ exit_with_error ()
 
 ## DIRECTORIES #################################################################
 
+# Returns the absolute path of a given directory
+#  @param  $1 (optional) path to directory
+#  @return    absolute path
+get_absolute_path ()
+{
+    local dir="$1"
+
+    if [ -z "$dir" ]
+    then
+        dir="$(pwd -P)"
+    else
+        # get absolute path
+        if [ ${dir:0:1} != "/" ]
+        then
+            # relative path
+            dir="$(pwd)/$dir"
+        fi
+        pushd . &>/dev/null
+        cd "$dir"
+        dir="$(pwd -P)"
+        popd &>/dev/null
+    fi
+
+    echo "$dir"
+}
+
 # check for write permissions
 #  @var   $SCRIPT (optional) echo prefix
 #  @param $1                 path to the directory
