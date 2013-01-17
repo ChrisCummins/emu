@@ -409,3 +409,75 @@ Merge: 92c2e39 703f631
 
 Date:   Thu Jan 17 12:05:52 2013 +0000
     Merge branch 'release/v0.0.1' into next
+
+emu-0.0.3 (Thu Jan 17 16:48:15 GMT 2013)
+--------------------------------------------------------------------------------
+
+Date:   Thu Jan 17 16:44:56 2013 +0000
+    release: add mktar tool
+
+Date:   Thu Jan 17 16:41:04 2013 +0000
+    Remove exit_with_error
+Merge: cf6467d d1216bc
+
+Date:   Thu Jan 17 16:33:23 2013 +0000
+    Merge branch 'wip/panic' into next
+
+Date:   Thu Jan 17 16:32:22 2013 +0000
+    libemu: fix panic tests
+
+Date:   Thu Jan 17 16:32:04 2013 +0000
+    sink: get source dynamically
+
+Date:   Thu Jan 17 16:31:55 2013 +0000
+    libemu: add get_source_dir_or_fail() test
+
+Date:   Thu Jan 17 16:31:31 2013 +0000
+    libemu: fix hooks
+
+Date:   Thu Jan 17 15:50:53 2013 +0000
+    libemu: fix lock functionality
+
+Date:   Thu Jan 17 15:39:50 2013 +0000
+    libemu: fix exit_with_error
+
+Date:   Thu Jan 17 15:31:37 2013 +0000
+    make: installer is more verbose
+
+Date:   Thu Jan 17 15:30:46 2013 +0000
+    emu: Remove unused version number
+Merge: d30020d 1c9f898
+
+Date:   Thu Jan 17 15:27:04 2013 +0000
+    Merge branch 'wip/sink' into next
+
+Date:   Thu Jan 17 15:26:56 2013 +0000
+    sink: implement correct functionality
+
+Date:   Thu Jan 17 15:26:31 2013 +0000
+    libemu: fix print_sink_details ()
+
+Date:   Thu Jan 17 15:26:16 2013 +0000
+    libemu: Add incorrect command exit code
+
+Date:   Thu Jan 17 15:26:03 2013 +0000
+    libemu: Add absolute paths
+
+Date:   Thu Jan 17 14:53:58 2013 +0000
+    libemu: Add directory utils
+
+Date:   Thu Jan 17 13:57:58 2013 +0000
+    test: add extra assert functions
+
+Date:   Thu Jan 17 13:57:49 2013 +0000
+    libemu: re-organise file
+
+Date:   Thu Jan 17 13:42:51 2013 +0000
+    Add 'todo'
+
+Date:   Thu Jan 17 13:41:08 2013 +0000
+    Remove redundant emu-util
+Merge: 1b99dbf fccf206
+
+Date:   Thu Jan 17 12:54:37 2013 +0000
+    Merge branch 'release/0.0.2' into next
