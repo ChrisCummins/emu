@@ -69,13 +69,14 @@ emu-$VERSION ($(date))
 --------------------------------------------------------------------------------
 EOF
 
-git log \
+git log $OLD_VERSION.. \
     | grep -v Author \
     | grep -v 'commit' \
     | grep -v '^$' \
     | sed -r 's/(Date:.*)/\n\1/' \
     >> CHANGELOG
 
+echo "" >> CHANGELOG
 echo "" >> CHANGELOG
 
 # create a release tarball
