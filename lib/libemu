@@ -144,16 +144,141 @@ exit_if_no_dir_permissions ()
     fi
 }
 
-is_emu_source ()
+# returns whether a directory is a source or not
+#  @param $1 (optional) path to directory
+is_source ()
 {
-    echo ""
+    local dir="$1"
+
+    if [ -z "$dir" ]
+    then
+        dir="$(pwd)"
+    fi
+
+    if [[ -f "$dir/.emu/excludes" ]] \
+        && [[ -d "$dir/.emu/hooks" ]] \
+        && [[ -d "$dir/.emu/sinks" ]]
+    then
+        return 0
+    else
+        return 15
+    fi
 }
 
-# TODO: implement
+_test_source_dir ()
+{
+    dir="$(pwd -P)"
+
+    if ! is_source "$dir"
+    then
+        if [[ "$dir" != "/" ]]
+        then
+            cd ..
+            get_source_dir
+        else
+            # reached top of tree (/), source dir not found
+            SOURCE_DIR=""
+        fi
+    else
+        SOURCE_DIR="$dir"
+    fi
+}
+
+# recurse up a directory tree, looking for an emu source
+#  @param   $1          (optional) The directory to start the search for the
+#                       source in
+#  @preturn $SOURCE_DIR The source directory, or empty if not found
 get_source_dir ()
 {
-    ls
-    SOURCE_DIR=""
+    local dir="$1"
+
+    if [ -z "$dir" ]
+    then
+        dir="$(pwd)"
+    fi
+
+    pushd . &>/dev/null
+    # navigate to and recurse the directory tree
+    cd "$dir"
+    if _test_source_dir
+    then
+        r=0
+    else
+        r=1
+    fi
+
+    # return to starting position
+    popd &>/dev/null
+
+    return $r
+}
+
+# returns whether a directory is a sink or not
+#  @param $1 (optional) path to directory
+is_sink ()
+{
+    local dir="$1"
+
+    if [ -z "$dir" ]
+    then
+        dir="$(pwd)"
+    fi
+
+    if [[ -f "$dir/.emu/HEAD" ]] \
+        && [[ -d "$dir/.emu/nodes" ]]
+    then
+        return 0
+    else
+        return 15
+    fi
+}
+
+_test_sink_dir ()
+{
+    dir="$(pwd -P)"
+
+    if ! is_sink "$dir"
+    then
+        if [[ "$dir" != "/" ]]
+        then
+            cd ..
+            get_sink_dir
+        else
+            # reached top of tree (/), sink dir not found
+            SINK_DIR=""
+        fi
+    else
+        SINK_DIR="$dir"
+    fi
+}
+
+# recurse up a directory tree, looking for an emu sink
+#  @param   $1        (optional) The directory to start the search for the
+#                     sink in
+#  @preturn $SINK_DIR The sink directory, or empty if not found
+get_sink_dir ()
+{
+    local dir="$1"
+
+    if [ -z "$dir" ]
+    then
+        dir="$(pwd)"
+    fi
+
+    pushd . &>/dev/null
+    # navigate to and recurse the directory tree
+    cd "$dir"
+    if _test_sink_dir
+    then
+        r=0
+    else
+        r=1
+    fi
+
+    # return to starting position
+    popd &>/dev/null
+
+    return $r
 }
 
 # check and block directory. If the directory is already locked, it will block
@@ -174,7 +299,7 @@ block_until_dir_free ()
             if [[ $BLOCK_COUNTER -gt $BLOCK_COUNTER_MAX ]]
             then
                 emu_error "failed to get exclusive access to directory:\n  $1"
-                exit_with_error "$SOURCE_DIR"
+                exit_with_error "$SINK_DIR"
             fi
         fi
 
