@@ -66,6 +66,7 @@ done
 touch CHANGELOG
 
 cat <<EOF >> CHANGELOG
+
 emu-$VERSION ($(date))
 --------------------------------------------------------------------------------
 EOF
@@ -77,5 +78,4 @@ git log $OLD_VERSION.. \
     | sed -r 's/(Date:.*)/\n\1/' \
     >> CHANGELOG
 
-echo "" >> CHANGELOG
 echo "" >> CHANGELOG
