@@ -2,7 +2,6 @@
 
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
-SOURCE_DIR="$(pwd)"
 
 help ()
 {
@@ -178,6 +177,8 @@ main ()
         help
         exit 0
     fi
+
+    get_source_dir_or_fail
 
     if [ ! -d "$SOURCE_DIR/.emu/sinks" ]
     then
