@@ -342,7 +342,10 @@ get_sink_dir ()
 #                           continue indefinitely
 block_until_dir_free ()
 {
-    if [[ -f "$1/.emu/LOCK" ]]
+    local dir="$1"
+    local lock_file="$dir/.emu/LOCK"
+
+    if [[ -f "$lock_file" ]]
     then
         BLOCK_COUNTER=$((BLOCK_COUNTER+1))
 
@@ -350,14 +353,14 @@ block_until_dir_free ()
         then
             if [[ $BLOCK_COUNTER -gt $BLOCK_COUNTER_MAX ]]
             then
-                emu_error "failed to get exclusive access to directory:\n  $1"
+                emu_error "failed to get exclusive access to directory:\n  $dir"
                 emu_panic
                 exit $EMU_EXIT_BLOCKED
             fi
         fi
 
         # print the PID of blocking process
-        BLOCK_PID=$(cat "$1/.emu/LOCK" | grep PID | sed -r 's/PID: +//')
+        BLOCK_PID=$(cat "$lock_file" | grep PID | sed -r 's/PID: +//')
         echo -en "\r$1 blocking on process: $BLOCK_PID "
 
         # print status of blocking process
@@ -369,13 +372,46 @@ block_until_dir_free ()
             echo -n "[$(echo $BLOCK_STATUS | cut -d' ' -f8)]"
         fi
         sleep $BLOCK_SLEEP_TIME
-        block_until_dir_free "$1"
+        block_until_dir_free "$dir"
     fi
 }
 
 # lock the specified directory
-#  @param $1 (optional) Path to the directory to lock
+#  @param $1            (optional) path to the directory to lock
+#  @var EMU_LOCK_FORCE  set to ignore existing locks
+#  @var EMU_LOCK_KILL   set to kill existing lock processes
 lock_dir ()
+{
+    local dir="$1"
+    local lock_file="$1/.emu/LOCK"
+
+    if [ -z "$dir" ]
+    then
+        dir="$(pwd -P)"
+    fi
+
+    if (( $EMU_LOCK_FORCE ))
+    then
+        if [ -f "$lock_file" ] && (( $EMU_LOCK_KILL ))
+        then
+            # force with kill - kill lock process
+            local block_pid=$(cat "$lock_file" | grep PID | sed -r 's/PID:\s+//')
+            kill -9 $block_pid
+        fi
+    else
+        # polite
+        BLOCK_SLEEP_TIME=1
+        BLOCK_COUNTER=0
+        BLOCK_COUNTER_MAX=10
+        block_until_dir_free "$dir"
+    fi
+
+    echo -e "DATE: $(date)\nPID:  $$" > "$dir/.emu/LOCK"
+}
+
+# force lock the specified directory, removing any existing locks
+#  @param $1 (optional) Path to the directory to lock
+lock_dir_force ()
 {
     local dir="$1"
 
@@ -384,11 +420,27 @@ lock_dir ()
         dir="$(pwd -P)"
     fi
 
-    BLOCK_SLEEP_TIME=1
-    BLOCK_COUNTER=0
-    BLOCK_COUNTER_MAX=10
+    echo -e "DATE: $(date)\nPID:  $$" > "$dir/.emu/LOCK"
+}
 
-    block_until_dir_free "$dir"
+# force lock the specified directory, killing any existing locks
+#  @param $1 (optional) Path to the directory to lock
+lock_dir_kill ()
+{
+    local dir="$1"
+
+    if [ -z "$dir" ]
+    then
+        dir="$(pwd -P)"
+    fi
+
+    if [ -f "$dir/.emu/LOCK" ]
+    then
+        # kill lock process
+        local block_pid=$(cat "$dir/.emu/LOCK" | grep PID | sed -r 's/PID: +//')
+        kill -9 $block_pid
+    fi
+
     echo -e "DATE: $(date)\nPID:  $$" > "$dir/.emu/LOCK"
 }
 
