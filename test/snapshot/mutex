@@ -18,6 +18,7 @@ set +u
 unlock_dir
 set -u
 
+sleep 1
 emu snapshot
 
 test_teardown
