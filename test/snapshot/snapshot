@@ -4,10 +4,10 @@ test_setup
 cd /tmp/emu/test-source
 
 assert_fail "emu snapshot"
-
 emu init -v
+echo "hello, world!" > test
 emu sink -v add origin ../test-sink
-
 emu snapshot
+assert_strings_match "hello, world!" "$(cat ../test-sink/.emu/trees/*/test)"
 
 test_teardown
