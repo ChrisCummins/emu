@@ -176,7 +176,7 @@ pop_tails ()
 {
     local sink_dir="$1"
 
-    while [[ $(sink_snapshot_count "$sink_dir") -ge $(sink_max_snapshots "$sink_dir") ]]
+    while [[ $(sink_snapshot_count "$sink_dir") -gt $(sink_max_snapshots "$sink_dir") ]]
     do
         next_snapshot_hash="$(cat $sink_dir/.emu/HEAD)"
         pop_tail "$sink_dir"
