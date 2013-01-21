@@ -439,7 +439,6 @@ _exec_hooks_list ()
 
     get_source_dir_if_empty
     local hooks_list="$(find "$SOURCE_DIR/.emu/hooks/exec/" -name '*.'$ext 2>/dev/null)"
-    echo "hooks list: $hooks_list"
 
     for exec in $hooks_list
     do

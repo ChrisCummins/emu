@@ -1,0 +1,32 @@
+set -eu
+test_setup
+
+cd /tmp/emu/test-source
+
+assert_fail "emu snapshot"
+
+emu init -v
+emu sink -v add origin ../test-sink
+
+emu snapshot
+emu snapshot
+emu snapshot
+emu snapshot
+emu snapshot
+emu snapshot
+emu snapshot
+emu snapshot
+emu snapshot
+emu snapshot
+emu snapshot
+emu snapshot
+emu snapshot
+emu snapshot
+emu snapshot
+emu snapshot
+emu snapshot
+emu snapshot
+emu snapshot
+emu snapshot
+
+test_teardown

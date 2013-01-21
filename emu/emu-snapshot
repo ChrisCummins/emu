@@ -2,16 +2,14 @@
 
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
-SOURCE_DIR="$(pwd)"
 
 help ()
 {
     man emu-snapshot
 }
 
-# Retrieve all sink files.
-#
-# @return SINK_FILES List of paths to sink files.
+# Retrieve all sink files
+#  @return SINK_FILES List of paths to sink files
 get_all_sinks ()
 {
     SINK_FILES="$(find $SOURCE_DIR/.emu/sinks/ | tail -n+2)"
@@ -23,32 +21,31 @@ get_all_sinks ()
         exit $EMU_EXIT_INCORRECT_COMMAND
     fi
 
-    # Check for all sync files.
-    for SINK_FILE in $SINK_FILES
+    # check for all sync files
+    for sink_file in $SINK_FILES
     do
-        SINK="$(cat $SINK_FILE)"
-        if [[ ! -d "$SINK/.emu" ]]
+        local sink="$(cat $sink_file)"
+        if [[ ! -d "$sink/.emu" ]]
         then
-            emu_error "sink does not exist:\n  $SINK\n"
+            emu_error "sink does not exist:\n  $sink\n"
             emu_panic
             exit $EMU_EXIT_ERROR
         fi
     done
 }
 
-# Convert a list of sinks to sink files.
-#
-# @param $@ List of sinks.
-# @return SINK_FILES List of sink files paths.
+# convert a list of sinks to sink files
+#  @param  $@         List of sinks
+#  @return SINK_FILES List of sink files paths
 get_sinks ()
 {
     SINK_FILES[$#]=$@
-    for ARG in $@
+    for arg in $@
     do
-        SINK_FILE="$(find $SOURCE_DIR/.emu/sinks/ -name $ARG)"
+        SINK_FILE="$(find $SOURCE_DIR/.emu/sinks/ -name $arg)"
         if [[ "$SINK_FILE" == "" ]]
         then
-            emu_error "sink '$ARG' not found!"
+            emu_error "sink '$arg' not found!"
             emu_panic
             exit $EMU_EXIT_INCORRECT_COMMAND
         fi
@@ -57,16 +54,15 @@ get_sinks ()
     SINK_FILES="$(echo -e $SINK_FILES | tail -n+2)"
 }
 
-# Generate a snapshot hash.
-#
-# @param $1 Path to sink directory.
-# @return HASH a 40 digit snapshot UID.
+# generate a snapshot hash
+#  @param  $1   Path to sink directory
+#  @return HASH A 40 digit snapshot UID
 generate_hash ()
 {
     HASH=$(hash_directory "$1/.emu/trees/new")
     HASH=$HASH$(printf '%x\n' $(date +'%s') | tail -c8)
 
-    # Check if hash exists, and if so, wait.
+    # check if hash exists, and if so, wait
     if [[ -f "$1/.emu/nodes/$HASH" ]]
     then
         sleep 1
@@ -74,40 +70,37 @@ generate_hash ()
     fi
 }
 
-# Gnerate a snapshot name.
-#
-# @param $1 Path to sink directory.
-# @var HASH the 40 digit snapshot UID.
-# @return SNAPSHOT a snapshot name
+# generate a snapshot name
+#  @param  $1       Path to sink directory
+#  @var    HASH     The 40 digit snapshot UID
+#  @return SNAPSHOT A snapshot name
 generate_snapshot_name ()
 {
     SNAPSHOT=$(date -d @$(printf '%d' 0x5${HASH:32:8}) +'%Y-%m-%d %T')
 }
 
-# Generate a snapshot node file.
-#
-# @param $1 Path to sink directory.
-# @var $HEAD The UID of the parent snapshot.
-# @var $HASH The 40 digit snapshot UID.
+# generate a snapshot node file
+#  @param $1    Path to sink directory
+#  @var   $HEAD The UID of the parent snapshot
+#  @var   $HASH The 40 digit snapshot UID
 generate_node ()
 {
-    NODE="$1/.emu/nodes/$HASH"
-    touch "$NODE"
-    cat <<EOF >> "$NODE"
+    local node="$1/.emu/nodes/$HASH"
+    touch "$node"
+    cat <<EOF >> "$node"
 Snapshot $SNAPSHOT
 Parent   $HEAD
 Date     $(date)
 Source   $(cat $1/.emu/SOURCE)
 Size     $(du -sh "$1/.emu/trees/$HASH" | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')
 EOF
-    chmod 0640 "$NODE"
+    chmod 0640 "$node"
 }
 
-# Fetch the head of the sink tree, if there is one.
-#
-# @param $1 Path to sink directory.
-# @return HEAD The UID of the HEAD snapshot.
-# @return RSYNC_LINK The rsync link command, pointed to head.
+# fetch the head of the sink tree, if there is one
+#  @param  $1         Path to sink directory
+#  @return HEAD       The UID of the HEAD snapshot
+#  @return RSYNC_LINK The rsync link command, pointed to head
 get_rsync_link ()
 {
     HEAD="$(cat $1/.emu/HEAD)"
@@ -119,157 +112,214 @@ get_rsync_link ()
     fi
 }
 
-# Push the latest snapshot to HEAD.
-#
-# @param $1 Path to sink directory.
-# @var HASH The UID of the latest snapshot.
+# push the latest snapshot to HEAD
+#  @param $1   Path to sink directory
+#  @var   HASH The UID of the latest snapshot
 push_head ()
 {
     rm -f "$1/.emu/HEAD"
     echo "$HASH" > "$1/.emu/HEAD"
 }
 
-# Fetch the parent of the current snapshot.
-#
-# @param $1 Path to sink directory.
-# @param $2 Starting hash.
-# @return Next hash, or empty string if NULL.
+# fetch the parent of the current snapshot
+#  @param  $1 Path to sink directory
+#  @param  $2 Starting hash
+#  @return    Next hash, or empty string if NULL
 get_snapshot_parent ()
 {
     echo "$(cat $1/.emu/nodes/$2 2>/dev/null | grep Parent | sed -r 's/Parent +//')"
 }
 
-# Fetch the child of the current snapshot.
-#
-# @param $1 Path to sink directory.
-# @param $2 Hash of starting point.
-# @param $3 Target hash.
-# @return SNAPSHOT_HASH The hash of the snapshot's child.
+# Fetch the child of the current snapshot
+#  @param  $1            Path to sink directory
+#  @param  $2            Hash of starting point
+#  @param  $3            Target hash
+#  @return SNAPSHOT_HASH The hash of the snapshot's child
 get_snapshot_child ()
 {
-    NEXT_SNAPSHOT_HASH="$2"
-    while [[ "$NEXT_SNAPSHOT_HASH" != "$3" ]]
+    local next_snapshot_hash="$2"
+    while [[ "$next_snapshot_hash" != "$3" ]]
     do
-        SNAPSHOT_HASH="$NEXT_SNAPSHOT_HASH"
-        NEXT_SNAPSHOT_HASH="$(get_snapshot_parent $1 $SNAPSHOT_HASH)"
+        SNAPSHOT_HASH="$next_snapshot_hash"
+        next_snapshot_hash="$(get_snapshot_parent $1 $SNAPSHOT_HASH)"
     done
 }
 
-# Deletes a snapshot.
-#
-# @param $1 path to sink directory.
-# @param $2 snapshot to delete.
+# deletes a snapshot
+#  @param $1 path to sink directory
+#  @param $2 snapshot to delete
 remove_snapshot ()
 {
     get_snapshot_child "$1" "$(cat $1/.emu/HEAD)" "$2"
     cat "$1/.emu/nodes/$SNAPSHOT_HASH" | sed -r 's/(Parent +).*$/\1/' > "$1/.emu/nodes/$SNAPSHOT_HASH"
     echo "$SINK_NAME: removing $2"
-    rm -f "$1/.emu/nodes/$2"
-    rm -f "$1/.emu/nodes/$2.msg"
-    rm -rf "$1/.emu/trees/$2"
-    rm -rf "$1/$(date -d @$(printf '%d' 0x5${2:32:8}) +'%Y-%m-%d %T')"
+    rm -f $EMU_VERBOSE "$1/.emu/nodes/$2"
+    rm -f $EMU_VERBOSE "$1/.emu/nodes/$2.msg"
+    rm -rf $EMU_VERBOSE "$1/.emu/trees/$2"
+    rm -rf $EMU_VERBOSE "$1/$(date -d @$(printf '%d' 0x5${2:32:8}) +'%Y-%m-%d %T')"
 }
 
-# Remove the oldest in tree in a set of snapshots.
-#
-# @param $1 Path to sink directory.
+# remove the oldest in tree in a set of snapshots
+#  @param $1 Path to sink directory
 pop_tail ()
 {
+    local sink_dir="$1"
+
     # Get the root snapshot (one with no child).
-    get_snapshot_child "$1" "$(cat $1/.emu/HEAD)"
-    remove_snapshot "$1" "$SNAPSHOT_HASH"
+    get_snapshot_child "$sink_dir" "$(cat $sink_dir/.emu/HEAD)"
+    remove_snapshot "$sink_dir" "$SNAPSHOT_HASH"
 }
 
-# Push the latest snapshot to HEAD.
-#
-# @param $1 Path to sink directory.
+# push the latest snapshot to HEAD
+#  @param $1 Path to sink directory
 pop_tails ()
 {
-    while [[ $(sink_snapshot_count "$1") -ge $(sink_max_snapshots "$1") ]]
+    local sink_dir="$1"
+
+    while [[ $(sink_snapshot_count "$sink_dir") -ge $(sink_max_snapshots "$sink_dir") ]]
     do
-        NEXT_SNAPSHOT_HASH="$(cat $1/.emu/HEAD)"
-        pop_tail "$1"
+        next_snapshot_hash="$(cat $sink_dir/.emu/HEAD)"
+        pop_tail "$sink_dir"
     done
 }
 
-# Perform the a snapshot on sink.
-#
-# @param $1 Path to sink directory.
-# @param $2 Name of sink.
-# @return Integer success value (non-zero indicates failure)
+# perform the a snapshot on sink
+#  @param  $1 Path to sink directory
+#  @param  $2 Name of sink
+#  @return    Integer success value (non-zero indicates failure)
 perform_snapshot_on_sink ()
 {
-    lock_dir "$1"
-    get_rsync_link "$1"
-    pop_tails "$1"
-    emu_echo "$2: creating snapshot ($(sink_snapshot_count $1) of $(sink_max_snapshots $1))"
+    local sink_dir="$1"
+    local sink_name="$2"
+
+    lock_dir "$sink_dir"
+    get_rsync_link "$sink_dir"
+    pop_tails "$sink_dir"
+    emu_echo "$sink_name: creating snapshot ($(sink_snapshot_count $sink_dir) of $(sink_max_snapshots $sink_dir))"
 
     rsync \
+        $EMU_VERBOSE \
+        $EMU_PROGRESS \
         --delete \
         --delete-excluded \
         --archive \
         --human-readable \
         --exclude-from="$SOURCE_DIR/.emu/excludes" \
         "$RSYNC_LINK" \
-        "$SOURCE_DIR/" "$1/.emu/trees/new"
+        "$SOURCE_DIR/" "$sink_dir/.emu/trees/new"
     if (( $? ))
     then
-        unlock_dir "$1"
-        return 3
+        unlock_dir "$sink_dir"
+        return 1
     fi
 
-    generate_hash "$1"
-    generate_snapshot_name "$1"
-    mv "$1/.emu/trees/new" "$1/.emu/trees/$HASH"
-    ln -s "$1/.emu/trees/$HASH" "$1/$SNAPSHOT"
-    generate_node "$1"
-    push_head "$1"
+    generate_hash "$sink_dir"
+    generate_snapshot_name "$sink_dir"
+    mv "$sink_dir/.emu/trees/new" "$sink_dir/.emu/trees/$HASH"
+    ln -s $EMU_VERBOSE "$sink_dir/.emu/trees/$HASH" "$sink_dir/$SNAPSHOT"
+    generate_node "$sink_dir"
+    push_head "$sink_dir"
 
-    unlock_dir "$1"
-    emu_echo "$2: new snapshot '$SNAPSHOT'"
-    emu_echo "$2: HEAD at $HASH"
+    unlock_dir "$sink_dir"
+    emu_echo "$sink_name: new snapshot '$SNAPSHOT'"
+    emu_echo "$sink_name: HEAD at $HASH"
+
     return 0
 }
 
-# Perform snapshots on all sink files.
-#
-# @var $SINK_FILES List of paths to sink files.
+# perform snapshots on all sink files
+#  @var $SINK_FILES List of paths to sink files
 perform_snapshots ()
 {
-    SNAPSHOT_FAILED=0
+    local snapshot_failed=0
 
-    for SINK_FILE in $SINK_FILES
+    for sink_file in $SINK_FILES
     do
-        SINK="$(cat $SINK_FILE)"
-        SINK_NAME="$(basename $SINK_FILE)"
+        local sink="$(cat $sink_file)"
+        local sink_name="$(basename $sink_file)"
 
-        perform_snapshot_on_sink "$SINK" "$SINK_NAME"
+        perform_snapshot_on_sink "$sink" "$sink_name"
         if (( $? ))
         then
-            SNAPSHOT_FAILED=1
-            emu_error "snapshot to '$SINK_NAME' failed"
+            snapshot_failed=1
+            emu_error "snapshot to '$sink_name' failed"
         fi
     done
 
-    return $SNAPSHOT_FAILED
+    return $snapshot_failed
 }
 
 main ()
 {
+    while getopts "nm:MvpfF" OPT
+    do
+        case $OPT in
+            n)
+                EMU_DRY_RUN=1
+                ;;
+            m)
+                SNAPSHOT_MESSAGE=$OPTARG
+                ;;
+            M)
+                if [ -z $EDITOR ]
+                then
+                    emu_error "EDITOR variable not specified"
+                    exit $EMU_EXIT_INCORRECT_COMMAND
+                fi
+
+                $EDITOR EMU_SNAPSHOT_MSG
+                SNAPSHOT_MESSAGE=$(cat EMU_SNAPSHOT_MSG)
+                rm -f EMU_SNAPSHOT_MSG
+                ;;
+            v)
+                EMU_VERBOSE="-v"
+                ;;
+            p)
+                EMU_VERBOSE="-v"
+                EMU_PROGRESS="-ph"
+                ;;
+            f)
+                EMU_SNAPSHOT_FORCE=1
+                ;;
+            F)
+                EMU_SNAPSHOT_FORCE=1
+                EMU_SNAPSHOT_KILL=1
+                ;;
+            \?)
+                emu_error "invalid option: -$OPTARG"
+                exit 1
+                ;;
+            :)
+                emu_error "option -$OPTARG requires an argument"
+                exit 1
+                ;;
+        esac
+    done
+
+    # dispose of args
+    while [ "${1:0:1}" = "-" ]
+    do
+        shift
+    done
+
     if [ "$1" = "help" ]
     then
         help
-        exit 0
+        exit $EMU_EXIT
     fi
 
-    pre_exec_hooks "$SOURCE_DIR"
+    get_source_dir_or_fail
+    pre_exec_hooks
+
     if [[ "$@" == "" ]]
     then
         get_all_sinks
     else
         get_sinks $@
     fi
+
     lock_dir "$SOURCE_DIR"
+
     perform_snapshots
     if (( $? ))
     then
@@ -277,7 +327,8 @@ main ()
         emu_panic
         exit $EMU_EXIT_ERROR
     fi
+
     unlock_dir "$SOURCE_DIR"
-    post_exec_hooks "$SOURCE_DIR"
+    post_exec_hooks
 }
 main $@
