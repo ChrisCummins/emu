@@ -1,0 +1,7 @@
+set -eu
+test_setup
+
+cd /tmp/emu/test-source
+emu init -v
+
+test_teardown
