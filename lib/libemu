@@ -261,6 +261,7 @@ get_source_dir_or_fail ()
     if [ -z "$SOURCE_DIR" ]
     then
         emu_panic
+        emu_error "not an emu source"
         exit $EMU_EXIT_ERROR
     fi
 }
