@@ -300,9 +300,9 @@ fi
 
 if (( $FAILED ))
 then
-    echo "Results: $PASSED passed $FAILED failed"
+    echo "$PASSED passed, $FAILED failed"
 else
-    echo "Results: All $PASSED tests passed"
+    echo "All $PASSED tests passed"
 fi
 
 # Print failed test logs.
