@@ -212,6 +212,7 @@ perform_snapshot_on_sink ()
         --delete-excluded \
         --archive \
         --human-readable \
+        --exclude="$SOURCE_DIR/.emu/*" \
         --exclude-from="$SOURCE_DIR/.emu/excludes" \
         "$RSYNC_LINK" \
         "$SOURCE_DIR/" "$sink_dir/.emu/trees/new"
