@@ -11,6 +11,7 @@ lock_dir
 set -u
 
 assert_fail "emu snapshot"
+sleep 1
 emu snapshot -f
 
 test_teardown
