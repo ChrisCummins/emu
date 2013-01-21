@@ -153,10 +153,10 @@ remove_snapshot ()
     get_snapshot_child "$1" "$(cat $1/.emu/HEAD)" "$2"
     cat "$1/.emu/nodes/$SNAPSHOT_HASH" | sed -r 's/(Parent +).*$/\1/' > "$1/.emu/nodes/$SNAPSHOT_HASH"
     echo "$SINK_NAME: removing $2"
-    rm -f "$1/.emu/nodes/$2"
-    rm -f "$1/.emu/nodes/$2.msg"
-    rm -rf "$1/.emu/trees/$2"
-    rm -rf "$1/$(date -d @$(printf '%d' 0x5${2:32:8}) +'%Y-%m-%d %T')"
+    rm -f $EMU_VERBOSE "$1/.emu/nodes/$2"
+    rm -f $EMU_VERBOSE "$1/.emu/nodes/$2.msg"
+    rm -rf $EMU_VERBOSE "$1/.emu/trees/$2"
+    rm -rf $EMU_VERBOSE "$1/$(date -d @$(printf '%d' 0x5${2:32:8}) +'%Y-%m-%d %T')"
 }
 
 # remove the oldest in tree in a set of snapshots
@@ -198,6 +198,8 @@ perform_snapshot_on_sink ()
     emu_echo "$sink_name: creating snapshot ($(sink_snapshot_count $sink_dir) of $(sink_max_snapshots $sink_dir))"
 
     rsync \
+        $EMU_VERBOSE \
+        $EMU_PROGRESS \
         --delete \
         --delete-excluded \
         --archive \
@@ -214,7 +216,7 @@ perform_snapshot_on_sink ()
     generate_hash "$sink_dir"
     generate_snapshot_name "$sink_dir"
     mv "$sink_dir/.emu/trees/new" "$sink_dir/.emu/trees/$HASH"
-    ln -s "$sink_dir/.emu/trees/$HASH" "$sink_dir/$SNAPSHOT"
+    ln -s $EMU_VERBOSE "$sink_dir/.emu/trees/$HASH" "$sink_dir/$SNAPSHOT"
     generate_node "$sink_dir"
     push_head "$sink_dir"
 
@@ -273,7 +275,8 @@ main ()
                 EMU_VERBOSE="-v"
                 ;;
             p)
-                EMU_PROGRESS=1
+                EMU_VERBOSE="-v"
+                EMU_PROGRESS="-ph"
                 ;;
             f)
                 EMU_SNAPSHOT_FORCE=1
