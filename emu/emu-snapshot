@@ -154,7 +154,7 @@ remove_snapshot ()
     cat "$1/.emu/nodes/$SNAPSHOT_HASH" | sed -r 's/(Parent +).*$/\1/' > "$1/.emu/nodes/$SNAPSHOT_HASH"
     echo "$SINK_NAME: removing $2"
     rm -f $EMU_VERBOSE "$1/.emu/nodes/$2"
-    rm -f $EMU_VERBOSE "$1/.emu/nodes/$2.msg"
+    rm -f $EMU_VERBOSE "$1/.emu/nodes/$2.MSG"
     rm -rf $EMU_VERBOSE "$1/.emu/trees/$2"
     rm -rf $EMU_VERBOSE "$1/$(date -d @$(printf '%d' 0x5${2:32:8}) +'%Y-%m-%d %T')"
 }
