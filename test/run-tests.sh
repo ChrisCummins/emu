@@ -1,5 +1,7 @@
 #!/bin/bash
 
+EXIT_NO_TESTS=1
+
 # Test helper functions.
 test_setup ()
 {
@@ -265,17 +267,40 @@ then
     TEXT_RESET="$(tput sgr0)"
 fi
 
+if [ -n "$1" ]
+then
+    # pick from subcategory
+    test_dir="$1"
+else
+    # execute all tests
+    test_dir="."
+fi
+
+test_files="$(find $1 -type f 2>/dev/null)"
+
+if [ -z "$test_files" ]
+then
+    echo "No tests found!" >&2
+    exit $EXIT_NO_TESTS
+fi
+
 # Execute tests.
-for TEST in $(find . -type f)
+for test in $test_files
 do
-    if [ $TEST != "./run-tests.sh" ]
+    if [ $test != "./run-tests.sh" ]
     then
         pushd . &>/dev/null
-        echo -n "${TEST:2}"
-        ./$TEST &> $TEST.log
+        if [ "$test_dir" == "." ]
+        then
+            # do not print './'
+            echo -n "${test:2} "
+        else
+            echo -n "$test "
+        fi
+        ./$test &> $test.log
 
-        EXIT_CODE=$?
-        if (( $EXIT_CODE ))
+        exit_code=$?
+        if (( $exit_code ))
         then
             echo "${TEXT_FAIL}FAIL${TEXT_RESET}"
             echo "$test failed!" >>$test.log
