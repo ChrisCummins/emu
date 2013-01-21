@@ -22,12 +22,12 @@ get_all_sinks ()
     fi
 
     # check for all sync files
-    for SINK_FILE in $SINK_FILES
+    for sink_file in $SINK_FILES
     do
-        SINK="$(cat $SINK_FILE)"
-        if [[ ! -d "$SINK/.emu" ]]
+        local sink="$(cat $sink_file)"
+        if [[ ! -d "$sink/.emu" ]]
         then
-            emu_error "sink does not exist:\n  $SINK\n"
+            emu_error "sink does not exist:\n  $sink\n"
             emu_panic
             exit $EMU_EXIT_ERROR
         fi
@@ -40,12 +40,12 @@ get_all_sinks ()
 get_sinks ()
 {
     SINK_FILES[$#]=$@
-    for ARG in $@
+    for arg in $@
     do
-        SINK_FILE="$(find $SOURCE_DIR/.emu/sinks/ -name $ARG)"
+        SINK_FILE="$(find $SOURCE_DIR/.emu/sinks/ -name $arg)"
         if [[ "$SINK_FILE" == "" ]]
         then
-            emu_error "sink '$ARG' not found!"
+            emu_error "sink '$arg' not found!"
             emu_panic
             exit $EMU_EXIT_INCORRECT_COMMAND
         fi
@@ -85,16 +85,16 @@ generate_snapshot_name ()
 #  @var   $HASH The 40 digit snapshot UID
 generate_node ()
 {
-    NODE="$1/.emu/nodes/$HASH"
-    touch "$NODE"
-    cat <<EOF >> "$NODE"
+    local node="$1/.emu/nodes/$HASH"
+    touch "$node"
+    cat <<EOF >> "$node"
 Snapshot $SNAPSHOT
 Parent   $HEAD
 Date     $(date)
 Source   $(cat $1/.emu/SOURCE)
 Size     $(du -sh "$1/.emu/trees/$HASH" | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')
 EOF
-    chmod 0640 "$NODE"
+    chmod 0640 "$node"
 }
 
 # fetch the head of the sink tree, if there is one
@@ -137,11 +137,11 @@ get_snapshot_parent ()
 #  @return SNAPSHOT_HASH The hash of the snapshot's child
 get_snapshot_child ()
 {
-    NEXT_SNAPSHOT_HASH="$2"
-    while [[ "$NEXT_SNAPSHOT_HASH" != "$3" ]]
+    local next_snapshot_hash="$2"
+    while [[ "$next_snapshot_hash" != "$3" ]]
     do
-        SNAPSHOT_HASH="$NEXT_SNAPSHOT_HASH"
-        NEXT_SNAPSHOT_HASH="$(get_snapshot_parent $1 $SNAPSHOT_HASH)"
+        SNAPSHOT_HASH="$next_snapshot_hash"
+        next_snapshot_hash="$(get_snapshot_parent $1 $SNAPSHOT_HASH)"
     done
 }
 
@@ -178,7 +178,7 @@ pop_tails ()
 
     while [[ $(sink_snapshot_count "$sink_dir") -ge $(sink_max_snapshots "$sink_dir") ]]
     do
-        NEXT_SNAPSHOT_HASH="$(cat $sink_dir/.emu/HEAD)"
+        next_snapshot_hash="$(cat $sink_dir/.emu/HEAD)"
         pop_tail "$sink_dir"
     done
 }
