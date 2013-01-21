@@ -220,7 +220,7 @@ _test_source_dir ()
 # recurse up a directory tree, looking for an emu source
 #  @param   $1          (optional) The directory to start the search for the
 #                       source in
-#  @preturn $SOURCE_DIR The source directory, or empty if not found
+#  @return $SOURCE_DIR The source directory, or empty if not found
 get_source_dir ()
 {
     local dir="$1"
