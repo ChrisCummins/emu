@@ -154,7 +154,7 @@ remove_snapshot ()
     cat "$1/.emu/nodes/$SNAPSHOT_HASH" | sed -r 's/(Parent +).*$/\1/' > "$1/.emu/nodes/$SNAPSHOT_HASH"
     echo "$SINK_NAME: removing $2"
     rm -f $EMU_VERBOSE "$1/.emu/nodes/$2"
-    rm -f $EMU_VERBOSE "$1/.emu/nodes/$2.msg"
+    rm -f $EMU_VERBOSE "$1/.emu/nodes/$2.MSG"
     rm -rf $EMU_VERBOSE "$1/.emu/trees/$2"
     rm -rf $EMU_VERBOSE "$1/$(date -d @$(printf '%d' 0x5${2:32:8}) +'%Y-%m-%d %T')"
 }
@@ -194,12 +194,20 @@ perform_snapshot_on_sink ()
 
     lock_dir "$sink_dir"
     get_rsync_link "$sink_dir"
-    pop_tails "$sink_dir"
+
+    if [ $EMU_DRY_RUN ]
+    then
+        rsync_dry_run="--dry-run"
+    else
+        pop_tails "$sink_dir"
+    fi
+
     emu_echo "$sink_name: creating snapshot ($(sink_snapshot_count $sink_dir) of $(sink_max_snapshots $sink_dir))"
 
     rsync \
         $EMU_VERBOSE \
         $EMU_PROGRESS \
+        $rsync_dry_run \
         --delete \
         --delete-excluded \
         --archive \
@@ -215,14 +223,17 @@ perform_snapshot_on_sink ()
 
     generate_hash "$sink_dir"
     generate_snapshot_name "$sink_dir"
-    mv "$sink_dir/.emu/trees/new" "$sink_dir/.emu/trees/$HASH"
-    ln -s $EMU_VERBOSE "$sink_dir/.emu/trees/$HASH" "$sink_dir/$SNAPSHOT"
-    generate_node "$sink_dir"
-    push_head "$sink_dir"
-
-    if [ -n "$EMU_SNAPSHOT_MESSAGE" ]
+    if [ ! $EMU_DRY_RUN ]
     then
-        echo "$EMU_SNAPSHOT_MESSAGE" > "$sink_dir/.emu/nodes/$HASH.MSG"
+        mv "$sink_dir/.emu/trees/new" "$sink_dir/.emu/trees/$HASH"
+        ln -s $EMU_VERBOSE "$sink_dir/.emu/trees/$HASH" "$sink_dir/$SNAPSHOT"
+        generate_node "$sink_dir"
+        push_head "$sink_dir"
+
+        if [ -n "$EMU_SNAPSHOT_MESSAGE" ]
+        then
+            echo "$EMU_SNAPSHOT_MESSAGE" > "$sink_dir/.emu/nodes/$HASH.MSG"
+        fi
     fi
 
     unlock_dir "$sink_dir"

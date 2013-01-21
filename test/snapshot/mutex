@@ -12,6 +12,7 @@ source /usr/local/lib/libemu
 lock_dir
 set -u
 
+sleep 1
 assert_fail "emu snapshot"
 
 set +u
