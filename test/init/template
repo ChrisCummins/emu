@@ -12,6 +12,7 @@ mkdir -pv /tmp/emu/test-template
 mkdir -pv /tmp/emu/test-template/config
 mkdir -pv /tmp/emu/test-template/hooks
 mkdir -pv /tmp/emu/test-template/sinks
+echo "test" > /tmp/emu/test-template/excludes
 echo "hello, test!" > /tmp/emu/test-template/abc
 
 emu init -t/tmp/emu/test-template
@@ -19,15 +20,17 @@ assert_dirs_match /tmp/emu/test-template /tmp/emu/test-source/.emu
 
 echo "abc" >> /tmp/emu/test-template/abc
 emu init -t/tmp/emu/test-template
-if [ $(cat .emu/abc | head -n-1) != "abc" ]
+if [ "$(cat .emu/abc | tail -n1)" != "abc" ]
 then
+    echo "'$(cat .emu/abc | tail -n1)' != 'abc'"
     exit 5
 fi
 assert_dirs_match /tmp/emu/test-template /tmp/emu/test-source/.emu
 
 emu init -t/tmp/emu/test-template -R
-if [ $(cat .emu/abc | head -n-1) == "abc" ]
+if [ "$(cat .emu/abc | tail -n1)" != "abc" ]
 then
+    echo "'$(cat .emu/abc | tail -n1)' != 'abc'"
     exit 5
 fi
 assert_dirs_match /tmp/emu/test-template /tmp/emu/test-source/.emu
@@ -36,12 +39,11 @@ emu init -C
 assert_is_not_dir .emu
 
 EMU_SOURCE_TEMPLATE_DIR=/tmp/emu/test-template emu init
-if [ $(cat .emu/abc | head -n-1) == "abc" ]
+if [ "$(cat .emu/abc | tail -n1)" != "abc" ]
 then
+    echo "'$(cat .emu/abc | tail -n1)' != 'abc'"
     exit 5
 fi
 assert_dirs_match /tmp/emu/test-template /tmp/emu/test-source/.emu
 
-# Delete template
-rm -rvf /tmp/emu/test-template
 test_teardown
