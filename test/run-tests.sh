@@ -1,13 +1,20 @@
 #!/bin/bash
 
-# Test helper functions.
+## GLOBAL VARIABLES
+
+EXIT_NO_TESTS=1
+
+## TEST FUNCTIONS
+
 test_setup ()
 {
+    source libtest.sh
     echo "INFO: Running setup..."
     mkdir -pv /tmp/emu
     mkdir -pv /tmp/emu/test-source
     echo "INFO: Running test..."
 }
+export -f test_setup
 
 test_teardown ()
 {
@@ -15,302 +22,94 @@ test_teardown ()
     rm -rvf /tmp/emu
     echo "INFO: Test ended"
 }
-
-assert ()
-{
-    if [ $(test "$1") ]
-    then
-        echo "ERROR: assert '$1' failed!" >&2
-        exit 5
-    else
-        echo "Assert '$1'"
-    fi
-}
-
-assert_not ()
-{
-    if ! [ $(test "$1") ]
-    then
-        echo "ERROR: assert !'$1' failed!" >&2
-        exit 5
-    else
-        echo "Assert !'$1'"
-    fi
-}
-
-assert_zero ()
-{
-    if (( $1 ))
-    then
-        echo "ERROR: assertion '$1' == 0!" >&2
-        exit 5
-    else
-        echo "Assert '$1' == 0"
-    fi
-}
-
-assert_non_zero ()
-{
-    if ! (( $1 ))
-    then
-        echo "ERROR: assertion '$1' != 0 failed!" >&2
-        exit 5
-    else
-        echo "Assert '$1' != 0"
-    fi
-}
-
-assert_success ()
-{
-    set +e
-    echo "Assert '$1' succeeds"
-    $($1)
-    RETURN=$?
-    if (( $RETURN ))
-    then
-        echo "ERROR: assertion '$1' succeeds failed! ($RETURN)" >&2
-        exit 5
-    fi
-    set -e
-}
-
-assert_fail ()
-{
-    set +e
-    echo "Assert '$1' fails"
-    $($1)
-    RETURN=$?
-    if ! (( $RETURN ))
-    then
-        echo "ERROR: assertion '$1' fails failed! ($RETURN)" >&2
-        exit 5
-    else
-        echo "Assertion succeeded ($RETURN)"
-    fi
-    set -e
-}
-
-assert_is_dir ()
-{
-    echo "Assert '$1' is dir"
-    if [ ! -d "$1" ]
-    then
-        echo "ERROR: assertion '$1' is dir failed!" >&2
-        exit 5
-    fi
-}
-
-assert_is_not_dir ()
-{
-    echo "Assert '$1' is not dir"
-    if [ -d "$1" ]
-    then
-        echo "ERROR: assertion '$1' is not dir failed!" >&2
-        ls -l "$1"
-        exit 5
-    fi
-}
-
-assert_is_file ()
-{
-    echo "Assert '$1' is file"
-    if [ ! -f "$1" ]
-    then
-        echo "ERROR: assertion '$1' is file failed!" >&2
-        exit 5
-    fi
-}
-
-assert_is_not_file ()
-{
-    echo "Assert '$1' is not file"
-    if [ -f "$1" ]
-    then
-        echo "ERROR: assertion '$1' is not file failed!" >&2
-        ls -l "$1"
-        exit 5
-    fi
-}
-
-assert_dir_is_empty ()
-{
-    echo "Assert '$1' is empty"
-    if [ $(find "$1" | wc -l) -gt 1 ]
-    then
-        echo "ERROR: assertion '$1' is empty failed! ($(find "$1" | wc -l))" >&2
-        exit 5
-    fi
-}
-
-assert_dir_is_not_empty ()
-{
-    echo "Assert '$1' is not empty"
-    if [ $(find "$1" | wc -l) -le 1 ]
-    then
-        echo "ERROR: assertion '$1' is not empty failed! ($(find "$1" | wc -l))" >&2
-        exit 5
-    fi
-}
-
-assert_file_is_empty ()
-{
-    echo "Assert '$1' is empty"
-    if [ $(cat "$1" | wc -l) -gt 0 ]
-    then
-        cat "$1"
-        echo "ERROR: assertion '$1' is empty failed!" >&2
-        exit 5
-    fi
-}
-
-assert_file_is_not_empty ()
-{
-    echo "Assert '$1' is not empty"
-    if [ $(cat "$1" | wc -l) -lt 1 ]
-    then
-        echo "ERROR: assertion '$1' is not empty failed!" >&2
-        exit 5
-    fi
-}
-
-assert_files_match ()
-{
-    echo "Assert '$1' and '$2' match"
-    diff "$1" "$2"
-    if (( $? ))
-    then
-        echo "ERROR: assertion '$1' matches '$2' failed!" >&2
-        exit 5
-    fi
-}
-
-assert_dirs_match ()
-{
-    echo "Assert '$1' and '$2' match"
-    diff -d "$1" "$2"
-    if (( $? ))
-    then
-        echo "ERROR: assertion '$1' matches '$2' failed!" >&2
-        exit 5
-    fi
-}
-
-assert_string_is_empty ()
-{
-    echo "Assert string is empty '$1'"
-    if [ -n "$1" ]
-    then
-        echo "ERROR: assertion '$1' is empty failed!" >&2
-        exit 5
-    fi
-}
-
-assert_string_is_not_empty ()
-{
-    echo "Assert string is not empty '$1'"
-    if [ -z "$1" ]
-    then
-        echo "ERROR: assertion '$1' is not empty failed!" >&2
-        exit 5
-    fi
-}
-
-assert_strings_match ()
-{
-    echo "Assert strings match: '$1', '$2'"
-    if [[ "$1" != "$2" ]]
-    then
-        echo "ERROR: assert strings match failed!" >&2
-        exit 5
-    fi
-}
-
-export -f test_setup
 export -f test_teardown
-export -f assert
-export -f assert_dir_is_empty
-export -f assert_dir_is_not_empty
-export -f assert_dirs_match
-export -f assert_fail
-export -f assert_file_is_empty
-export -f assert_file_is_not_empty
-export -f assert_files_match
-export -f assert_is_dir
-export -f assert_is_file
-export -f assert_is_not_dir
-export -f assert_is_not_file
-export -f assert_non_zero
-export -f assert_not
-export -f assert_string_is_empty
-export -f assert_string_is_not_empty
-export -f assert_strings_match
-export -f assert_success
-export -f assert_zero
 
 cd test
 
-# Test results.
-PASSED=0
-FAILED=0
+## LOCAL VARIABLES
 
-# Use coloured text if available.
-unset TEXT_FAIL
-unset TEXT_PASS
-unset TEXT_RESET
+tests_passed=0
+tests_failed=0
 
+# use coloured text if available
 if [ $(which tput 2>/dev/null) ]
 then
-    TEXT_FAIL="$(tput setaf 1)"
-    TEXT_PASS="$(tput setaf 2)"
-    TEXT_RESET="$(tput sgr0)"
+    colour_fail="$(tput setaf 1)"
+    colour_pass="$(tput setaf 2)"
+    colour_reset="$(tput sgr0)"
 fi
 
-# Execute tests.
-for TEST in $(find . -type f)
-do
-    if [ $TEST != "./run-tests.sh" ]
-    then
-        pushd . &>/dev/null
-        echo -n "${TEST:2}"
-        ./$TEST &> $TEST.log
+if [ -n "$1" ]
+then
+    # pick from subcategory
+    test_dir="$1"
+else
+    # execute all tests
+    test_dir="."
+fi
 
-        EXIT_CODE=$?
-        if (( $EXIT_CODE ))
+test_files="$(find $1 -type f 2>/dev/null)"
+
+if [ -z "$test_files" ]
+then
+    echo "No tests found!" >&2
+    exit $EXIT_NO_TESTS
+fi
+
+# execute tests
+for test in $test_files
+do
+    if [ "$test" != "./run-tests.sh" ] && [ "$test" != "./libtest.sh" ]
+    then
+        if [ "$test_dir" == "." ]
         then
-            echo "$TEXT_FAIL FAIL$TEXT_RESET"
-            echo "$TEST failed!" >>$TEST.log
-            test_teardown &>/dev/null
-            echo $EXIT_CODE >>$TEST.log
-            FAILED=$((FAILED+1))
+            test_name="${test:2}"
         else
-            echo "$TEXT_PASS PASS$TEXT_RESET"
-            rm -f $TEST.log
-            PASSED=$((PASSED+1))
+            test_name="$test"
+        fi
+
+        echo -n "$test_name "
+
+        pushd . &>/dev/null
+        ./$test &> $test.log
+
+        exit_code=$?
+        if (( $exit_code ))
+        then
+            echo "${colour_fail}FAIL${colour_reset}"
+            echo "$test failed!" >>$test.log
+            test_teardown &>/dev/null
+            echo $exit_code >>$test.log
+            tests_failed=$((tests_failed+1))
+        else
+            echo "${colour_pass}PASS${colour_reset}"
+            rm -f $test.log
+            tests_passed=$((tests_passed+1))
         fi
 
         popd &>/dev/null
     fi
 done
 
-# Print test results summary.
-if (( $PASSED )) || (( $FAILED ))
+# print test results summary
+if (( $tests_passed )) || (( $tests_failed ))
 then
     echo ""
 fi
 
-if (( $FAILED ))
+if (( $tests_failed ))
 then
-    echo "Results: $PASSED passed $FAILED failed"
+    echo "$tests_passed passed, $tests_failed failed"
 else
-    echo "Results: All $PASSED tests passed"
+    echo "All $tests_passed tests passed"
 fi
 
-# Print failed test logs.
-for LOG in $(find . -name "*.log")
+# print failed test logs
+for log in $(find . -name "*.log")
 do
-    LOG_NAME="${LOG%.log}"
+    log_name="${log%.log}"
     echo ""
-    echo "$TEXT_FAIL${LOG_NAME:2}$TEXT_RESET ($(cat $LOG | tail -n-1))"
-    cat $LOG | head -n-1
-    rm -rf $LOG
+    echo "$colour_fail${log_name:2}$colour_reset ($(cat $log | tail -n-1))"
+    cat $log | head -n-1
+    rm -rf $log
 done
