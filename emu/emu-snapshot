@@ -220,6 +220,11 @@ perform_snapshot_on_sink ()
     generate_node "$sink_dir"
     push_head "$sink_dir"
 
+    if [ -n "$EMU_SNAPSHOT_MESSAGE" ]
+    then
+        echo "$EMU_SNAPSHOT_MESSAGE" > "$sink_dir/.emu/nodes/$HASH.MSG"
+    fi
+
     unlock_dir "$sink_dir"
     emu_echo "$sink_name: new snapshot '$SNAPSHOT'"
     emu_echo "$sink_name: HEAD at $HASH"
@@ -257,9 +262,6 @@ main ()
             n)
                 EMU_DRY_RUN=1
                 ;;
-            m)
-                SNAPSHOT_MESSAGE=$OPTARG
-                ;;
             M)
                 if [ -z $EDITOR ]
                 then
@@ -268,7 +270,7 @@ main ()
                 fi
 
                 $EDITOR EMU_SNAPSHOT_MSG
-                SNAPSHOT_MESSAGE=$(cat EMU_SNAPSHOT_MSG)
+                EMU_SNAPSHOT_MESSAGE=$(cat EMU_SNAPSHOT_MSG)
                 rm -f EMU_SNAPSHOT_MSG
                 ;;
             v)

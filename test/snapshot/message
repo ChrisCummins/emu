@@ -1,0 +1,15 @@
+set -eu
+test_setup
+
+cd /tmp/emu/test-source
+
+assert_fail "emu snapshot"
+
+emu init -v
+emu sink -v add origin ../test-sink
+
+EMU_SNAPSHOT_MESSAGE="hello, world!" emu snapshot
+
+assert_strings_match "$(cat ../test-sink/.emu/nodes/*.MSG)" "hello, world!"
+
+test_teardown
