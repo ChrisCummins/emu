@@ -277,14 +277,14 @@ do
         EXIT_CODE=$?
         if (( $EXIT_CODE ))
         then
-            echo "$TEXT_FAIL FAIL$TEXT_RESET"
-            echo "$TEST failed!" >>$TEST.log
+            echo "${TEXT_FAIL}FAIL${TEXT_RESET}"
+            echo "$test failed!" >>$test.log
             test_teardown &>/dev/null
-            echo $EXIT_CODE >>$TEST.log
+            echo $exit_code >>$test.log
             FAILED=$((FAILED+1))
         else
-            echo "$TEXT_PASS PASS$TEXT_RESET"
-            rm -f $TEST.log
+            echo "${TEXT_PASS}PASS${TEXT_RESET}"
+            rm -f $test.log
             PASSED=$((PASSED+1))
         fi
 
