@@ -47,7 +47,7 @@ uninstall: uninstall-share uninstall-lib uninstall-exec uninstall-doc
 .PHONY: test check clean release
 
 test check:
-	$(QUIET) bash test/run-tests.sh
+	$(QUIET) bash test/run-tests.sh $(TEST)
 
 clean:
 	rm -rfv /tmp/emu
