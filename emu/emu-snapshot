@@ -282,7 +282,8 @@ main ()
                 EMU_SNAPSHOT_FORCE=1
                 ;;
             F)
-                EMU_SNAPSHOT_UBER_FORCE=1
+                EMU_SNAPSHOT_FORCE=1
+                EMU_SNAPSHOT_KILL=1
                 ;;
             \?)
                 emu_error "invalid option: -$OPTARG"
