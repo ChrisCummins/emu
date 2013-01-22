@@ -2,7 +2,6 @@
 
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
-SOURCE_DIR="$(pwd)"
 
 help ()
 {
@@ -26,7 +25,7 @@ cat <<EOF >>.emu_log
 EOF
 }
 
-# Print the nodes for a sink.
+# print the nodes for a sink
 #
 # @param $1 Name of sink.
 print_nodes ()
@@ -34,7 +33,7 @@ print_nodes ()
     print_sink_details $1 >> .emu_log
 
     SINK_PATH="$(cat $SOURCE_DIR/.emu/sinks/$1)"
-    for NODE in $(ls "$SINK_DIR/.emu/nodes" | sort -r)
+    for NODE in $(ls "$SINK_PATH/.emu/nodes" | sort -r)
     do
         NODE_PATH="$SINK_PATH/.emu/nodes/$NODE"
         DATE="$(cat $NODE_PATH | grep Date | sed -r 's/Date +(.*)/\1/')"
@@ -54,26 +53,38 @@ main ()
         exit 0
     fi
 
-    pre_exec_hooks "$SOURCE_DIR"
+    get_source_dir_or_fail
+    pre_exec_hooks
 
-    if [[ "$1" == "" ]]
+    if ! (( $(ls "$SOURCE_DIR/.emu/sinks" | wc -l) ))
     then
-        emu_error "no sink specified"
-        emu_panic
-        exit $EMU_EXIT_INCORRECT_COMMAND
-    fi
-
-    SINK_DIR="$(cat $SOURCE_DIR/.emu/sinks/$1 2>/dev/null)"
-    if [[ ! -f "$SOURCE_DIR/.emu/sinks/$1" ]] || [[ ! -d "$SINK_DIR" ]]
-    then
-        emu_error "sink '$1' does not exist"
+        emu_error "no sinks. See 'emu help sink'"
         emu_panic
         exit $EMU_EXIT_ERROR
     fi
 
-    print_nodes "$1"
+    for sink in $@
+    do
+        local sink_dir="$(cat $SOURCE_DIR/.emu/sinks/$sink 2>/dev/null)"
 
-    post_exec_hooks "$SOURCE_DIR"
+        if [[ ! -f "$SOURCE_DIR/.emu/sinks/$sink" ]]
+        then
+            emu_error "sink '$sink' does not exist"
+            emu_panic
+            exit $EMU_EXIT_ERROR
+        fi
+
+        if [ -z "$sink_dir" ] || [[ ! -d "$sink_dir" ]]
+        then
+            emu_error "sink '$sink' is corrrupt"
+            emu_panic
+            exit $EMU_EXIT_ERROR
+        fi
+
+        print_nodes "$sink"
+    done
+
+    post_exec_hooks
     exit 0
 }
 main $@
