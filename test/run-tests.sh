@@ -11,10 +11,6 @@ test_setup ()
     echo "INFO: Running setup..."
     source libtest.sh
     rm -rvf /tmp/emu
-    for log in $(find . -name "*.log")
-    do
-        rm -fv "$log"
-    done
     mkdir -pv /tmp/emu
     mkdir -pv /tmp/emu/test-source
     echo "INFO: Running test..."
@@ -62,6 +58,12 @@ then
     echo "No tests found!" >&2
     exit $EXIT_NO_TESTS
 fi
+
+# delete old logs
+for log in $(find . -name "*.log")
+do
+    rm -fv "$log"
+done
 
 # execute tests
 for test in $test_files
