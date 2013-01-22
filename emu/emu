@@ -77,7 +77,7 @@ EOF
 }
 
 # Get arguments.
-while getopts :hv OPT
+while getopts ":hv" OPT
 do
     case $OPT in
         h)

@@ -29,7 +29,7 @@ main ()
 {
     EMU_LOG_MAX=10000
 
-    while getopts "n:s" OPT
+    while getopts ":n:s" OPT
     do
         case $OPT in
             n)

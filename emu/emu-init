@@ -63,7 +63,7 @@ main ()
 {
     EMU_TEMPLATE_UPDATE="-u"
 
-    while getopts "qvCRt:" OPT
+    while getopts ":qvCRt:" OPT
     do
         case $OPT in
             q)
