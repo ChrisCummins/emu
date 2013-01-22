@@ -13,9 +13,9 @@ help_command ()
 {
     local command="$1"
 
-    if [ -z "$1" ]
+    if [ -n "$command" ]
     then
-        local exec=emu-$1
+        local exec=emu-$command
         command -v $exec >/dev/null 2>&1 || { command_not_found "$command"; }
         $exec help
         exit 0
