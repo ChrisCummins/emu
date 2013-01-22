@@ -64,12 +64,12 @@ main ()
     get_source_dir_or_fail
     pre_exec_hooks
 
-    local sink_list="$@"
+    local arg_list="$@"
 
     if [ -z "$1" ]
     then
         # if no argument is given, generate a sink list of all sinks
-        sink_list="$(ls "$SOURCE_DIR/.emu/sinks")"
+        arg_list="$(ls "$SOURCE_DIR/.emu/sinks")"
     fi
 
     if ! (( $(ls "$SOURCE_DIR/.emu/sinks" | wc -l) ))
@@ -80,9 +80,20 @@ main ()
         exit $EMU_EXIT_ERROR
     fi
 
-    for sink in $sink_list
+    for arg in $arg_list
     do
-        SINK_DIR="$(cat $SOURCE_DIR/.emu/sinks/$sink 2>/dev/null)"
+        local in=$(echo "$1" | tr ":" "\n")
+        local sink=""
+        local snapshot=""
+
+        if [[ $(echo "$in" | wc -l) -ne 2 ]]
+        then
+            # not a ':' delimited input
+            sink="$arg"
+        else
+            # <sink>:<snapshot> format
+            sink=$(echo "$in" | tail -n1)
+        fi
 
         if [[ ! -f "$SOURCE_DIR/.emu/sinks/$sink" ]]
         then
@@ -91,16 +102,42 @@ main ()
             exit $EMU_EXIT_ERROR
         fi
 
+        SINK_DIR="$(cat $SOURCE_DIR/.emu/sinks/$sink 2>/dev/null)"
+
         if [ -z "$SINK_DIR" ] || [[ ! -d "$SINK_DIR" ]]
         then
+            # sink files do not exist
             emu_error "sink '$sink' is corrrupt"
             emu_panic
             exit $EMU_EXIT_ERROR
         fi
 
-        print_sink_details "$sink" >> .emu_log
-        print_all_node_details "$sink" >> .emu_log
-        echo "" >> .emu_log
+        if [[ $(echo "$in" | wc -l) -eq 2 ]]
+        then
+            # <sink>:<snapshot> format
+            snapshot=$(echo "$in" | head -n1)
+
+            if [ "$snapshot" = "HEAD" ]
+            then
+                snapshot="$(cat "$SINK_DIR/.emu/HEAD")"
+            fi
+
+            if [[ ! -d "$SINK_DIR/.emu/trees/$snapshot" ]]
+            then
+                emu_error "snapshot '$snapshot' does not exist"
+                emu_panic
+                exit $EMU_EXIT_ERROR
+            fi
+        fi
+
+        if [ -z "$snapshot" ]
+        then
+            print_sink_details "$sink" >> .emu_log
+            print_all_node_details "$sink" >> .emu_log
+            echo "" >> .emu_log
+        else
+            print_node_details "$snapshot"
+        fi
     done
 
     # display the log
