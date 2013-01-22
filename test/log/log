@@ -1,0 +1,10 @@
+set -eu
+test_setup
+
+cd /tmp/emu/test-source
+emu init -v
+
+emu sink -v add origin ../test-sink
+emu log
+
+test_teardown
