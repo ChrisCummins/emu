@@ -37,6 +37,7 @@ _emu_echo ()
 # print a message
 #  @param $1                         msg
 #  @var   EMU_ECHO_PREFIX (optional) output prefix
+#  @var   EMU_QUIET       (optional) silences output
 emu_echo ()
 {
     local msg="$1"
@@ -46,13 +47,18 @@ emu_echo ()
         local emu_prefix_color="$(tput setaf 2)"
     fi
 
-    _emu_echo "$msg" 1
+    if ! (( $EMU_QUIET ))
+    then
+        _emu_echo "$msg" 1
+    fi
+
     return 0
 }
 
 # print a warning message
 #  @param $1                         msg
 #  @var   EMU_ECHO_PREFIX (optional) output prefix
+#  @var   EMU_QUIET       (optional) silences output
 emu_warning ()
 {
     local msg="$1"
@@ -62,7 +68,11 @@ emu_warning ()
         local emu_prefix_color="$(tput setaf 3)"
     fi
 
-    _emu_echo "$msg" 2
+    if ! (( $EMU_QUIET ))
+    then
+        _emu_echo "$msg" 2
+    fi
+
     return 0
 }
 
