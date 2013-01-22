@@ -21,7 +21,6 @@ print_all_node_details ()
         if [[ $counter -le $EMU_LOG_MAX ]]
         then
             print_node_details "$node"
-            echo ""
         fi
     done
 }
@@ -101,6 +100,7 @@ main ()
 
         print_sink_details "$sink" >> .emu_log
         print_all_node_details "$sink" >> .emu_log
+        echo "" >> .emu_log
     done
 
     # display the log
