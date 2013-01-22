@@ -86,13 +86,13 @@ main ()
         local sink=""
         local snapshot=""
 
-        if [[ $(echo "$in" | wc -l) -ne 2 ]]
+        if [[ $(echo "$in" | wc -l) -eq 2 ]]
         then
+            # <sink>:<snapshot> format
+            sink=$(echo "$in" | head -n1)
+        else
             # not a ':' delimited input
             sink="$arg"
-        else
-            # <sink>:<snapshot> format
-            sink=$(echo "$in" | tail -n1)
         fi
 
         if [[ ! -f "$SOURCE_DIR/.emu/sinks/$sink" ]]
@@ -115,7 +115,7 @@ main ()
         if [[ $(echo "$in" | wc -l) -eq 2 ]]
         then
             # <sink>:<snapshot> format
-            snapshot=$(echo "$in" | head -n1)
+            snapshot=$(echo "$in" | tail -n1)
 
             if [ "$snapshot" = "HEAD" ]
             then
@@ -136,12 +136,23 @@ main ()
             print_all_node_details "$sink" >> .emu_log
             echo "" >> .emu_log
         else
-            print_node_details "$snapshot"
+            print_node_details "$snapshot" > .emu_log
         fi
     done
 
-    # display the log
-    cat .emu_log | head -n-1 | less
+    if [ -z "$snapshot" ]
+    then
+        cat .emu_log | head -n-1 > .emu_log_tmp
+        mv .emu_log_tmp .emp_log
+    fi
+
+    if [ -n "$snapshot" ] && ! (( $EMU_LOG_SUMMARY ))
+    then
+        cat .emu_log | tail -n+2 > .emu_log_tmp
+        mv .emu_log_tmp .emu_log
+    fi
+
+    less .emu_log
     rm -f .emu_log
 
     post_exec_hooks
