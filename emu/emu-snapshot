@@ -268,7 +268,7 @@ perform_snapshots ()
 
 main ()
 {
-    while getopts "nm:MvpfF" OPT
+    while getopts "nMvpfF" OPT
     do
         case $OPT in
             n)
