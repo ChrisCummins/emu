@@ -8,45 +8,54 @@ help ()
     man emu-log
 }
 
-print_node_verbose ()
-{
-cat <<EOF >>.emu_log
-$NODE
-  Date: $DATE
-  Size: $SIZE
-
-EOF
-}
-
-print_node_dense ()
-{
-cat <<EOF >>.emu_log
- $NODE * $DATE
-EOF
-}
-
 # print the nodes for a sink
-#
-# @param $1 Name of sink.
-print_nodes ()
+#  @param $1 name of sink
+print_all_node_details ()
 {
-    print_sink_details $1 >> .emu_log
+    local sink="$1"
+    local counter=0
 
-    SINK_PATH="$(cat $SOURCE_DIR/.emu/sinks/$1)"
-    for NODE in $(ls "$SINK_PATH/.emu/nodes" | sort -r)
+    for node in $(ls "$SINK_DIR/.emu/nodes" | sort -r)
     do
-        NODE_PATH="$SINK_PATH/.emu/nodes/$NODE"
-        DATE="$(cat $NODE_PATH | grep Date | sed -r 's/Date +(.*)/\1/')"
-        SIZE="$(cat $NODE_PATH | grep Size | sed -r 's/Size +(.*)/\1/')"
-
-        print_node_verbose $NODE
+        counter=$((counter+1))
+        if [[ $counter -le $EMU_LOG_MAX ]]
+        then
+            print_node_details "$node"
+            echo ""
+        fi
     done
-    cat .emu_log | less
-    rm -f .emu_log
 }
 
 main ()
 {
+    EMU_LOG_MAX=10000
+
+    while getopts "n:s" OPT
+    do
+        case $OPT in
+            n)
+                EMU_LOG_MAX=$OPTARG
+                ;;
+            s)
+                EMU_LOG_SUMMARY=1
+                ;;
+            \?)
+                emu_error "invalid option: -$OPTARG"
+                exit 1
+                ;;
+            :)
+                emu_error "option -$OPTARG requires an argument"
+                exit 1
+                ;;
+        esac
+    done
+
+    # dispose of args
+    while [ "${1:0:1}" = "-" ]
+    do
+        shift
+    done
+
     if [[ "$1" == "help" ]]
     then
         help
@@ -56,16 +65,25 @@ main ()
     get_source_dir_or_fail
     pre_exec_hooks
 
+    local sink_list="$@"
+
+    if [ -z "$1" ]
+    then
+        # if no argument is given, generate a sink list of all sinks
+        sink_list="$(ls "$SOURCE_DIR/.emu/sinks")"
+    fi
+
     if ! (( $(ls "$SOURCE_DIR/.emu/sinks" | wc -l) ))
     then
+        # there are no sinks
         emu_error "no sinks. See 'emu help sink'"
         emu_panic
         exit $EMU_EXIT_ERROR
     fi
 
-    for sink in $@
+    for sink in $sink_list
     do
-        local sink_dir="$(cat $SOURCE_DIR/.emu/sinks/$sink 2>/dev/null)"
+        SINK_DIR="$(cat $SOURCE_DIR/.emu/sinks/$sink 2>/dev/null)"
 
         if [[ ! -f "$SOURCE_DIR/.emu/sinks/$sink" ]]
         then
@@ -74,15 +92,20 @@ main ()
             exit $EMU_EXIT_ERROR
         fi
 
-        if [ -z "$sink_dir" ] || [[ ! -d "$sink_dir" ]]
+        if [ -z "$SINK_DIR" ] || [[ ! -d "$SINK_DIR" ]]
         then
             emu_error "sink '$sink' is corrrupt"
             emu_panic
             exit $EMU_EXIT_ERROR
         fi
 
-        print_nodes "$sink"
+        print_sink_details "$sink" >> .emu_log
+        print_all_node_details "$sink" >> .emu_log
     done
+
+    # display the log
+    cat .emu_log | head -n-1 | less
+    rm -f .emu_log
 
     post_exec_hooks
     exit 0
