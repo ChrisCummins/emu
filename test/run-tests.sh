@@ -30,12 +30,14 @@ cd test
 
 tests_passed=0
 tests_failed=0
+tests_skipped=0
 
 # use coloured text if available
 if [ $(which tput 2>/dev/null) ]
 then
-    colour_fail="$(tput setaf 1)"
     colour_pass="$(tput setaf 2)"
+    colour_fail="$(tput setaf 1)"
+    colour_skip="$(tput setaf 3)"
     colour_reset="$(tput sgr0)"
 fi
 
@@ -70,24 +72,30 @@ do
 
         echo -n "$test_name "
 
-        pushd . &>/dev/null
-        ./$test &> $test.log
-
-        exit_code=$?
-        if (( $exit_code ))
+        if [ -x "$test" ]
         then
-            echo "${colour_fail}FAIL${colour_reset}"
-            echo "$test failed!" >>$test.log
-            test_teardown &>/dev/null
-            echo $exit_code >>$test.log
-            tests_failed=$((tests_failed+1))
-        else
-            echo "${colour_pass}PASS${colour_reset}"
-            rm -f $test.log
-            tests_passed=$((tests_passed+1))
-        fi
+            pushd . &>/dev/null
+            ./$test &> $test.log
 
-        popd &>/dev/null
+            exit_code=$?
+            if (( $exit_code ))
+            then
+                echo "${colour_fail}FAIL${colour_reset}"
+                echo "$test failed!" >>$test.log
+                test_teardown &>/dev/null
+                echo $exit_code >>$test.log
+                tests_failed=$((tests_failed+1))
+            else
+                echo "${colour_pass}PASS${colour_reset}"
+                rm -f $test.log
+                tests_passed=$((tests_passed+1))
+            fi
+
+            popd &>/dev/null
+        else
+            echo "${colour_skip}SKIPPED${colour_reset}"
+            tests_skipped=$((tests_skipped+1))
+        fi
     fi
 done
 
@@ -99,10 +107,16 @@ fi
 
 if (( $tests_failed ))
 then
-    echo "$tests_passed passed, $tests_failed failed"
+    echo -n "$tests_passed passed, $tests_failed failed"
 else
-    echo "All $tests_passed tests passed"
+    echo -n "All $tests_passed tests passed"
 fi
+
+if (( $tests_skipped ))
+then
+    echo -n " ($tests_skipped skipped)"
+fi
+echo ""
 
 # print failed test logs
 for log in $(find . -name "*.log")
