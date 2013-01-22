@@ -33,7 +33,7 @@ copy_template_files ()
         --archive \
         --human-readable \
         $EMU_TEMPLATE_UPDATE \
-        "$SOURCE_TEMPLATE_DIR/" \
+        "$EMU_SOURCE_TEMPLATE_DIR/" \
         "$SOURCE_DIR/.emu/"
 }
 
@@ -80,8 +80,8 @@ main ()
                 EMU_TEMPLATE_UPDATE=""
                 ;;
             t)
-                SOURCE_TEMPLATE_DIR="$OPTARG"
-                if [ ! -d "$SOURCE_TEMPLATE_DIR" ]
+                EMU_SOURCE_TEMPLATE_DIR="$OPTARG"
+                if [ ! -d "$EMU_SOURCE_TEMPLATE_DIR" ]
                 then
                     emu_error "'$OPTARG' not a directory"
                     exit 1
@@ -114,9 +114,9 @@ main ()
     exit_if_no_dir_permissions "$SOURCE_DIR"
     CONF_DIR="$SOURCE_DIR/.emu"
 
-    if [ -z "$SOURCE_TEMPLATE_DIR" ]
+    if [ -z "$EMU_SOURCE_TEMPLATE_DIR" ]
     then
-        SOURCE_TEMPLATE_DIR="/usr/share/emu/source-templates"
+        EMU_SOURCE_TEMPLATE_DIR="/usr/share/emu/source-templates"
     fi
 
     if (( $EMU_DIR_CLEAN ))
