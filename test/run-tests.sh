@@ -62,7 +62,7 @@ fi
 # delete old logs
 for log in $(find . -name "*.log")
 do
-    rm -fv "$log"
+    rm -f "$log"
 done
 
 # execute tests
