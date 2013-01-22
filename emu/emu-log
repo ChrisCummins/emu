@@ -64,7 +64,7 @@ main ()
     fi
 
     SINK_DIR="$(cat $SOURCE_DIR/.emu/sinks/$1 2>/dev/null)"
-    if [[ ! -d "$SINK_DIR" ]]
+    if [[ ! -f "$SOURCE_DIR/.emu/sinks/$1" ]] || [[ ! -d "$SINK_DIR" ]]
     then
         emu_error "sink '$1' does not exist"
         emu_panic
