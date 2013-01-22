@@ -596,9 +596,9 @@ EOF
         # verbose node info
         cat <<EOF
 
-$node
-  Date: $node_date
-  Size: $node_size
+  $node
+    Date: $node_date
+    Size: $node_size
 EOF
     fi
 }
