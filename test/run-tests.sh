@@ -8,8 +8,13 @@ EXIT_NO_TESTS=1
 
 test_setup ()
 {
-    source libtest.sh
     echo "INFO: Running setup..."
+    source libtest.sh
+    rm -rvf /tmp/emu
+    for log in $(find . -name "*.log")
+    do
+        rm -fv "$log"
+    done
     mkdir -pv /tmp/emu
     mkdir -pv /tmp/emu/test-source
     echo "INFO: Running test..."
