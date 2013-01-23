@@ -80,6 +80,7 @@ main ()
         exit $EMU_EXIT_ERROR
     fi
 
+    rm -f .emu_log
     touch .emu_log
 
     for arg in $arg_list
