@@ -138,25 +138,16 @@ main ()
 
         if [ -z "$snapshot" ]
         then
+            if [[ $(cat .emu_log | wc -l) -gt 0 ]]
+            then
+                echo "" >> .emu_log
+            fi
             print_sink_details "$sink" >> .emu_log
             print_all_node_details "$sink" >> .emu_log
-            echo "" >> .emu_log
         else
             print_node_details "$snapshot" > .emu_log
         fi
     done
-
-    if [ -z "$snapshot" ]
-    then
-        cat .emu_log | head -n-1 > .emu_log_tmp
-        mv .emu_log_tmp .emp_log
-    fi
-
-    if [ -n "$snapshot" ] && ! (( $EMU_LOG_SUMMARY ))
-    then
-        cat .emu_log | tail -n+2 > .emu_log_tmp
-        mv .emu_log_tmp .emu_log
-    fi
 
     less .emu_log
     rm -f .emu_log
