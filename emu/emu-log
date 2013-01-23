@@ -80,6 +80,8 @@ main ()
         exit $EMU_EXIT_ERROR
     fi
 
+    touch .emu_log
+
     for arg in $arg_list
     do
         local in=$(echo "$1" | tr ":" "\n")
