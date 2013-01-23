@@ -100,6 +100,7 @@ main ()
         if [[ ! -f "$SOURCE_DIR/.emu/sinks/$sink" ]]
         then
             emu_error "sink '$sink' does not exist"
+            rm -f .emu_log
             emu_panic
             exit $EMU_EXIT_ERROR
         fi
@@ -110,6 +111,7 @@ main ()
         then
             # sink files do not exist
             emu_error "sink '$sink' is corrrupt"
+            rm -f .emu_log
             emu_panic
             exit $EMU_EXIT_ERROR
         fi
@@ -127,6 +129,7 @@ main ()
             if [[ ! -d "$SINK_DIR/.emu/trees/$snapshot" ]]
             then
                 emu_error "snapshot '$snapshot' does not exist"
+                rm -f .emu_log
                 emu_panic
                 exit $EMU_EXIT_ERROR
             fi
