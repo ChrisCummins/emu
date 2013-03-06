@@ -30,6 +30,9 @@ help:
 	@echo 'For further info see the ./README file'
 
 # installer
+.PHONY: install install-share install-lib install-exec install-doc
+install: install-share install-lib install-exec install-doc
+
 install-exec:
 	find emu -type f -exec cp -v {} /usr/local/bin \;
 
@@ -42,9 +45,10 @@ install-share:
 install-doc:
 	find share/man/ -type f -exec cp -v {} /usr/local/share/man/man1 \;
 
-install: install-share install-lib install-exec install-doc
-
 # uninstaller
+.PHONY: uninstall uninstall-share uninstall-lib uninstall-exec uninstall-doc
+uninstall: uninstall-share uninstall-lib uninstall-exec uninstall-doc
+
 uninstall-exec:
 	rm -f /usr/local/bin/emu
 	rm -f /usr/local/bin/emu-init
@@ -63,8 +67,6 @@ uninstall-share:
 
 uninstall-doc:
 	rm -f /usr/local/share/man/man1/emu*.1
-
-uninstall: uninstall-share uninstall-lib uninstall-exec uninstall-doc
 
 # misc
 .PHONY: test check clean release
