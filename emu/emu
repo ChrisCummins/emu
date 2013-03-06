@@ -3,7 +3,7 @@
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
 
-# Print the help text.
+# print the help text
 help ()
 {
     man emu
@@ -11,11 +11,13 @@ help ()
 
 help_command ()
 {
-    if [[ $1 != "" ]]
+    local command="$1"
+
+    if [ -n "$command" ]
     then
-        EXEC=emu-$1
-        command -v $EXEC >/dev/null 2>&1 || { command_not_found "$1"; }
-        $EXEC help
+        local exec=emu-$command
+        command -v $exec >/dev/null 2>&1 || { command_not_found "$command"; }
+        $exec help
         exit 0
     else
         help
@@ -23,7 +25,7 @@ help_command ()
     fi
 }
 
-# Print the version number.
+# print the version number
 version ()
 {
     emu_echo "version $EMU_VERSION"
@@ -76,8 +78,21 @@ print_emu ()
 EOF
 }
 
-# Get arguments.
-while getopts :hv OPT
+for arg in $@; do
+    case $arg in
+        "--help")
+            help
+            exit 0
+            ;;
+        "--version")
+            version
+            exit 0
+            ;;
+    esac
+done
+
+# get arguments
+while getopts ":hv" OPT
 do
     case $OPT in
         h)
@@ -99,12 +114,12 @@ do
     esac
 done
 
-# Get command.
-COMMAND="$1"
+# get command
+command="$1"
 shift
 
-# Parse commands.
-case $COMMAND in
+# parse commands
+case $command in
     "" | "help")
         help_command $@
         exit 0
@@ -118,10 +133,10 @@ case $COMMAND in
         exit 0
         ;;
     *)
-        # Execute command.
-        EXEC=emu-$COMMAND
-        command -v $EXEC >/dev/null 2>&1 || { command_not_found "$COMMAND"; }
-        $EXEC $@
+        # execute command
+        exec=emu-$command
+        command -v $exec >/dev/null 2>&1 || { command_not_found "$command"; }
+        $exec $@
         exit $?
         ;;
 esac

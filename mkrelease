@@ -19,8 +19,6 @@ This will substitute relevant references to 0.2.2 with 0.2.3, and generate two f
 
   releases/emu-0.2.3.tar.gz
   releases/emu-0.2.3.tar.gz.md5
-
-Additionally, the CHANGELOG file will have a 0.2.3 entry added.
 EOF
     exit 1
 fi
@@ -38,8 +36,7 @@ FILELIST=$(find . -type f \
     | grep -v 'releases/emu-*.tar.gz' \
     | grep -v 'releases/emu-*.tar.gz.md5' \
     | grep -v 'mkrelease' \
-    | grep -v 'mktar' \
-    | grep -v 'CHANGELOG')
+    | grep -v 'mktar')
 
 # update references to version in filelist
 for file in $FILELIST
@@ -61,21 +58,3 @@ do
     rm -f $f
     mv $f.tmp $f
 done
-
-# update changelog
-touch CHANGELOG
-
-cat <<EOF >> CHANGELOG
-
-emu-$VERSION ($(date))
---------------------------------------------------------------------------------
-EOF
-
-git log $OLD_VERSION.. \
-    | grep -v Author \
-    | grep -v 'commit' \
-    | grep -v '^$' \
-    | sed -r 's/(Date:.*)/\n\1/' \
-    >> CHANGELOG
-
-echo "" >> CHANGELOG

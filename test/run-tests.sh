@@ -8,8 +8,9 @@ EXIT_NO_TESTS=1
 
 test_setup ()
 {
-    source libtest.sh
     echo "INFO: Running setup..."
+    source libtest.sh
+    rm -rvf /tmp/emu
     mkdir -pv /tmp/emu
     mkdir -pv /tmp/emu/test-source
     echo "INFO: Running test..."
@@ -58,6 +59,12 @@ then
     exit $EXIT_NO_TESTS
 fi
 
+# delete old logs
+for log in $(find . -name "*.log")
+do
+    rm -f "$log"
+done
+
 # execute tests
 for test in $test_files
 do
@@ -70,7 +77,7 @@ do
             test_name="$test"
         fi
 
-        echo -n "$test_name "
+        echo -ne "\t$test_name "
 
         if [ -x "$test" ]
         then

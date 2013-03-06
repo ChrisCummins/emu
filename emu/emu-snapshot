@@ -148,11 +148,14 @@ get_snapshot_child ()
 # deletes a snapshot
 #  @param $1 path to sink directory
 #  @param $2 snapshot to delete
+#  @param $3 name of sink
 remove_snapshot ()
 {
+    local sink_name="$3"
+
     get_snapshot_child "$1" "$(cat $1/.emu/HEAD)" "$2"
     cat "$1/.emu/nodes/$SNAPSHOT_HASH" | sed -r 's/(Parent +).*$/\1/' > "$1/.emu/nodes/$SNAPSHOT_HASH"
-    echo "$SINK_NAME: removing $2"
+    emu_echo "$sink_name: removing '$2'"
     rm -f $EMU_VERBOSE "$1/.emu/nodes/$2"
     rm -f $EMU_VERBOSE "$1/.emu/nodes/$2.MSG"
     rm -rf $EMU_VERBOSE "$1/.emu/trees/$2"
@@ -161,25 +164,29 @@ remove_snapshot ()
 
 # remove the oldest in tree in a set of snapshots
 #  @param $1 Path to sink directory
+#  @param $2 name of the sink
 pop_tail ()
 {
     local sink_dir="$1"
+    local sink_name="$2"
 
     # Get the root snapshot (one with no child).
     get_snapshot_child "$sink_dir" "$(cat $sink_dir/.emu/HEAD)"
-    remove_snapshot "$sink_dir" "$SNAPSHOT_HASH"
+    remove_snapshot "$sink_dir" "$SNAPSHOT_HASH" "$sink_name"
 }
 
 # push the latest snapshot to HEAD
 #  @param $1 Path to sink directory
+#  @param $2 name of the sink
 pop_tails ()
 {
     local sink_dir="$1"
+    local sink_name="$2"
 
     while [[ $(sink_snapshot_count "$sink_dir") -gt $(sink_max_snapshots "$sink_dir") ]]
     do
         next_snapshot_hash="$(cat $sink_dir/.emu/HEAD)"
-        pop_tail "$sink_dir"
+        pop_tail "$sink_dir" "$sink_name"
     done
 }
 
@@ -199,7 +206,7 @@ perform_snapshot_on_sink ()
     then
         rsync_dry_run="--dry-run"
     else
-        pop_tails "$sink_dir"
+        pop_tails "$sink_dir" "$sink_name"
     fi
 
     emu_echo "$sink_name: creating snapshot ($(sink_snapshot_count $sink_dir) of $(sink_max_snapshots $sink_dir))"
@@ -268,7 +275,7 @@ perform_snapshots ()
 
 main ()
 {
-    while getopts "nMvpfF" OPT
+    while getopts ":nMvpfF" OPT
     do
         case $OPT in
             n)

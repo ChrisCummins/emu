@@ -1,0 +1,39 @@
+set -eu
+test_setup
+
+cd /tmp/emu/test-source
+emu init -v
+
+emu sink -v add origin ../test-sink
+emu sink -v add test ../test-sink2
+
+emu snapshot -v
+
+emu log > /tmp/emu/log
+emu log origin > /tmp/emu/log-origin
+emu log test > /tmp/emu/log-test
+
+sleep 1
+emu snapshot -v
+
+if [[ "$(wc -l /tmp/emu/log | awk '{ print $1 }')" -lt "$(wc -l /tmp/emu/log-origin | awk '{ print $1 }')" ]]
+then
+    echo "Log test failed!"
+    echo "emu log:"
+    cat /tmp/emu/log
+    echo "emu log origin:"
+    cat /tmp/emu/log-origin
+    exit 5
+fi
+
+if [[ "$(wc -l /tmp/emu/log | awk '{ print $1 }')" -lt "$(wc -l /tmp/emu/log-test | awk '{ print $1 }')" ]]
+then
+    echo "Log test failed!"
+    echo "emu log:"
+    cat /tmp/emu/log
+    echo "emu log origin:"
+    cat /tmp/emu/log-test
+    exit 5
+fi
+
+test_teardown
