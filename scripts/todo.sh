@@ -2,6 +2,7 @@
 
 FILELIST=$(find . -type f \
     | grep -v .git \
+    | grep -v Makefile \
     | grep -v todo)
 
 for f in $FILELIST
