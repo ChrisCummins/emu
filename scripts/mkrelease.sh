@@ -5,12 +5,12 @@ set -e
 print_help ()
 {
     cat <<EOF
-Usage: mkrelease.sh [--version] [--help] <new-version-number>
+Usage: ./scripts/mkrelease.sh [--version] [--help] <target-version>
 
 Automatic release tool, generates release tarball and replaces all
-references to the old version number with the new one. For example, if
-the current version is 0.2.2 and you would like to make a release 0.3.0,
-run:
+references to the old version number with the new one <target-version>.
+For example, if the current version is 0.2.2 and you would like to make
+a release 0.3.0, run:
 
   $ ./scripts/mkrelease.sh 0.3.0
 
