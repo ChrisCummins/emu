@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 print_help ()
 {
     cat <<EOF
@@ -20,49 +22,74 @@ generate two files:
 EOF
 }
 
-VERSION=$1
-OLD_VERSION=$(cat lib/libemu | grep EMU_VERSION \
-    | sed -r 's/.+\sEMU_VERSION="([0-9]\.[0-9]\.[0-9])"\s*$/\1/')
+print_version ()
+{
+    echo "version $current_version"
+}
 
-# check for correct args
-if [ -z $VERSION ]
-then
-    print_help
-    exit 1
+current_version=$(cat lib/libemu | grep EMU_VERSION \
+    | sed -r 's/.+\sEMU_VERSION="([0-9]+\.[0-9]+\.[0-9]+)"\s*$/\1/')
+
+# Check sanity of current version number.
+test -n "$current_version" || { echo "Could not get old version number!" >&2; exit 1; }
+
+# Make sure we have an arg.
+test -n "$1" || { print_help; exit 1; }
+
+case "$1" in
+    "--help")
+        print_help
+        exit 0
+        ;;
+    "--version")
+        print_version
+        exit 0
+        ;;
+esac
+
+# Check sanity of new version number.
+set +e
+new_version=$(echo "$1" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$')
+set -e
+
+if [ -z "$new_version" ]; then
+    echo "Invalid version number '$1'!" >&2
+    exit 2
 fi
 
-# check that old version number is valid
-if [[ -z "$OLD_VERSION" ]]
-then
-    echo "Could not get old version number!"
-    exit 1
+if [ -f ./releases/emu-$new_version.tar.gz ]; then
+    echo "Release tarball './releases/emu-$new_version.tar.gz' already exists!"
+    exit 3
 fi
 
-# generate file list
-FILELIST=$(find . -type f \
-    | grep -v '.git' \
-    | grep -v 'releases/emu-*.tar.gz' \
-    | grep -v 'releases/emu-*.tar.gz.md5' \
+# Generate file list.
+filelist=$(find . -type f \
+    | grep -vE '\.git' \
+    | grep -vE '\./releases/emu-[0-9]+\.[0-9]+\.[0-9]+\.tar\.gz' \
     | grep -v 'mkrelease' \
     | grep -v 'mktar')
 
 # update references to version in filelist
-for file in $FILELIST
+for file in $filelist
 do
-    sed -i "s/$OLD_VERSION/$VERSION/g" $file
+    sed -i "s/$current_version/$new_version/g" $file
 done
 
-# generate man list
-MANLIST=$(find ./share/man -type f)
+# Generate man list.
+manpage_list=$(find ./share/man -type f)
 
-# update man page headers
-for f in $MANLIST
+# Update man page headers.
+for f in $manpage_list
 do
     base=$(basename $f)
     file=${base%.*}
     ext=${base##*.}
     date=$(date +'%B %d, %Y')
-    cat $f | sed "1s/.*/.TH $file $ext  \"$date\" \"version $VERSION\" \"Emu Manual\"/" > $f.tmp
+
+    cat $f | sed "1s/.*/.TH $file $ext  \"$date\" \"version $new_version\" \"Emu Manual\"/" > $f.tmp
     rm -f $f
     mv $f.tmp $f
 done
+
+# Finally, lets make the release tarball.
+./scripts/mktar.sh
