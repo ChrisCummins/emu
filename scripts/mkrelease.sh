@@ -8,18 +8,20 @@ OLD_VERSION=$(cat lib/libemu | grep EMU_VERSION \
 if [ -z $VERSION ]
 then
     cat <<EOF
-Usage: <version-number>
+Usage: mkrelease.sh [--version] [--help] <new-version-number>
 
-Automatic release tool, generates release tarball and replaces references to the
-old version number with the new one. For example, if the current version is
-0.2.2 and you would like to make a release 0.2.3, run:
+Automatic release tool, generates release tarball and replaces all
+references to the old version number with the new one. For example, if
+the current version is 0.2.2 and you would like to make a release 0.3.0,
+run:
 
-  $ ./mkrelease 0.2.3
+  $ ./scripts/mkrelease.sh 0.3.0
 
-This will substitute relevant references to 0.2.2 with 0.2.3, and generate two files:
+This will substitute relevant references to 0.2.2 with 0.3.0, and
+generate two files:
 
-  releases/emu-0.2.3.tar.gz
-  releases/emu-0.2.3.tar.gz.md5
+  ./releases/emu-0.3.0.tar.gz      # The release tarball.
+  ./releases/emu-0.3.0.tar.gz.md5  # Release tarball checksum.
 EOF
     exit 1
 fi
