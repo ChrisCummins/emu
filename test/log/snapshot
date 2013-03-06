@@ -1,0 +1,16 @@
+set -eu
+test_setup
+
+cd /tmp/emu/test-source
+emu init -v
+
+emu sink -v add origin ../test-sink
+
+emu snapshot -v
+
+snapshot=$(ls ../test-sink/.emu/nodes)
+
+echo "emu log origin:$snapshot"
+emu log origin:$snapshot
+
+test_teardown
