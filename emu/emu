@@ -78,6 +78,19 @@ print_emu ()
 EOF
 }
 
+for arg in $@; do
+    case $arg in
+        "--help")
+            help
+            exit 0
+            ;;
+        "--version")
+            version
+            exit 0
+            ;;
+    esac
+done
+
 # get arguments
 while getopts ":hv" OPT
 do
