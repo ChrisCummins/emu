@@ -36,16 +36,18 @@ test -n "$current_version" || { echo "Could not get old version number!" >&2; ex
 # Make sure we have an arg.
 test -n "$1" || { print_help; exit 1; }
 
-case "$1" in
-    "--help")
-        print_help
-        exit 0
-        ;;
-    "--version")
-        print_version
-        exit 0
-        ;;
-esac
+for arg in $@; do
+    case "$arg" in
+        "--help")
+            print_help
+            exit 0
+            ;;
+        "--version")
+            print_version
+            exit 0
+            ;;
+    esac
+done
 
 # Check sanity of new version number.
 set +e
