@@ -1,7 +1,8 @@
 #!/bin/bash
 
 VERSION=$1
-OLD_VERSION=$(cat lib/libemu | grep EMU_VERSION | sed -r 's/.+EMU_VERSION="(\w\.\w\.\w)".*/\1/')
+OLD_VERSION=$(cat lib/libemu | grep EMU_VERSION \
+    | sed -r 's/.+\sEMU_VERSION="([0-9]\.[0-9]\.[0-9])"\s*$/\1/')
 
 # check for correct args
 if [ -z $VERSION ]
