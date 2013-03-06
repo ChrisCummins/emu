@@ -73,7 +73,7 @@ uninstall-doc:
 .PHONY: test check clean todo
 
 test check:
-	$(QUIET) bash test/run-tests.sh $(TEST)
+	$(QUIET) bash scripts/run-tests.sh $(TEST)
 
 clean:
 	rm -rfv /tmp/emu
