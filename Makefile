@@ -24,6 +24,7 @@ help:
 	@echo 'Other targets:'
 	@echo '  test            - Run the test suite (must be installed)'
 	@echo '  help            - Display this help'
+	@echo '  todo            - Show all TODO flags in source files'
 	@echo ''
 	@echo '  make V=0|1 [targets] 0 => quiet build (default), 1 => verbose build'
 	@echo ''
@@ -69,10 +70,13 @@ uninstall-doc:
 	rm -f /usr/local/share/man/man1/emu*.1
 
 # misc
-.PHONY: test check clean release
+.PHONY: test check clean todo
 
 test check:
 	$(QUIET) bash test/run-tests.sh $(TEST)
 
 clean:
 	rm -rfv /tmp/emu
+
+todo:
+	$(QUIET) bash scripts/todo.sh
