@@ -4,7 +4,30 @@ QUIET = $(QUIET_$(V))
 .PHONY: help
 
 help:
-	$(QUIET) echo "  usage: <install|uninstall>[-<share|lib|exec|doc>]"
+	@echo 'Cleaning targets:'
+	@echo '  clean           - Remove temporary files'
+	@echo ''
+	@echo 'Install targets:'
+	@echo '  install         - Run all install targets marked with a \'*\''
+	@echo '* install-share   - Install the share files'
+	@echo '* install-lib     - Install library files'
+	@echo '* install-exec    - Install the executable files'
+	@echo '* install-doc     - Install the documentation'
+	@echo ''
+	@echo 'Uninstall targets:'
+	@echo '  uninstall       - Run all uninstall targets marked with a \'*\''
+	@echo '* uninstall-share - Install the share files'
+	@echo '* uninstall-lib   - Install library files'
+	@echo '* uninstall-exec  - Install the executable files'
+	@echo '* uninstall-doc   - Install the documentation'
+	@echo ''
+	@echo 'Other targets:'
+	@echo '  test            - Run the test suite (must be installed)'
+	@echo '  help            - Display this help'
+	@echo ''
+	@echo '  make V=0|1 [targets] 0 => quiet build (default), 1 => verbose build'
+	@echo ''
+	@echo 'For further info see the ./README file'
 
 # installer
 install-exec:
