@@ -25,7 +25,7 @@ test_teardown ()
 }
 export -f test_teardown
 
-cd test
+cd tests
 
 ## LOCAL VARIABLES
 
