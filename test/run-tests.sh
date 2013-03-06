@@ -77,7 +77,7 @@ do
             test_name="$test"
         fi
 
-        echo -n "$test_name "
+        echo -ne "\t$test_name "
 
         if [ -x "$test" ]
         then
