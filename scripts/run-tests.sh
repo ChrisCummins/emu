@@ -25,7 +25,7 @@ test_teardown ()
 }
 export -f test_teardown
 
-cd test
+cd tests
 
 ## LOCAL VARIABLES
 
@@ -45,7 +45,7 @@ fi
 if [ -n "$1" ]
 then
     # pick from subcategory
-    test_dir="$1"
+    test_dir=".$1"
 else
     # execute all tests
     test_dir="."
