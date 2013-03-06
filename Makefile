@@ -32,6 +32,7 @@ help:
 
 # installer
 .PHONY: install install-share install-lib install-exec install-doc
+
 install: install-share install-lib install-exec install-doc
 
 install-exec:
@@ -48,6 +49,7 @@ install-doc:
 
 # uninstaller
 .PHONY: uninstall uninstall-share uninstall-lib uninstall-exec uninstall-doc
+
 uninstall: uninstall-share uninstall-lib uninstall-exec uninstall-doc
 
 uninstall-exec:
