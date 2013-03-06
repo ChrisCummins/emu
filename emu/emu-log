@@ -20,6 +20,10 @@ print_all_node_details ()
         counter=$((counter+1))
         if [[ $counter -le $EMU_LOG_MAX ]]
         then
+            if (( $(cat .emu_log | wc -l ) )) && ! (( $EMU_LOG_SUMMARY ))
+            then
+                echo ""
+            fi
             print_node_details "$node"
         fi
     done
