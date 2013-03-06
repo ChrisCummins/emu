@@ -1,12 +1,7 @@
 #!/bin/bash
 
-VERSION=$1
-OLD_VERSION=$(cat lib/libemu | grep EMU_VERSION \
-    | sed -r 's/.+\sEMU_VERSION="([0-9]\.[0-9]\.[0-9])"\s*$/\1/')
-
-# check for correct args
-if [ -z $VERSION ]
-then
+print_help ()
+{
     cat <<EOF
 Usage: mkrelease.sh [--version] [--help] <new-version-number>
 
@@ -23,6 +18,16 @@ generate two files:
   ./releases/emu-0.3.0.tar.gz      # The release tarball.
   ./releases/emu-0.3.0.tar.gz.md5  # Release tarball checksum.
 EOF
+}
+
+VERSION=$1
+OLD_VERSION=$(cat lib/libemu | grep EMU_VERSION \
+    | sed -r 's/.+\sEMU_VERSION="([0-9]\.[0-9]\.[0-9])"\s*$/\1/')
+
+# check for correct args
+if [ -z $VERSION ]
+then
+    print_help
     exit 1
 fi
 
