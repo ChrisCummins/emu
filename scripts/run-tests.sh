@@ -8,20 +8,18 @@ EXIT_NO_TESTS=1
 
 test_setup ()
 {
-    echo "INFO: Running setup..."
+    set -x
     source libtest.sh
     rm -rvf /tmp/emu
     mkdir -pv /tmp/emu
     mkdir -pv /tmp/emu/test-source
-    echo "INFO: Running test..."
 }
 export -f test_setup
 
 test_teardown ()
 {
-    echo "INFO: Running teardown..."
+    set -x
     rm -rvf /tmp/emu
-    echo "INFO: Test ended"
 }
 export -f test_teardown
 
