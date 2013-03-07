@@ -27,8 +27,23 @@ file_list=$(find $directories -type f \
     | grep -v Makefile \
     | grep -v todo)
 
-for f in $file_list; do
-    grep -iHn 'TODO\|FIXME\|XXX' $f
+tmp=".todo"
+while [ -f $tmp ]; do
+    tmp="$tmp$tmp"
 done
+
+echo $tmp
+
+for f in $file_list; do
+    grep -iHn 'TODO\|FIXME\|XXX' $f >> $tmp
+done
+
+if [ -f TODO ]; then
+    cat TODO | sed 's/^\s*[-*]\s*//' | sed '/^$/d' >> $tmp
+fi
+
+cat $tmp | nl
+
+rm -f $tmp
 
 exit 0
