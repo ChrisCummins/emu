@@ -9,14 +9,19 @@ help () {
 
 set -e
 
-# Enable debugging if needed.
-test -n "$EMU_DEBUG" && set -x
+main () {
+    # Enable debugging if needed.
+    test -n "$EMU_DEBUG" && set -x
 
-# Parse --help argument first.
-for arg in $@; do
-    case "$arg" in
-        "--help" | "help")
-            help
-            exit 0
-    esac
-done
+    # Parse help argument first.
+    for arg in $@; do
+        case "$arg" in
+            "--help" | "help")
+                help
+                exit 0
+        esac
+    done
+
+    exit 0
+}
+main $@
