@@ -5,6 +5,7 @@ EMU_ECHO_PREFIX=$(basename "$0")
 
 main ()
 {
+    test -n "$EMU_DEBUG" && set -x
     exit_on_help_version $@
 
     get_source_dir_or_fail

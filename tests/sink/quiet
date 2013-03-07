@@ -1,6 +1,7 @@
 set -ue
 test_setup
 
+unset EMU_DEBUG
 cd $EMU_TEST_DIR/test-source
 emu init -v
 

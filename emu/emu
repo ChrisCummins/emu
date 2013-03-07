@@ -19,6 +19,8 @@ help_command ()
     fi
 }
 
+test -n "$EMU_DEBUG" && set -x
+
 # We cant use exit_on_help_version() since we only want to test $1.
 case $1 in
     "--help")

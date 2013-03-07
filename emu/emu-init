@@ -58,6 +58,7 @@ main ()
 {
     EMU_TEMPLATE_UPDATE="-u"
 
+    test -n "$EMU_DEBUG" && set -x
     exit_on_help_version $@
 
     while getopts ":qvCRt:" OPT
