@@ -31,18 +31,17 @@ version ()
     emu_echo "version $EMU_VERSION"
 }
 
-for arg in $@; do
-    case $arg in
-        "--help")
-            help
-            exit 0
-            ;;
-        "--version")
-            version
-            exit 0
-            ;;
-    esac
-done
+# First we parse local args.
+case $1 in
+    "--help")
+        help
+        exit 0
+        ;;
+    "--version")
+        version
+        exit 0
+        ;;
+esac
 
 # get arguments
 while getopts ":hv" OPT
