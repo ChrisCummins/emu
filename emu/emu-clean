@@ -1,7 +1,10 @@
 #!/bin/bash
 
+source /usr/local/lib/libemu
+EMU_ECHO_PREFIX=$(basename "$0")
+
 help () {
-    man emu-clean
+    man $EMU_ECHO_PREFIX
 }
 
 set -e
