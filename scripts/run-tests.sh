@@ -52,7 +52,7 @@ then
 fi
 
 # delete old logs
-for log in $(find . -name "*.log")
+for log in $(find . -name '*.log')
 do
     rm -f "$log"
 done
