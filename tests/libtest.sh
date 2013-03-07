@@ -4,6 +4,7 @@ set -ax
 
 ### Test variables.
 EMU_TEST_DIR=/tmp/emu
+EMU_DEBUG=1
 
 ## EXIT CODES
 EXIT_ASSERT_FAIL=5
