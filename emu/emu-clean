@@ -1,0 +1,19 @@
+#!/bin/bash
+
+help () {
+    man emu-clean
+}
+
+set -e
+
+# Enable debugging if needed.
+test -n "$EMU_DEBUG" && set -x
+
+# Parse --help argument first.
+for arg in $@; do
+    case "$arg" in
+        "--help" | "help")
+            help
+            exit 0
+    esac
+done

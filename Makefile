@@ -54,6 +54,7 @@ uninstall: uninstall-share uninstall-lib uninstall-exec uninstall-doc
 
 uninstall-exec:
 	rm -f /usr/local/bin/emu
+	rm -f /usr/local/bin/emu-clean
 	rm -f /usr/local/bin/emu-init
 	rm -f /usr/local/bin/emu-log
 	rm -f /usr/local/bin/emu-reset
