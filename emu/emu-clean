@@ -23,7 +23,28 @@ main () {
         esac
     done
 
+    # Parse short args.
+    while getopts ":n" OPT
+    do
+        case $OPT in
+            n)
+                EMU_DRY_RUN=1
+                ;;
+            \?)
+                emu_error "invalid option: -$OPTARG"
+                exit 1
+                ;;
+            :)
+                emu_error "option -$OPTARG requires an argument"
+                exit 1
+                ;;
         esac
+    done
+
+    # Dispose of args.
+    while [ "${1:0:1}" = "-" ]
+    do
+        shift
     done
 
     exit 0
