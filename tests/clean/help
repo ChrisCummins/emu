@@ -1,0 +1,22 @@
+set -eux
+test_setup
+
+tmp=/tmp/emu/help
+export EMU_DEBUG=1
+
+rm -fv $tmp
+touch $tmp
+emu help clean >> $tmp
+assert_file_is_not_empty $tmp
+
+rm -fv $tmp
+touch $tmp
+emu clean help >> $tmp
+assert_file_is_not_empty $tmp
+
+rm -fv $tmp
+touch $tmp
+emu clean --help >> $tmp
+assert_file_is_not_empty $tmp
+
+test_teardown
