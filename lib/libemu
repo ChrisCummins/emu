@@ -12,6 +12,17 @@ export EMU_EXIT_BLOCKED=3
 export EMU_EXIT_INCORRECT_COMMAND=126
 export EMU_EXIT_COMMAND_NOT_FOUND=127
 
+## HELP AND VERSION ############################################################
+print_version() {
+    emu_echo "version $EMU_VERSION"
+}
+
+print_help() {
+    if [ -n "$EMU_ECHO_PREFIX" ]; then
+        man "$EMU_ECHO_PREFIX"
+    fi
+}
+
 ## ECHO ########################################################################
 
 _emu_echo ()
