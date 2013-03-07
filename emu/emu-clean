@@ -3,10 +3,6 @@
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
 
-help () {
-    man $EMU_ECHO_PREFIX
-}
-
 set -e
 
 main () {
@@ -17,8 +13,16 @@ main () {
     for arg in $@; do
         case "$arg" in
             "--help" | "help")
-                help
+                print_help
                 exit 0
+                ;;
+            "--version")
+                print_version
+                exit 0
+                ;;
+        esac
+    done
+
         esac
     done
 
