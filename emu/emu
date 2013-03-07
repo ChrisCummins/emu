@@ -3,12 +3,6 @@
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
 
-# print the help text
-help ()
-{
-    man emu
-}
-
 help_command ()
 {
     local command="$1"
@@ -17,28 +11,22 @@ help_command ()
     then
         local exec=emu-$command
         command -v $exec >/dev/null 2>&1 || { command_not_found "$command"; }
-        $exec help
+        $exec --help
         exit 0
     else
-        help
+        print_help
         exit 0
     fi
 }
 
-# print the version number
-version ()
-{
-    emu_echo "version $EMU_VERSION"
-}
-
-# First we parse local args.
+# We cant use exit_on_help_version() since we only want to test $1.
 case $1 in
     "--help")
-        help
+        print_help
         exit 0
         ;;
     "--version")
-        version
+        print_version
         exit 0
         ;;
 esac
@@ -47,14 +35,6 @@ esac
 while getopts ":hv" OPT
 do
     case $OPT in
-        h)
-            help
-            exit 0
-            ;;
-        v)
-            version
-            exit 0
-            ;;
         \?)
             emu_error "invalid option: -$OPTARG"
             exit $EXIT_INVALID_ARGS

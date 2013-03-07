@@ -3,7 +3,7 @@
 emu\-init \- Create or reinitialize an existing emu source
 .SH SYNOPSIS
 .B emu init
-[help] [\-v] q[\-t <template-dir>] [\-q] [\-R] [\-C]
+[\-\-help] [\-\-version] [\-v] q[\-t <template-dir>] [\-q] [\-R] [\-C]
 .SH DESCRIPTION
 This command creates an empty emu source. This means creating a .emu
 directory with subdirectories for hooks, sink refs and configuration files.
@@ -17,6 +17,12 @@ overwrite any existing data. Instead, it can be used to rescue a broken source,
 as it will silently replace or recreate any missing files. If you have broken a
 file and would like to revert to the default, delete it and run this command.
 .SH OPTIONS
+.TP
+\-\-help
+show this help and quit
+.TP
+\-\-version
+show version information
 .TP
 \-v
 increase verbosity

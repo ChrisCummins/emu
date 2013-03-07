@@ -3,18 +3,9 @@
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
 
-help ()
-{
-    man emu-reset
-}
-
 main ()
 {
-    if [ "$1" = "help" ]
-    then
-        help
-        exit 0
-    fi
+    exit_on_help_version $@
 
     emu restore $@
     get_source_dir_or_fail

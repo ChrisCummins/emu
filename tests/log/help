@@ -7,7 +7,7 @@ emu help log >> $EMU_TEST_DIR/help
 assert_file_is_not_empty $EMU_TEST_DIR/help
 
 touch $EMU_TEST_DIR/help2
-emu log help >> $EMU_TEST_DIR/help2
+emu log --help >> $EMU_TEST_DIR/help2
 assert_file_is_not_empty $EMU_TEST_DIR/help2
 
 assert_files_match $EMU_TEST_DIR/help "$EMU_TEST_DIR"/help2

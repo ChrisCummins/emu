@@ -3,11 +3,6 @@
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
 
-help ()
-{
-    man emu-log
-}
-
 # print the nodes for a sink
 #  @param $1 name of sink
 print_all_node_details ()
@@ -32,6 +27,8 @@ print_all_node_details ()
 main ()
 {
     EMU_LOG_MAX=10000
+
+    exit_on_help_version $@
 
     while getopts ":n:s" OPT
     do
@@ -58,12 +55,6 @@ main ()
     do
         shift
     done
-
-    if [[ "$1" == "help" ]]
-    then
-        help
-        exit 0
-    fi
 
     get_source_dir_or_fail
     pre_exec_hooks

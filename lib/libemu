@@ -23,6 +23,21 @@ print_help() {
     fi
 }
 
+exit_on_help_version() {
+    for arg in $@; do
+        case "$arg" in
+            "--help")
+                print_help
+                exit 0
+                ;;
+            "--version")
+                print_version
+                exit 0
+                ;;
+        esac
+    done
+}
+
 ## ECHO ########################################################################
 
 _emu_echo ()

@@ -3,11 +3,6 @@
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
 
-help ()
-{
-    man $(basename "$0")
-}
-
 init_sink ()
 {
     SINK_DIR="$1"
@@ -35,7 +30,7 @@ add_sink ()
 
     if [ -z "$sink_name" ] || [ -z "$sink_path" ]
     then
-        help
+        print_help
         exit $EMU_EXIT_INCORRECT_COMMAND
     fi
 
@@ -133,6 +128,8 @@ list_sinks ()
 
 main ()
 {
+    exit_on_help_version $@
+
     while getopts ":qvs:Rt:" OPT
     do
         case $OPT in
@@ -172,12 +169,6 @@ main ()
     do
         shift
     done
-
-    if [ "$1" = "help" ]
-    then
-        help
-        exit 0
-    fi
 
     get_source_dir_or_fail
 

@@ -3,11 +3,6 @@
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
 
-help ()
-{
-    man emu-snapshot
-}
-
 # Retrieve all sink files
 #  @return SINK_FILES List of paths to sink files
 get_all_sinks ()
@@ -275,6 +270,8 @@ perform_snapshots ()
 
 main ()
 {
+    exit_on_help_version $@
+
     while getopts ":nMvpfF" OPT
     do
         case $OPT in
@@ -322,12 +319,6 @@ main ()
     do
         shift
     done
-
-    if [ "$1" = "help" ]
-    then
-        help
-        exit $EMU_EXIT
-    fi
 
     get_source_dir_or_fail
     pre_exec_hooks

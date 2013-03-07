@@ -3,11 +3,6 @@
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
 
-help ()
-{
-    man emu-init
-}
-
 clean_emu_dir ()
 {
     get_source_dir_or_fail
@@ -63,6 +58,8 @@ main ()
 {
     EMU_TEMPLATE_UPDATE="-u"
 
+    exit_on_help_version $@
+
     while getopts ":qvCRt:" OPT
     do
         case $OPT in
@@ -103,12 +100,6 @@ main ()
     do
         shift
     done
-
-    if [ "$1" = "help" ]
-    then
-        help
-        exit 0
-    fi
 
     SOURCE_DIR=$(pwd -P)
     exit_if_no_dir_permissions "$SOURCE_DIR"
