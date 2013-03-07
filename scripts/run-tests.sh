@@ -5,7 +5,7 @@
 EXIT_NO_TESTS=1
 
 ## TEST FUNCTIONS
-
+set -a
 test_setup ()
 {
     set -x
@@ -14,14 +14,12 @@ test_setup ()
     mkdir -pv /tmp/emu
     mkdir -pv /tmp/emu/test-source
 }
-export -f test_setup
 
 test_teardown ()
 {
     set -x
     rm -rvf /tmp/emu
 }
-export -f test_teardown
 
 cd tests
 

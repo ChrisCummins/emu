@@ -4,6 +4,7 @@
 EXIT_ASSERT_FAIL=5
 
 ## ASSERTIONS
+set -ax
 
 assert ()
 {
@@ -15,7 +16,6 @@ assert ()
         echo "Assert '$1'"
     fi
 }
-export -f assert
 
 assert_not ()
 {
@@ -27,7 +27,6 @@ assert_not ()
         echo "Assert !'$1'"
     fi
 }
-export -f assert_not
 
 assert_zero ()
 {
@@ -39,7 +38,6 @@ assert_zero ()
         echo "Assert '$1' == 0"
     fi
 }
-export -f assert_zero
 
 assert_non_zero ()
 {
@@ -51,7 +49,6 @@ assert_non_zero ()
         echo "Assert '$1' != 0"
     fi
 }
-export -f assert_non_zero
 
 assert_success ()
 {
@@ -66,7 +63,6 @@ assert_success ()
     fi
     set -e
 }
-export -f assert_success
 
 assert_fail ()
 {
@@ -83,7 +79,6 @@ assert_fail ()
     fi
     set -e
 }
-export -f assert_fail
 
 assert_is_dir ()
 {
@@ -94,7 +89,6 @@ assert_is_dir ()
         exit $EXIT_ASSERT_FAIL
     fi
 }
-export -f assert_is_dir
 
 assert_is_not_dir ()
 {
@@ -106,7 +100,6 @@ assert_is_not_dir ()
         exit $EXIT_ASSERT_FAIL
     fi
 }
-export -f assert_is_not_dir
 
 assert_is_file ()
 {
@@ -117,7 +110,6 @@ assert_is_file ()
         exit $EXIT_ASSERT_FAIL
     fi
 }
-export -f assert_is_file
 
 assert_is_not_file ()
 {
@@ -129,7 +121,6 @@ assert_is_not_file ()
         exit $EXIT_ASSERT_FAIL
     fi
 }
-export -f assert_is_not_file
 
 assert_dir_is_empty ()
 {
@@ -140,7 +131,6 @@ assert_dir_is_empty ()
         exit $EXIT_ASSERT_FAIL
     fi
 }
-export -f assert_dir_is_empty
 
 assert_dir_is_not_empty ()
 {
@@ -151,7 +141,6 @@ assert_dir_is_not_empty ()
         exit $EXIT_ASSERT_FAIL
     fi
 }
-export -f assert_dir_is_not_empty
 
 assert_file_is_empty ()
 {
@@ -163,7 +152,6 @@ assert_file_is_empty ()
         exit $EXIT_ASSERT_FAIL
     fi
 }
-export -f assert_file_is_empty
 
 assert_file_is_not_empty ()
 {
@@ -174,7 +162,6 @@ assert_file_is_not_empty ()
         exit $EXIT_ASSERT_FAIL
     fi
 }
-export -f assert_file_is_not_empty
 
 assert_files_match ()
 {
@@ -186,7 +173,6 @@ assert_files_match ()
         exit $EXIT_ASSERT_FAIL
     fi
 }
-export -f assert_files_match
 
 assert_dirs_match ()
 {
@@ -198,7 +184,6 @@ assert_dirs_match ()
         exit $EXIT_ASSERT_FAIL
     fi
 }
-export -f assert_dirs_match
 
 assert_string_is_empty ()
 {
@@ -209,7 +194,6 @@ assert_string_is_empty ()
         exit $EXIT_ASSERT_FAIL
     fi
 }
-export -f assert_string_is_empty
 
 assert_string_is_not_empty ()
 {
@@ -220,7 +204,6 @@ assert_string_is_not_empty ()
         exit $EXIT_ASSERT_FAIL
     fi
 }
-export -f assert_string_is_not_empty
 
 assert_strings_match ()
 {
@@ -231,4 +214,3 @@ assert_strings_match ()
         exit $EXIT_ASSERT_FAIL
     fi
 }
-export -f assert_strings_match
