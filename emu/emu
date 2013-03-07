@@ -31,65 +31,17 @@ version ()
     emu_echo "version $EMU_VERSION"
 }
 
-print_emu ()
-{
-    cat << EOF | less
-                                       /-/-=/-=
-                                      //  ZX   \"
-                                    / /XZXZX(o)  ---,
-                                    / XZXZXZXZX _____\`\\
-                                     /ZXZXZXZX
-                                      / ;,ZXZ
-                                      /  :ZX%\\
-                                      /%  : X\\
-                                      :/:  %:X:
-                                      /%:%   %\\\\
-                                       /:%:  %  \\
-                                       /  :%  : \\
-                                        /  :%  :%\\
-                                        /%  %    \\
-                                        /%:  %:  %\\
-                                        //%    :  %\\
-                   %%%%%%%%%%  %% %%   /  /     :   :
-              %%%%%%%%       %%  %   %%%%           \\:
-            %%%%%%                                 : \\
-          %%%%                                    :%:\\
-       % %                                       %  \\
-      %                                         %% \\
-    %                                  %%% %%%%%% \\
-  %                                 %%%%%%%% %%%\\
- %                                %%  %%%%%% %\\
- %                         %%%%%%%%%%%%% %%%%\\\\
- %%%%/%%%%%%%%%%%%%%%%%%%%%%% %%%%%%% %%% %%\\
- /       %%%%%%%%%  % %% % %%% % %%%%% %%%\\
-                (_____)%%(_____)%%%%%%\\
-              ((_____) ((____)
-                (___)    (___)
-                 (__)     (__)
-                  (__)     (__)
-                   (__)     (__)
-                    (__)     (__)
-                     (  )     (  )
-                     (  )     (  )
-                    (    )   (    )
-                  (__    |  (___  |
-              ___(  /  \\  \\____ \\  |---
-            <(____/      \\_____(>\\_____(>
-EOF
-}
-
-for arg in $@; do
-    case $arg in
-        "--help")
-            help
-            exit 0
-            ;;
-        "--version")
-            version
-            exit 0
-            ;;
-    esac
-done
+# First we parse local args.
+case $1 in
+    "--help")
+        help
+        exit 0
+        ;;
+    "--version")
+        version
+        exit 0
+        ;;
+esac
 
 # get arguments
 while getopts ":hv" OPT
@@ -126,10 +78,6 @@ case $command in
         ;;
     "version")
         version
-        exit 0
-        ;;
-    "emu")
-        print_emu
         exit 0
         ;;
     *)
