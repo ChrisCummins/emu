@@ -9,17 +9,17 @@ init_sink ()
     TEMPLATE_DIR="/usr/local/share/emu/sink-templates"
 
     exit_if_no_dir_permissions "$1"
-    mkdir $EMU_VERBOSE -p "$SINK_DIR/.emu"
-    mkdir $EMU_VERBOSE -p "$SINK_DIR/.emu/trees"
-    mkdir $EMU_VERBOSE -p "$SINK_DIR/.emu/nodes"
-    mkdir $EMU_VERBOSE -p "$SINK_DIR/.emu/config"
-    touch "$SINK_DIR/.emu/HEAD"
-    echo $(pwd) > "$SINK_DIR/.emu/SOURCE"
-    cp -n $EMU_VERBOSE "$TEMPLATE_DIR/config/SNAPSHOT-COUNT" "$SINK_DIR/.emu/config"
+    mkdir $EMU_VERBOSE -p "$SINK_DIR/$EMU_DIR"
+    mkdir $EMU_VERBOSE -p "$SINK_DIR/$EMU_DIR/trees"
+    mkdir $EMU_VERBOSE -p "$SINK_DIR/$EMU_DIR/nodes"
+    mkdir $EMU_VERBOSE -p "$SINK_DIR/$EMU_DIR/config"
+    touch "$SINK_DIR/$EMU_DIR/HEAD"
+    echo $(pwd) > "$SINK_DIR/$EMU_DIR/SOURCE"
+    cp -n $EMU_VERBOSE "$TEMPLATE_DIR/config/SNAPSHOT-COUNT" "$SINK_DIR/$EMU_DIR/config"
 
     if ! (( $EMU_QUIET ))
     then
-        emu_echo "initialized sink at $SINK_DIR/.emu"
+        emu_echo "initialized sink at $SINK_DIR/$EMU_DIR"
     fi
 }
 
@@ -34,13 +34,13 @@ add_sink ()
         exit $EMU_EXIT_INCORRECT_COMMAND
     fi
 
-    if [[ -f ".emu/sinks/$sink_name" ]]
+    if [[ -f "$EMU_DIR/sinks/$sink_name" ]]
     then
         emu_error "sink '$sink_name' already exists"
         exit 1
     fi
 
-    exit_if_no_dir_permissions ".emu"
+    exit_if_no_dir_permissions "$EMU_DIR"
 
     # get absolute path
     mkdir -p "$sink_path"
@@ -54,7 +54,7 @@ add_sink ()
     fi
     popd &>/dev/null
 
-    echo "$sink_path" > ".emu/sinks/$sink_name"
+    echo "$sink_path" > "$EMU_DIR/sinks/$sink_name"
 
     # initialize sink
     init_sink "$sink_path"
@@ -62,7 +62,7 @@ add_sink ()
 
 rm_sink ()
 {
-    if [[ ! -f ".emu/sinks/$1" ]]
+    if [[ ! -f "$EMU_DIR/sinks/$1" ]]
     then
         emu_error "sink '$1' does not exist"
         exit 1
@@ -70,10 +70,10 @@ rm_sink ()
 
     if (( $EMU_RM_SINK ))
     then
-        rm $EMU_VERBOSE -rf "$(cat .emu/sinks/$1)"
+        rm $EMU_VERBOSE -rf "$(cat $EMU_DIR/sinks/$1)"
     fi
 
-    rm $EMU_VERBOSE -f ".emu/sinks/$1"
+    rm $EMU_VERBOSE -f "$EMU_DIR/sinks/$1"
     if ! (( $EMU_QUIET ))
     then
         emu_echo "sink '$1' removed"
@@ -84,12 +84,12 @@ show_sink ()
 {
     if [[ $@ == "" ]]
     then
-        SINKS="$(ls .emu/sinks)"
+        SINKS="$(ls $EMU_DIR/sinks)"
     else
         FAILURE=0
         for ARG in $@
         do
-            if [[ -f ".emu/sinks/$ARG" ]]
+            if [[ -f "$EMU_DIR/sinks/$ARG" ]]
             then
                 SINKS="$SINKS\n$ARG"
             else
@@ -117,11 +117,11 @@ list_sinks ()
 {
     if [ -z $EMU_VERBOSE ]
     then
-        ls ".emu/sinks"
+        ls "$EMU_DIR/sinks"
     else
-        for SINK in $(ls ".emu/sinks")
+        for SINK in $(ls "$EMU_DIR/sinks")
         do
-            echo "$SINK  ->  $(cat .emu/sinks/$SINK)"
+            echo "$SINK  ->  $(cat $EMU_DIR/sinks/$SINK)"
         done
     fi
 }
@@ -173,7 +173,7 @@ main ()
 
     get_source_dir_or_fail
 
-    if [ ! -d "$SOURCE_DIR/.emu/sinks" ]
+    if [ ! -d "$SOURCE_DIR/$EMU_DIR/sinks" ]
     then
         emu_error "not an emu source"
         emu_panic

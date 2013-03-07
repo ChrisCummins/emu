@@ -10,7 +10,7 @@ print_all_node_details ()
     local sink="$1"
     local counter=0
 
-    for node in $(ls "$SINK_DIR/.emu/nodes" | sort -r)
+    for node in $(ls "$SINK_DIR/$EMU_DIR/nodes" | sort -r)
     do
         counter=$((counter+1))
         if [[ $counter -le $EMU_LOG_MAX ]]
@@ -65,10 +65,10 @@ main ()
     if [ -z "$1" ]
     then
         # if no argument is given, generate a sink list of all sinks
-        arg_list="$(ls "$SOURCE_DIR/.emu/sinks")"
+        arg_list="$(ls "$SOURCE_DIR/$EMU_DIR/sinks")"
     fi
 
-    if ! (( $(ls "$SOURCE_DIR/.emu/sinks" | wc -l) ))
+    if ! (( $(ls "$SOURCE_DIR/$EMU_DIR/sinks" | wc -l) ))
     then
         # there are no sinks
         emu_error "no sinks. See 'emu help sink'"
@@ -94,7 +94,7 @@ main ()
             sink="$arg"
         fi
 
-        if [[ ! -f "$SOURCE_DIR/.emu/sinks/$sink" ]]
+        if [[ ! -f "$SOURCE_DIR/$EMU_DIR/sinks/$sink" ]]
         then
             emu_error "sink '$sink' does not exist"
             rm -f .emu_log
@@ -102,7 +102,7 @@ main ()
             exit $EMU_EXIT_ERROR
         fi
 
-        SINK_DIR="$(cat $SOURCE_DIR/.emu/sinks/$sink 2>/dev/null)"
+        SINK_DIR="$(cat $SOURCE_DIR/$EMU_DIR/sinks/$sink 2>/dev/null)"
 
         if [ -z "$SINK_DIR" ] || [[ ! -d "$SINK_DIR" ]]
         then
@@ -120,10 +120,10 @@ main ()
 
             if [ "$snapshot" = "HEAD" ]
             then
-                snapshot="$(cat "$SINK_DIR/.emu/HEAD")"
+                snapshot="$(cat "$SINK_DIR/$EMU_DIR/HEAD")"
             fi
 
-            if [[ ! -d "$SINK_DIR/.emu/trees/$snapshot" ]]
+            if [[ ! -d "$SINK_DIR/$EMU_DIR/trees/$snapshot" ]]
             then
                 emu_error "snapshot '$snapshot' does not exist"
                 rm -f .emu_log

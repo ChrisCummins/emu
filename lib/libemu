@@ -4,6 +4,10 @@
 
 export EMU_VERSION="0.0.3"
 
+if [ -z "$EMU_DIR" ]; then
+    export EMU_DIR=".emu"
+fi
+
 # exit codes
 export EMU_EXIT=0
 export EMU_EXIT_ERROR=1
@@ -141,7 +145,7 @@ emu_panic ()
         unlock_dir "$SOURCE_DIR"
 
         # unlock all sinks
-        for sink_file in "$SOURCE_DIR/.emu/sinks"
+        for sink_file in "$SOURCE_DIR/$EMU_DIR/sinks"
         do
             if [[ -f "$sink_file" ]]
             then
@@ -221,9 +225,9 @@ is_source ()
         dir="$(pwd)"
     fi
 
-    if [[ -f "$dir/.emu/excludes" ]] \
-        && [[ -d "$dir/.emu/hooks" ]] \
-        && [[ -d "$dir/.emu/sinks" ]]
+    if [[ -f "$dir/$EMU_DIR/excludes" ]] \
+        && [[ -d "$dir/$EMU_DIR/hooks" ]] \
+        && [[ -d "$dir/$EMU_DIR/sinks" ]]
     then
         return 0
     else
@@ -310,8 +314,8 @@ is_sink ()
         dir="$(pwd)"
     fi
 
-    if [[ -f "$dir/.emu/HEAD" ]] \
-        && [[ -d "$dir/.emu/nodes" ]]
+    if [[ -f "$dir/$EMU_DIR/HEAD" ]] \
+        && [[ -d "$dir/$EMU_DIR/nodes" ]]
     then
         return 0
     else
@@ -377,7 +381,7 @@ get_sink_dir ()
 block_until_dir_free ()
 {
     local dir="$1"
-    local lock_file="$dir/.emu/LOCK"
+    local lock_file="$dir/$EMU_DIR/LOCK"
 
     if [[ -f "$lock_file" ]]
     then
@@ -417,7 +421,7 @@ block_until_dir_free ()
 lock_dir ()
 {
     local dir="$1"
-    local lock_file="$1/.emu/LOCK"
+    local lock_file="$1/$EMU_DIR/LOCK"
 
     if [ -z "$dir" ]
     then
@@ -440,7 +444,7 @@ lock_dir ()
         block_until_dir_free "$dir"
     fi
 
-    echo -e "DATE: $(date)\nPID:  $$" > "$dir/.emu/LOCK"
+    echo -e "DATE: $(date)\nPID:  $$" > "$dir/$EMU_DIR/LOCK"
 }
 
 # force lock the specified directory, removing any existing locks
@@ -454,7 +458,7 @@ lock_dir_force ()
         dir="$(pwd -P)"
     fi
 
-    echo -e "DATE: $(date)\nPID:  $$" > "$dir/.emu/LOCK"
+    echo -e "DATE: $(date)\nPID:  $$" > "$dir/$EMU_DIR/LOCK"
 }
 
 # force lock the specified directory, killing any existing locks
@@ -468,14 +472,14 @@ lock_dir_kill ()
         dir="$(pwd -P)"
     fi
 
-    if [ -f "$dir/.emu/LOCK" ]
+    if [ -f "$dir/$EMU_DIR/LOCK" ]
     then
         # kill lock process
-        local block_pid=$(cat "$dir/.emu/LOCK" | grep PID | sed -r 's/PID: +//')
+        local block_pid=$(cat "$dir/$EMU_DIR/LOCK" | grep PID | sed -r 's/PID: +//')
         kill -9 $block_pid
     fi
 
-    echo -e "DATE: $(date)\nPID:  $$" > "$dir/.emu/LOCK"
+    echo -e "DATE: $(date)\nPID:  $$" > "$dir/$EMU_DIR/LOCK"
 }
 
 # remove the lock on source directory
@@ -489,7 +493,7 @@ unlock_dir ()
         dir="$(pwd -P)"
     fi
 
-    LOCK=$(cat "$dir/.emu/LOCK" 2> /dev/null)
+    LOCK=$(cat "$dir/$EMU_DIR/LOCK" 2> /dev/null)
     if [[ "$LOCK" == "" ]]
     then
         return
@@ -498,7 +502,7 @@ unlock_dir ()
 
     if [[ $$ -eq $LOCK_PID ]]
     then
-        rm -f "$dir/.emu/LOCK"
+        rm -f "$dir/$EMU_DIR/LOCK"
     else
         emu_error "cannot free lock $LOCK_PID with key $$"
     fi
@@ -524,7 +528,7 @@ _exec_hooks_list ()
     local ext="$1"
 
     get_source_dir_if_empty
-    local hooks_list="$(find "$SOURCE_DIR/.emu/hooks/exec/" -name '*.'$ext 2>/dev/null)"
+    local hooks_list="$(find "$SOURCE_DIR/$EMU_DIR/hooks/exec/" -name '*.'$ext 2>/dev/null)"
 
     for exec in $hooks_list
     do
@@ -556,14 +560,14 @@ error_exec_hooks ()
 #  @param $1 Path to sink directory
 sink_snapshot_count ()
 {
-    echo "$(ls -l "$1/.emu/trees" | wc -l)"
+    echo "$(ls -l "$1/$EMU_DIR/trees" | wc -l)"
 }
 
 # return the max number of snapshots for sink
 #  @param $1 Path to sink directory
 sink_max_snapshots ()
 {
-    echo "$(cat $1/.emu/config/SNAPSHOT-COUNT)"
+    echo "$(cat $1/$EMU_DIR/config/SNAPSHOT-COUNT)"
 }
 
 # prints details about a given sink
@@ -578,11 +582,11 @@ print_sink_details ()
         get_source_dir
     fi
 
-    local sink_path="$(cat $SOURCE_DIR/.emu/sinks/$sink_name)"
+    local sink_path="$(cat $SOURCE_DIR/$EMU_DIR/sinks/$sink_name)"
     local size="$(du -sh $sink_path | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')"
-    local head="$(cat $sink_path/.emu/HEAD)"
-    local snapshot_count="$(ls $sink_path/.emu/trees | wc -l)"
-    local load=$(echo "$snapshot_count / $(cat $sink_path/.emu/config/SNAPSHOT-COUNT) * 100" | bc -l)
+    local head="$(cat $sink_path/$EMU_DIR/HEAD)"
+    local snapshot_count="$(ls $sink_path/$EMU_DIR/trees | wc -l)"
+    local load=$(echo "$snapshot_count / $(cat $sink_path/$EMU_DIR/config/SNAPSHOT-COUNT) * 100" | bc -l)
 
     if (( $EMU_LOG_SUMMARY ))
     then
@@ -596,7 +600,7 @@ EOF
 * $1
   Path:           $sink_path
   Size:           $size
-  Last snapshot:  $(cat $sink_path/.emu/nodes/$head 2>/dev/null | grep Date | sed -r 's/Date +(.*)/\1/')
+  Last snapshot:  $(cat $sink_path/$EMU_DIR/nodes/$head 2>/dev/null | grep Date | sed -r 's/Date +(.*)/\1/')
   Snapshot count: $snapshot_count (${load::2}%)
 EOF
     fi
@@ -608,7 +612,7 @@ EOF
 print_node_details ()
 {
     local node="$1"
-    local node_path="$SINK_DIR/.emu/nodes/$node"
+    local node_path="$SINK_DIR/$EMU_DIR/nodes/$node"
     local node_date="$(cat $node_path | grep Date | sed -r 's/Date +(.*)/\1/')"
     local node_size="$(cat $node_path | grep Size | sed -r 's/Size +(.*)/\1/')"
 

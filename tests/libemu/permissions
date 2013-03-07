@@ -1,4 +1,4 @@
-set -eu
+set -e
 test_setup
 source /usr/local/lib/libemu
 
