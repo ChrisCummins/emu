@@ -1,8 +1,8 @@
 set -eux
 test_setup
 
-tmp=/tmp/emu/normal
-tmp2=/tmp/emu/debug
+tmp=$EMU_TEST_DIR/normal
+tmp2=$EMU_TEST_DIR/debug
 
 rm -fv $tmp
 touch $tmp

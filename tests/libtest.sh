@@ -3,7 +3,7 @@
 set -ax
 
 ### Test variables.
-EMU_TEST_DIR=/tmp/emu
+EMU_TEST_DIR=/tmp/emp
 EMU_DEBUG=1
 
 ## EXIT CODES

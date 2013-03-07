@@ -1,7 +1,7 @@
 set -eux
 test_setup
 
-tmp=/tmp/emu/help
+tmp=$EMU_TEST_DIR/help
 export EMU_DEBUG=1
 
 rm -fv $tmp
