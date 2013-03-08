@@ -51,7 +51,6 @@ main ()
     $(verify_node "$SNAPSHOT_DIR")
     emu_echo "pass"
 
-    execute_hooks "post" "$SOURCE_DIR"
     exit 0
 }
 main $@
