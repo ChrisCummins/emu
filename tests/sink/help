@@ -1,15 +1,15 @@
 set -ue
 test_setup
 
-rm -fv /tmp/emu/help
-touch /tmp/emu/help
-emu help sink >> /tmp/emu/help
-assert_file_is_not_empty /tmp/emu/help
+rm -fv $EMU_TEST_DIR/help
+touch $EMU_TEST_DIR/help
+emu help sink >> $EMU_TEST_DIR/help
+assert_file_is_not_empty $EMU_TEST_DIR/help
 
-rm -fv /tmp/emu/help
-touch /tmp/emu/help
-emu sink help >> /tmp/emu/help
-assert_file_is_not_empty /tmp/emu/help
-rm -fv /tmp/emu/help
+rm -fv $EMU_TEST_DIR/help
+touch $EMU_TEST_DIR/help
+emu sink --help >> $EMU_TEST_DIR/help
+assert_file_is_not_empty $EMU_TEST_DIR/help
+rm -fv $EMU_TEST_DIR/help
 
 test_teardown

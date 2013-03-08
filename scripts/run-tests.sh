@@ -4,31 +4,25 @@
 
 EXIT_NO_TESTS=1
 
-## TEST FUNCTIONS
-
+set -a
 test_setup ()
 {
-    echo "INFO: Running setup..."
     source libtest.sh
-    rm -rvf /tmp/emu
-    mkdir -pv /tmp/emu
-    mkdir -pv /tmp/emu/test-source
-    echo "INFO: Running test..."
+    rm -rvf "$EMU_TEST_DIR"
+    mkdir -pv "$EMU_TEST_DIR"
+    mkdir -pv "$EMU_TEST_DIR"/test-source
+    pushd "$EMU_TEST_DIR"
 }
-export -f test_setup
 
 test_teardown ()
 {
-    echo "INFO: Running teardown..."
-    rm -rvf /tmp/emu
-    echo "INFO: Test ended"
+    popd
+    rm -rvf "$EMU_TEST_DIR"
 }
-export -f test_teardown
 
 cd tests
 
 ## LOCAL VARIABLES
-
 tests_passed=0
 tests_failed=0
 tests_skipped=0
@@ -60,7 +54,7 @@ then
 fi
 
 # delete old logs
-for log in $(find . -name "*.log")
+for log in $(find . -name '*.log')
 do
     rm -f "$log"
 done

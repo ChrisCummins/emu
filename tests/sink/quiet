@@ -1,14 +1,15 @@
 set -ue
 test_setup
 
-cd /tmp/emu/test-source
+unset EMU_DEBUG
+cd $EMU_TEST_DIR/test-source
 emu init -v
 
 rm -fv output
 echo "touch output"
 touch output
-echo "emu sink -q add origin /tmp/emu/test-sink &> output"
-emu sink -q add origin /tmp/emu/test-sink &> output
+echo "emu sink -q add origin $EMU_TEST_DIR/test-sink &> output"
+emu sink -q add origin $EMU_TEST_DIR/test-sink &> output
 assert_file_is_empty output
 
 rm -fv output

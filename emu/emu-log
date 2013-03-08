@@ -3,11 +3,6 @@
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
 
-help ()
-{
-    man emu-log
-}
-
 # print the nodes for a sink
 #  @param $1 name of sink
 print_all_node_details ()
@@ -15,7 +10,7 @@ print_all_node_details ()
     local sink="$1"
     local counter=0
 
-    for node in $(ls "$SINK_DIR/.emu/nodes" | sort -r)
+    for node in $(ls "$SINK_DIR/$EMU_DIR/nodes" | sort -r)
     do
         counter=$((counter+1))
         if [[ $counter -le $EMU_LOG_MAX ]]
@@ -32,6 +27,9 @@ print_all_node_details ()
 main ()
 {
     EMU_LOG_MAX=10000
+
+    test -n "$EMU_DEBUG" && set -x
+    exit_on_help_version $@
 
     while getopts ":n:s" OPT
     do
@@ -59,12 +57,6 @@ main ()
         shift
     done
 
-    if [[ "$1" == "help" ]]
-    then
-        help
-        exit 0
-    fi
-
     get_source_dir_or_fail
     pre_exec_hooks
 
@@ -73,10 +65,10 @@ main ()
     if [ -z "$1" ]
     then
         # if no argument is given, generate a sink list of all sinks
-        arg_list="$(ls "$SOURCE_DIR/.emu/sinks")"
+        arg_list="$(ls "$SOURCE_DIR/$EMU_DIR/sinks")"
     fi
 
-    if ! (( $(ls "$SOURCE_DIR/.emu/sinks" | wc -l) ))
+    if ! (( $(ls "$SOURCE_DIR/$EMU_DIR/sinks" | wc -l) ))
     then
         # there are no sinks
         emu_error "no sinks. See 'emu help sink'"
@@ -102,7 +94,7 @@ main ()
             sink="$arg"
         fi
 
-        if [[ ! -f "$SOURCE_DIR/.emu/sinks/$sink" ]]
+        if [[ ! -f "$SOURCE_DIR/$EMU_DIR/sinks/$sink" ]]
         then
             emu_error "sink '$sink' does not exist"
             rm -f .emu_log
@@ -110,7 +102,7 @@ main ()
             exit $EMU_EXIT_ERROR
         fi
 
-        SINK_DIR="$(cat $SOURCE_DIR/.emu/sinks/$sink 2>/dev/null)"
+        SINK_DIR="$(cat $SOURCE_DIR/$EMU_DIR/sinks/$sink 2>/dev/null)"
 
         if [ -z "$SINK_DIR" ] || [[ ! -d "$SINK_DIR" ]]
         then
@@ -128,10 +120,10 @@ main ()
 
             if [ "$snapshot" = "HEAD" ]
             then
-                snapshot="$(cat "$SINK_DIR/.emu/HEAD")"
+                snapshot="$(cat "$SINK_DIR/$EMU_DIR/HEAD")"
             fi
 
-            if [[ ! -d "$SINK_DIR/.emu/trees/$snapshot" ]]
+            if [[ ! -d "$SINK_DIR/$EMU_DIR/trees/$snapshot" ]]
             then
                 emu_error "snapshot '$snapshot' does not exist"
                 rm -f .emu_log

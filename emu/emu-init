@@ -3,26 +3,21 @@
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
 
-help ()
-{
-    man emu-init
-}
-
 clean_emu_dir ()
 {
     get_source_dir_or_fail
 
-    rm $EMU_VERBOSE -rf "$SOURCE_DIR/.emu"
-    emu_echo "emptied source in $SOURCE_DIR/.emu"
+    rm $EMU_VERBOSE -rf "$SOURCE_DIR/$EMU_DIR"
+    emu_echo "emptied source in $SOURCE_DIR/$EMU_DIR"
 }
 
 create_directories ()
 {
-    mkdir $EMU_VERBOSE -p "$CONF_DIR"
-    mkdir $EMU_VERBOSE -p "$CONF_DIR/config"
-    mkdir $EMU_VERBOSE -p "$CONF_DIR/hooks"
-    mkdir $EMU_VERBOSE -p "$CONF_DIR/sinks"
-    chmod 0755 "$CONF_DIR/sinks"
+    mkdir $EMU_VERBOSE -p "$SOURCE_DIR/$EMU_DIR"
+    mkdir $EMU_VERBOSE -p "$SOURCE_DIR/$EMU_DIR/config"
+    mkdir $EMU_VERBOSE -p "$SOURCE_DIR/$EMU_DIR/hooks"
+    mkdir $EMU_VERBOSE -p "$SOURCE_DIR/$EMU_DIR/sinks"
+    chmod 0755 "$SOURCE_DIR/$EMU_DIR/sinks"
 }
 
 copy_template_files ()
@@ -34,7 +29,7 @@ copy_template_files ()
         --human-readable \
         $EMU_TEMPLATE_UPDATE \
         "$EMU_SOURCE_TEMPLATE_DIR/" \
-        "$SOURCE_DIR/.emu/"
+        "$SOURCE_DIR/$EMU_DIR/"
 }
 
 init_filesystem ()
@@ -47,11 +42,11 @@ emu_init ()
 {
     local msg=""
 
-    if [ -d .emu ]
+    if [ -d "$EMU_DIR" ]
     then
-        msg="reinitialized existing source in $CONF_DIR"
+        msg="reinitialized existing source in $SOURCE_DIR/$EMU_DIR"
     else
-        msg="initialized source in $CONF_DIR"
+        msg="initialized source in $SOURCE_DIR/$EMU_DIR"
     fi
 
     init_filesystem
@@ -62,6 +57,9 @@ emu_init ()
 main ()
 {
     EMU_TEMPLATE_UPDATE="-u"
+
+    test -n "$EMU_DEBUG" && set -x
+    exit_on_help_version $@
 
     while getopts ":qvCRt:" OPT
     do
@@ -104,15 +102,8 @@ main ()
         shift
     done
 
-    if [ "$1" = "help" ]
-    then
-        help
-        exit 0
-    fi
-
     SOURCE_DIR=$(pwd -P)
     exit_if_no_dir_permissions "$SOURCE_DIR"
-    CONF_DIR="$SOURCE_DIR/.emu"
 
     if [ -z "$EMU_SOURCE_TEMPLATE_DIR" ]
     then

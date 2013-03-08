@@ -1,22 +1,22 @@
-set -eu
+set -e
 test_setup
 source /usr/local/lib/libemu
 
-cd /tmp/emu/test-source
-echo "exit_if_no_dir_permissions /tmp/emu/test-source"
-exit_if_no_dir_permissions /tmp/emu/test-source
+cd $EMU_TEST_DIR/test-source
+echo "exit_if_no_dir_permissions $EMU_TEST_DIR/test-source"
+exit_if_no_dir_permissions $EMU_TEST_DIR/test-source
 echo "exit_if_no_dir_permissions ../test-source"
 exit_if_no_dir_permissions ../test-source
 echo "exit_if_no_dir_permissions ."
 exit_if_no_dir_permissions .
 
 # Fail tests
-sudo mkdir -pv /tmp/emu/root-dir
-cd /tmp/emu/root-dir
+sudo mkdir -pv $EMU_TEST_DIR/root-dir
+cd $EMU_TEST_DIR/root-dir
 
 set +e
-echo "exit_if_no_dir_permissions /tmp/emu/root-dir"
-exit_if_no_dir_permisions /tmp/emu/root-dir
+echo "exit_if_no_dir_permissions $EMU_TEST_DIR/root-dir"
+exit_if_no_dir_permisions $EMU_TEST_DIR/root-dir
 if ! (( $? ))
 then
     exit 5
@@ -36,7 +36,7 @@ then
     exit 5
 fi
 
-sudo rmdir -fv /tmp/emu/root-dir
+sudo rmdir -fv $EMU_TEST_DIR/root-dir
 set -e
 
 test_teardown

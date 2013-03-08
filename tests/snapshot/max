@@ -1,7 +1,7 @@
 set -eu
 test_setup
 
-cd /tmp/emu/test-source
+cd $EMU_TEST_DIR/test-source
 
 assert_fail "emu snapshot"
 

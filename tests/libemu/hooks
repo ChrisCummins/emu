@@ -2,67 +2,67 @@ set -e
 test_setup
 source /usr/local/lib/libemu
 
-cd /tmp/emu/test-source
+cd $EMU_TEST_DIR/test-source
 
 emu init -v
 
-cat <<EOF > /tmp/emu/test-source/.emu/hooks/exec/test.pre
+cat <<EOF > $EMU_TEST_DIR/test-source/.emu/hooks/exec/test.pre
 #!/bin/bash
 echo "**** PRE EXECUTING *****"
-echo "1234" > /tmp/emu/PRE
+echo "1234" > $EMU_TEST_DIR/PRE
 EOF
 
-cat <<EOF > /tmp/emu/test-source/.emu/hooks/exec/test2.pre
+cat <<EOF > $EMU_TEST_DIR/test-source/.emu/hooks/exec/test2.pre
 #!/bin/bash
 echo "**** PRE2 EXECUTING *****"
-touch /tmp/emu/PRE2
+touch $EMU_TEST_DIR/PRE2
 EOF
 
-cat <<EOF > /tmp/emu/test-source/.emu/hooks/exec/test.post
+cat <<EOF > $EMU_TEST_DIR/test-source/.emu/hooks/exec/test.post
 #!/bin/bash
 echo "**** POST EXECUTING *****"
-echo "1234" > /tmp/emu/POST
+echo "1234" > $EMU_TEST_DIR/POST
 EOF
 
-cat <<EOF > /tmp/emu/test-source/.emu/hooks/exec/test2.post
+cat <<EOF > $EMU_TEST_DIR/test-source/.emu/hooks/exec/test2.post
 #!/bin/bash
 echo "**** POST2 EXECUTING *****"
-touch /tmp/emu/POST2
+touch $EMU_TEST_DIR/POST2
 EOF
 
-cat <<EOF > /tmp/emu/test-source/.emu/hooks/exec/test.error
+cat <<EOF > $EMU_TEST_DIR/test-source/.emu/hooks/exec/test.error
 #!/bin/bash
 echo "**** ERROR EXECUTING *****"
-echo "1234" > /tmp/emu/ERROR
+echo "1234" > $EMU_TEST_DIR/ERROR
 EOF
 
-cat <<EOF > /tmp/emu/test-source/.emu/hooks/exec/test2.error
+cat <<EOF > $EMU_TEST_DIR/test-source/.emu/hooks/exec/test2.error
 #!/bin/bash
 echo "**** ERROR2 EXECUTING *****"
-touch /tmp/emu/ERROR2
+touch $EMU_TEST_DIR/ERROR2
 EOF
 
 chmod +x .emu/hooks/exec/*
 
 echo "pre_exec_hooks"
 pre_exec_hooks
-assert_is_file /tmp/emu/PRE
-assert_strings_match "1234" "$(cat /tmp/emu/PRE)"
-assert_is_file /tmp/emu/PRE2
-assert_file_is_empty /tmp/emu/PRE2
+assert_is_file $EMU_TEST_DIR/PRE
+assert_strings_match "1234" "$(cat $EMU_TEST_DIR/PRE)"
+assert_is_file $EMU_TEST_DIR/PRE2
+assert_file_is_empty $EMU_TEST_DIR/PRE2
 
 echo "post_exec_hooks"
 post_exec_hooks
-assert_is_file /tmp/emu/POST
-assert_strings_match "1234" "$(cat /tmp/emu/POST)"
-assert_is_file /tmp/emu/POST2
-assert_file_is_empty /tmp/emu/POST2
+assert_is_file $EMU_TEST_DIR/POST
+assert_strings_match "1234" "$(cat $EMU_TEST_DIR/POST)"
+assert_is_file $EMU_TEST_DIR/POST2
+assert_file_is_empty $EMU_TEST_DIR/POST2
 
 echo "error_exec_hooks"
 error_exec_hooks
-assert_is_file /tmp/emu/ERROR
-assert_strings_match "1234" "$(cat /tmp/emu/ERROR)"
-assert_is_file /tmp/emu/ERROR2
-assert_file_is_empty /tmp/emu/ERROR2
+assert_is_file $EMU_TEST_DIR/ERROR
+assert_strings_match "1234" "$(cat $EMU_TEST_DIR/ERROR)"
+assert_is_file $EMU_TEST_DIR/ERROR2
+assert_file_is_empty $EMU_TEST_DIR/ERROR2
 
 test_teardown

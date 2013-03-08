@@ -2,7 +2,7 @@ set -e
 test_setup
 source /usr/local/lib/libemu
 
-cd /tmp/emu/test-source
+cd $EMU_TEST_DIR/test-source
 
 set +e
 assert_fails get_source_dir_or_fail

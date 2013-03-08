@@ -3,6 +3,7 @@
 emu\-sink \- Manage emu sinks
 .SH SYNOPSIS
 .B emu sink
+[\-\-help] [\-\-version]
 [\-v] [\-q]
          [add [\-s <number>] <sink> <path>]
          [rm <sink>]
@@ -12,6 +13,12 @@ emu\-sink \- Manage emu sinks
 With no arguments, show a list of existing sinks. Alternatively, use one of the
 following subcommands.
 .SH OPTIONS
+.TP
+\-\-help
+show this help and quit
+.TP
+\-\-version
+show version information
 .TP
 \-v
 increase verbosity

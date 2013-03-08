@@ -1,15 +1,15 @@
 set -eu
 test_setup
 
-rm -fv /tmp/emu/help /tmp/emu/help2
-touch /tmp/emu/help
-emu help snapshot >> /tmp/emu/help
-assert_file_is_not_empty /tmp/emu/help
+rm -fv $EMU_TEST_DIR/help "$EMU_TEST_DIR"/help2
+touch $EMU_TEST_DIR/help
+emu help snapshot >> $EMU_TEST_DIR/help
+assert_file_is_not_empty $EMU_TEST_DIR/help
 
-touch /tmp/emu/help2
-emu snapshot help >> /tmp/emu/help2
-assert_file_is_not_empty /tmp/emu/help2
+touch $EMU_TEST_DIR/help2
+emu snapshot --help >> $EMU_TEST_DIR/help2
+assert_file_is_not_empty $EMU_TEST_DIR/help2
 
-assert_files_match /tmp/emu/help /tmp/emu/help2
+assert_files_match $EMU_TEST_DIR/help "$EMU_TEST_DIR"/help2
 
 test_teardown

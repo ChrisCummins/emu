@@ -3,7 +3,8 @@
 emu\-snapshot \- Record a snapshot of the source directory
 .SH SYNOPSIS
 .B emu snapshot
-[\-v] [\-p] [\-f] [\-F]
+[\-\-help] [\-\-version]
+             [\-v] [\-p] [\-f] [\-F]
              [\-n] [\-M] [<sink>...]
 .SH DESCRIPTION
 Store the current contents of the source directory in a new snapshot.
@@ -34,6 +35,12 @@ source files and the existing files in the sink.
 Rsync finds files that need to be transferred using a "quick check" algorithm
 that looks for files that have changed in size or in last\-modified time.
 .SH OPTIONS
+.TP
+\-\-help
+show this help and quit
+.TP
+\-\-version
+show version information
 .TP
 \-M
 open an editor to add a snapshot message (editor determined by EDITOR

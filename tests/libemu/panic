@@ -2,23 +2,23 @@ set -e
 test_setup
 source /usr/local/lib/libemu
 
-cd /tmp/emu/test-source
+cd $EMU_TEST_DIR/test-source
 
 emu init -v
 
 lock_dir
 
-cat <<EOF > /tmp/emu/test-source/.emu/hooks/exec/test.error
+cat <<EOF > $EMU_TEST_DIR/test-source/.emu/hooks/exec/test.error
 #!/bin/bash
 echo "**** TEST EXECUTING *****"
-touch /tmp/emu/HOOK
-echo "1234" > /tmp/emu/HOOK
+touch $EMU_TEST_DIR/HOOK
+echo "1234" > $EMU_TEST_DIR/HOOK
 EOF
 
-cat <<EOF > /tmp/emu/test-source/.emu/hooks/exec/test2.error
+cat <<EOF > $EMU_TEST_DIR/test-source/.emu/hooks/exec/test2.error
 #!/bin/bash
 echo "**** TEST2 EXECUTING *****"
-touch /tmp/emu/HOOK2
+touch $EMU_TEST_DIR/HOOK2
 EOF
 
 chmod +x .emu/hooks/exec/*
@@ -26,10 +26,10 @@ chmod +x .emu/hooks/exec/*
 echo "emu_panic"
 emu_panic
 
-assert_is_file /tmp/emu/HOOK2
-assert_file_is_empty /tmp/emu/HOOK2
+assert_is_file $EMU_TEST_DIR/HOOK2
+assert_file_is_empty $EMU_TEST_DIR/HOOK2
 
-assert_is_file /tmp/emu/HOOK
-assert_strings_match "1234" "$(cat /tmp/emu/HOOK)"
+assert_is_file $EMU_TEST_DIR/HOOK
+assert_strings_match "1234" "$(cat $EMU_TEST_DIR/HOOK)"
 
 test_teardown
