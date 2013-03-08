@@ -97,7 +97,6 @@ _emu_echo ()
     echo -n $emu_message_color >&$stream
     echo -ne ": $msg" >&$stream
     echo $reset_color >&$stream
-    echo -n $emu_prefix_color >&$stream
 }
 
 # print a message
