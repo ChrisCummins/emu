@@ -1,8 +1,49 @@
 #!/bin/bash
 
-## GLOBAL VARIABLES
-
 EXIT_NO_TESTS=1
+ERROR_LOG=../ERROR.log
+tests_passed=0
+tests_failed=0
+tests_skipped=0
+
+# Always run this.
+finish ()
+{
+    # print test results summary
+    if (( $tests_passed )) || (( $tests_failed )); then
+        echo ""
+    fi
+
+    if (( $tests_failed )); then
+        echo -n "$tests_passed passed, $tests_failed failed"
+    else
+        echo -n "All $tests_passed tests passed"
+    fi
+
+    if (( $tests_skipped )); then
+        echo -n " ($tests_skipped skipped)"
+    fi
+    echo ""
+
+    if (( $tests_failed )); then
+        failed_tests="$(find . -name '*.log')"
+
+        for log in $failed_tests; do
+            log_name="${log%.log}"
+            echo "" >> $ERROR_LOG
+            echo "$colour_fail${log_name:2}$colour_reset ($(cat $log | tail -n-1))" >> $ERROR_LOG
+            cat $log | head -n-1 >> $ERROR_LOG
+            rm -rf $log
+        done
+
+        echo ''
+        echo "A log file of failed tests can be found at '$(basename $ERROR_LOG)'"
+    fi
+
+    # One final sweap to make sure all log files are disposed of.
+    find . -name '*.log' | xargs rm -f
+}
+trap finish EXIT
 
 set -a
 test_setup ()
@@ -22,10 +63,8 @@ test_teardown ()
 
 cd tests
 
-## LOCAL VARIABLES
-tests_passed=0
-tests_failed=0
-tests_skipped=0
+# Get rid of any existing error log.
+rm -f $ERROR_LOG
 
 # use coloured text if available
 if [ $(which tput 2>/dev/null) ]
@@ -99,43 +138,3 @@ do
         fi
     fi
 done
-
-# print test results summary
-if (( $tests_passed )) || (( $tests_failed ))
-then
-    echo ""
-fi
-
-if (( $tests_failed ))
-then
-    echo -n "$tests_passed passed, $tests_failed failed"
-else
-    echo -n "All $tests_passed tests passed"
-fi
-
-if (( $tests_skipped ))
-then
-    echo -n " ($tests_skipped skipped)"
-fi
-echo ""
-
-# print failed test logs
-failed_tests="$(find . -name '*.log')"
-error_log=../ERROR.log
-
-if [ -n "$failed_tests" ]; then
-    rm -f $error_log
-fi
-
-for log in $failed_tests; do
-    log_name="${log%.log}"
-    echo "" >> $error_log
-    echo "$colour_fail${log_name:2}$colour_reset ($(cat $log | tail -n-1))" >> $error_log
-    cat $log | head -n-1 >> $error_log
-    rm -rf $log
-done
-
-if [ -n "$failed_tests" ]; then
-    echo ''
-    echo "A log file of failed tests can be found at '$(basename $error_log)'"
-fi
