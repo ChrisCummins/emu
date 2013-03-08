@@ -1,8 +1,9 @@
-set -e
 test_setup
 source /usr/local/lib/libemu
 
 cd $EMU_TEST_DIR/test-source
+
+set +u
 
 # test absolute paths
 pushd .
@@ -13,10 +14,8 @@ assert_strings_match "$EMU_TEST_DIR/test-source/a/b/c" $(get_absolute_path a/b/c
 popd
 
 # test empty source
-set +e
 get_source_dir
 get_sink_dir
-set -e
 assert_string_is_empty $SOURCE_DIR
 assert_string_is_empty $SINK_DIR
 
@@ -34,18 +33,16 @@ echo "assert_fail is_sink"
 assert_fail is_sink
 
 get_source_dir
-set +e
 get_sink_dir
-set -e
+
 assert_string_is_not_empty $SOURCE_DIR
 assert_strings_match "$SOURCE_DIR" "$(pwd)"
 assert_string_is_empty $SINK_DIR
 
 # test empty source
 rm -fr .emu
-set +e
+
 get_source_dir
-set -e
 assert_string_is_empty $SOURCE_DIR
 
 # test empty source recurse
@@ -60,10 +57,8 @@ assert_strings_match "$SOURCE_DIR" "$(pwd)"
 # test empty sink
 mkdir -pv ../test-sink
 cd ../test-sink
-set +e
 get_source_dir
 get_sink_dir
-set -e
 assert_string_is_empty $SOURCE_DIR
 assert_string_is_empty $SINK_DIR
 echo "assert_fail is_source"
@@ -76,9 +71,7 @@ cd ../test-source
 emu sink -v add test ../test-sink
 cd ../test-sink
 get_sink_dir
-set +e
 get_source_dir
-set -e
 assert_string_is_not_empty $SINK_DIR
 assert_string_is_empty $SOURCE_DIR
 echo "assert_success is_sink"

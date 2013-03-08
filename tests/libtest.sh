@@ -167,10 +167,8 @@ assert_string_is_not_empty ()
 
 assert_strings_match ()
 {
-    set +u
     if [[ "$1" -ne "$2" ]]
     then
         exit $EXIT_ASSERT_FAIL
     fi
-    set -u
 }

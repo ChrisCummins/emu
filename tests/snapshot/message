@@ -1,4 +1,4 @@
-set -eu
+set -e
 test_setup
 
 cd $EMU_TEST_DIR/test-source
