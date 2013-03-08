@@ -2,7 +2,7 @@
 
 ## VARIABLES ###################################################################
 
-export EMU_VERSION="0.0.3"
+export EMU_VERSION="0.0.4"
 
 if [ -z "$EMU_DIR" ]; then
     export EMU_DIR=".emu"
