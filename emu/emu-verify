@@ -2,7 +2,6 @@
 
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
-SOURCE_DIR="$(pwd)"
 
 main ()
 {
@@ -12,14 +11,14 @@ main ()
     get_source_dir_or_fail
     execute_hooks "pre" "$SOURCE_DIR"
 
-    IN=$(echo "$1" | tr ":" "\n")
+    local input=$(echo "$1" | tr ":" "\n")
 
-    if [[ $(echo "$IN" | wc -l) -ne 2 ]]
+    if [[ $(echo "$input" | wc -l) -ne 2 ]]
     then
         if [[ $(ls "$SOURCE_DIR/$EMU_DIR/sinks" | wc -l) -eq 1 ]]
         then
             # If there's only 1 sink, use that.
-            SINK="$(ls $SOURCE_DIR/$EMU_DIR/sinks)"
+            local sink="$(ls $SOURCE_DIR/$EMU_DIR/sinks)"
         else
             emu_error "invalid snapshot"
             emu_panic
@@ -27,32 +26,33 @@ main ()
         fi
     fi
 
-    if [ -z "$SINK" ]
+    if [ -z "$sink" ]
     then
-        SINK=$(echo "$IN" | head -n1)
+        local sink=$(echo "$input" | head -n1)
     fi
 
-    SINK_DIR="$(cat $SOURCE_DIR/$EMU_DIR/sinks/$SINK 2>/dev/null)"
-    if [[ ! -d "$SINK_DIR" ]]
+    local sink_dir="$(cat $SOURCE_DIR/$EMU_DIR/sinks/$sink 2>/dev/null)"
+    if [[ ! -d "$sink_dir" ]]
     then
-        emu_error "sink '$SINK' does not exist"
+        emu_error "sink '$sink' does not exist"
         emu_panic
         exit $EMU_EXIT_INCORRECT_COMMAND
     fi
 
-    SNAPSHOT=$(echo "$IN" | tail -n1)
-    SNAPSHOT_DIR="$SINK_DIR/$EMU_DIR/trees/$SNAPSHOT"
-    if [[ ! -d "$SNAPSHOT_DIR" ]]
+    local snapshot=$(echo "$input" | tail -n1)
+    local node="$sink_dir/$EMU_DIR/trees/$snapshot"
+    if [[ ! -d "$node" ]]
     then
-        emu_error "snapshot '$SNAPSHOT' does not exist"
+        emu_error "snapshot '$snapshot' does not exist"
         emu_panic
         exit $EMU_EXIT_INCORRECT_COMMAND
     fi
 
-    $(verify_node "$SNAPSHOT_DIR")
+    set -e
+    verify_node "$node"
+    set +e
     emu_echo "pass"
 
-    execute_hooks "post" "$SOURCE_DIR"
     exit 0
 }
 main $@

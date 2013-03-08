@@ -243,6 +243,8 @@ perform_snapshot_on_sink ()
     emu_echo "$sink_name: new snapshot '$SNAPSHOT'"
     emu_echo "$sink_name: HEAD at $HASH"
 
+    test -n "$EMU_VERIFY_SNAPSHOT" && emu verify "$sink_name:$HASH"
+
     return 0
 }
 
@@ -273,7 +275,7 @@ main ()
     test -n "$EMU_DEBUG" && set -x
     exit_on_help_version $@
 
-    while getopts ":nMvpfF" OPT
+    while getopts ":nMvpfFV" OPT
     do
         case $OPT in
             n)
@@ -303,6 +305,9 @@ main ()
             F)
                 EMU_LOCK_FORCE=1
                 EMU_LOCK_KILL=1
+                ;;
+            V)
+                EMU_VERIFY_SNAPSHOT=1
                 ;;
             \?)
                 emu_error "invalid option: -$OPTARG"

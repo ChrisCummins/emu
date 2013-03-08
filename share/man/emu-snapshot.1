@@ -5,7 +5,7 @@ emu\-snapshot \- Record a snapshot of the source directory
 .B emu snapshot
 [\-\-help] [\-\-version]
              [\-v] [\-p] [\-f] [\-F]
-             [\-n] [\-M] [<sink>...]
+             [\-n] [\-M] [\-V] [<sink>...]
 .SH DESCRIPTION
 Store the current contents of the source directory in a new snapshot.
 .PP
@@ -48,7 +48,7 @@ environment variable). Alternatively, the message can be set in the
 EMU_SNAPSHOT_MESSAGE environment variable.
 .TP
 \-n
-perform a trial run with no changes made, equivalent to
+perform a trial run with no changes made
 'emu status'
 .TP
 \-v
@@ -66,6 +66,9 @@ consumption, but is useful after a previous snapshot attempt failed
 equivalent to \-f force option, but in addition causing emu to kill any process
 owning a sink or source lock and removing any in\-progress snapshot
 data. Exercise caution or heads will explode
+.TP
+\-V
+verify snapshot contents upon completion
 .SH EMU
 Part of the
 .B emu
