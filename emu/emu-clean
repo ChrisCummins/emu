@@ -20,13 +20,13 @@ clean_dir_lock() {
     fi
 }
 
-clean_orphan_nodes() {
+clean_orphan_trees() {
     local dir="$1"
 
-    for t in $(find "$dir/$EMU_DIR/trees"); do
+    for t in $(ls "$dir/$EMU_DIR/trees"); do
         if [ ! -f "$dir/$EMU_DIR/nodes/$t" ]; then
             if [ -z "$EMU_DRY_RUN" ]; then
-                rm -rf "$t"
+                rm -rf "$dir/$EMU_DIR/trees/$t"
                 emu_echo "Removed orphan tree '$t'"
             else
                 emu_echo "Orphan tree '$t' will be removed"
@@ -35,16 +35,47 @@ clean_orphan_nodes() {
     done
 }
 
-clean_orphan_trees() {
+clean_orphan_nodes() {
     local dir="$1"
 
-    for n in $(find "$dir/$EMU_DIR/nodes"); do
+    for n in $(ls "$dir/$EMU_DIR/nodes"); do
         if [ ! -d "$dir/$EMU_DIR/trees/$n" ]; then
             if [ -z "$EMU_DRY_RUN" ]; then
-                rm -f "$n"
+                rm -f "$dir/$EMU_DIR/nodes/$n"
                 emu_echo "Removed orphan node '$n'"
             else
                 emu_echo "Orphan node '$n' will be removed"
+            fi
+        fi
+    done
+}
+
+clean_in_progress() {
+    local dir="$1"
+    local new="$dir/$EMU_DIR/trees/new"
+
+    if [ -d "$new" ]; then
+        if [ -z "$EMU_DRY_RUN" ]; then
+            rm -rf "$new"
+            emu_echo "Removed directory '$new'"
+        else
+            emu_echo "Directory '$new' will be removed"
+        fi
+    fi
+}
+
+clean_broken_symlinks() {
+    local dir="$1"
+
+    for l in $(ls "$dir"); do
+        if [ -L "$l" ]; then
+            if readlink -q "$l" &>/dev/null ; then
+                if [ -z "$EMU_DRY_RUN" ]; then
+                    rm -f "$l"
+                    emu_echo "Removed broken link '$l'"
+                else
+                    emu_echo "Broken link '$l' will be removed"
+                fi
             fi
         fi
     done
@@ -57,6 +88,8 @@ clean_sink() {
     clean_dir_lock "$dir"
     clean_orphan_nodes "$dir"
     clean_orphan_trees "$dir"
+    clean_in_progress "$dir"
+    clean_broken_symlinks "$dir"
 
     test -z "$EMU_DRY_RUN" && emu_echo "Working directory is clean"
 }
