@@ -12,12 +12,12 @@ finish ()
     # print test results summary
     if (( $tests_passed )) || (( $tests_failed )); then
         echo ""
-    fi
 
-    if (( $tests_failed )); then
-        echo -n "$tests_passed passed, $tests_failed failed"
-    else
-        echo -n "All $tests_passed tests passed"
+        if (( $tests_failed )); then
+            echo -n "$tests_passed passed, $tests_failed failed"
+        else
+            echo -n "All $tests_passed tests passed"
+        fi
     fi
 
     if (( $tests_skipped )); then
