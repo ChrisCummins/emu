@@ -391,6 +391,7 @@ block_until_dir_free ()
         then
             if [[ $BLOCK_COUNTER -gt $BLOCK_COUNTER_MAX ]]
             then
+                echo ""
                 emu_error "failed to get exclusive access to directory:\n  $dir"
                 emu_panic
                 exit $EMU_EXIT_BLOCKED
@@ -409,6 +410,8 @@ block_until_dir_free ()
         else
             echo -n "[$(echo $BLOCK_STATUS | cut -d' ' -f8)]"
         fi
+
+        echo -n " ($BLOCK_COUNTER/$BLOCK_COUNTER_MAX)"
         sleep $BLOCK_SLEEP_TIME
         block_until_dir_free "$dir"
     fi
