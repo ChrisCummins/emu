@@ -53,7 +53,7 @@ clean_orphan_trees() {
 clean_sink() {
     local dir="$1"
 
-    pre_exec_hooks "$dir"
+    execute_hooks "pre" "$dir"
     clean_dir_lock "$dir"
     clean_orphan_nodes "$dir"
     clean_orphan_trees "$dir"
@@ -64,7 +64,7 @@ clean_sink() {
 clean_source() {
     local dir="$1"
 
-    pre_exec_hooks "$dir"
+    execute_hooks "pre" "$dir"
     clean_dir_lock "$dir"
 
     test -z "$EMU_DRY_RUN" && emu_echo "Working directory is clean"

@@ -58,7 +58,7 @@ main ()
     done
 
     get_source_dir_or_fail
-    pre_exec_hooks
+    execute_hooks "pre" "$SOURCE_DIR"
 
     local arg_list="$@"
 
@@ -148,7 +148,7 @@ main ()
     less .emu_log
     rm -f .emu_log
 
-    post_exec_hooks
+    execute_hooks "post" "$SOURCE_DIR"
     exit 0
 }
 main $@

@@ -10,7 +10,7 @@ main ()
 
     get_source_dir_or_fail
 
-    pre_exec_hooks "$SOURCE_DIR"
+    execute_hooks "pre" "$SOURCE_DIR"
     lock_dir "$SOURCE_DIR"
 
     IN=$(echo "$1" | tr ":" "\n")
@@ -71,6 +71,6 @@ main ()
 
     unlock_dir "$SINK_DIR"
     unlock_dir "$SOURCE_DIR"
-    post_exec_hooks "$SOURCE_DIR"
+    execute_hooks "post" "$SOURCE_DIR"
 }
 main $@

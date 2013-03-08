@@ -9,7 +9,8 @@ main ()
     test -n "$EMU_DEBUG" && set -x
     exit_on_help_version $@
 
-    pre_exec_hooks "$SOURCE_DIR"
+    get_source_dir_or_fail
+    execute_hooks "pre" "$SOURCE_DIR"
 
     IN=$(echo "$1" | tr ":" "\n")
 
@@ -17,6 +18,7 @@ main ()
     then
         if [[ $(ls "$SOURCE_DIR/$EMU_DIR/sinks" | wc -l) -eq 1 ]]
         then
+            # If there's only 1 sink, use that.
             SINK="$(ls $SOURCE_DIR/$EMU_DIR/sinks)"
         else
             emu_error "invalid snapshot"
@@ -25,7 +27,7 @@ main ()
         fi
     fi
 
-    if [ "$SINK" = "" ]
+    if [ -z "$SINK" ]
     then
         SINK=$(echo "$IN" | head -n1)
     fi
@@ -50,7 +52,7 @@ main ()
     $(verify_node "$SNAPSHOT_DIR")
     emu_echo "pass"
 
-    post_exec_hooks "$SOURCE_DIR"
+    execute_hooks "post" "$SOURCE_DIR"
     exit 0
 }
 main $@

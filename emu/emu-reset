@@ -10,7 +10,7 @@ main ()
 
     emu restore $@
     get_source_dir_or_fail
-    pre_exec_hooks
+    execute_hooks "pre" "$SOURCE_DIR"
 
     IN=$(echo "$1" | tr ":" "\n")
 
@@ -53,7 +53,6 @@ main ()
         exit $EMU_EXIT_ERROR
     fi
 
-    post_exec_hooks "$SOURCE_DIR"
-
+    execute_hooks "post" "$SOURCE_DIR"
 }
 main $@
