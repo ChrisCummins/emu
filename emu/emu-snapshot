@@ -149,7 +149,8 @@ remove_snapshot ()
     local sink_name="$3"
 
     get_snapshot_child "$1" "$(cat $1/$EMU_DIR/HEAD)" "$2"
-    cat "$1/$EMU_DIR/nodes/$SNAPSHOT_HASH" | sed -r 's/(Parent +).*$/\1/' > "$1/.emu/nodes/$SNAPSHOT_HASH"
+    cat "$1/$EMU_DIR/nodes/$SNAPSHOT_HASH" | sed -r 's/^(Parent\s+).*/\1/i' > "$1/.emu/nodes/$SNAPSHOT_HASH.tmp"
+    mv -f "$1/.emu/nodes/$SNAPSHOT_HASH.tmp" "$1/.emu/nodes/$SNAPSHOT_HASH"
     emu_echo "$sink_name: removing '$2'"
     rm -f $EMU_VERBOSE "$1/$EMU_DIR/nodes/$2"
     rm -f $EMU_VERBOSE "$1/$EMU_DIR/nodes/$2.MSG"
