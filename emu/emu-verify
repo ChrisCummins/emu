@@ -11,9 +11,9 @@ main ()
     get_source_dir_or_fail
     execute_hooks "pre" "$SOURCE_DIR"
 
-    IN=$(echo "$1" | tr ":" "\n")
+    local input=$(echo "$1" | tr ":" "\n")
 
-    if [[ $(echo "$IN" | wc -l) -ne 2 ]]
+    if [[ $(echo "$input" | wc -l) -ne 2 ]]
     then
         if [[ $(ls "$SOURCE_DIR/$EMU_DIR/sinks" | wc -l) -eq 1 ]]
         then
@@ -28,7 +28,7 @@ main ()
 
     if [ -z "$SINK" ]
     then
-        SINK=$(echo "$IN" | head -n1)
+        SINK=$(echo "$input" | head -n1)
     fi
 
     SINK_DIR="$(cat $SOURCE_DIR/$EMU_DIR/sinks/$SINK 2>/dev/null)"
@@ -39,7 +39,7 @@ main ()
         exit $EMU_EXIT_INCORRECT_COMMAND
     fi
 
-    SNAPSHOT=$(echo "$IN" | tail -n1)
+    SNAPSHOT=$(echo "$input" | tail -n1)
     SNAPSHOT_DIR="$SINK_DIR/$EMU_DIR/trees/$SNAPSHOT"
     if [[ ! -d "$SNAPSHOT_DIR" ]]
     then
