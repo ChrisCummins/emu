@@ -78,7 +78,6 @@ assert_is_not_dir ()
 {
     if [ -d "$1" ]
     then
-        ls -l "$1"
         exit $EXIT_ASSERT_FAIL
     fi
 }
@@ -95,7 +94,6 @@ assert_is_not_file ()
 {
     if [ -f "$1" ]
     then
-        ls -l "$1"
         exit $EXIT_ASSERT_FAIL
     fi
 }
