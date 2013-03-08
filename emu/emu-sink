@@ -119,10 +119,16 @@ list_sinks ()
     then
         ls "$EMU_DIR/sinks"
     else
+        local table=.emu-sink.TMP
+
         for SINK in $(ls "$EMU_DIR/sinks")
         do
-            echo "$SINK  ->  $(cat $EMU_DIR/sinks/$SINK)"
+            echo -e "$SINK \t$(cat $EMU_DIR/sinks/$SINK)" >> $table
         done
+
+        # Print the table.
+        cat $table | column -t -s'	'
+        rm -f $table
     fi
 }
 
