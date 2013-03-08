@@ -84,7 +84,7 @@ else
     test_dir="."
 fi
 
-test_files="$(find $1 -type f 2>/dev/null)"
+test_files="$(find $1 -type f 2>/dev/null | sort)"
 
 if [ -z "$test_files" ]
 then
