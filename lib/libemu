@@ -1,5 +1,41 @@
 #!/bin/bash
 
+## TRAPS #######################################################################
+
+finish() {
+    local dir=""
+
+    set +eu
+    if [ -n "$SOURCE_DIR" ]; then
+        dir="$SOURCE_DIR"
+    fi
+
+    if [ -n "$SINK_DIR" ]; then
+        dir="$SINK_DIR"
+    fi
+
+    if [ -n "$dir" ]; then
+        local hooks="$(find "$dir/$EMU_DIR/hooks/exec/" -name '*.post' 2>/dev/null)"
+
+        for h in $hooks; do
+            $h
+        done
+
+        # Execute command specific hooks.
+        if [ -n "$EMU_ECHO_PREFIX" ]; then
+            local command="$(echo $EMU_ECHO_PREFIX | sed 's/^emu-//')"
+            local command_hooks="$(find "$dir/$EMU_DIR/hooks/$command/" -name '*.post' 2>/dev/null)"
+
+            for h in $command_hooks; do
+                $h
+            done
+        fi
+    fi
+    set -eu
+}
+
+trap finish EXIT
+
 ## VARIABLES ###################################################################
 
 export EMU_VERSION="0.0.4"
