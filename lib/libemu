@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## TRAPS #######################################################################
+## Traps #######################################################################
 
 finish() {
     local dir=""
@@ -36,7 +36,7 @@ finish() {
 
 trap finish EXIT
 
-## VARIABLES ###################################################################
+## Variables ###################################################################
 
 export EMU_VERSION="0.0.4"
 
@@ -52,7 +52,7 @@ export EMU_EXIT_BLOCKED=3
 export EMU_EXIT_INCORRECT_COMMAND=126
 export EMU_EXIT_COMMAND_NOT_FOUND=127
 
-## HELP AND VERSION ############################################################
+## Help and Version ############################################################
 print_version() {
     emu_echo "version $EMU_VERSION"
 }
@@ -78,7 +78,7 @@ exit_on_help_version() {
     done
 }
 
-## ECHO ########################################################################
+## Echo ########################################################################
 
 _emu_echo ()
 {
@@ -158,7 +158,7 @@ emu_error ()
     return 0
 }
 
-## ERRORS ######################################################################
+## Errors ######################################################################
 
 # print 'not a command' text and exit
 #  @param $1 name of missing command
@@ -193,7 +193,7 @@ emu_panic ()
     fi
 }
 
-## DIRECTORIES #################################################################
+## Directories #################################################################
 
 # Returns the absolute path of a given directory
 #  @param  $1 (optional) path to directory
@@ -562,15 +562,6 @@ hash_directory ()
 
 ## Hooks #######################################################################
 
-# @param 1 hook type. Must be (pre|post|error).
-# @param 2 path to the hooks directory, e,g. '/path/.emu/hooks/exec'.
-get_hooks_list() {
-    local type="$1"
-    local dir="$2"
-
-    echo "$(find "$dir" -executable -type f -name '*.'$type 2>/dev/null)"
-}
-
 # Execute a list of files.
 #
 # @param @ files.
@@ -580,6 +571,15 @@ execute_file_list() {
     for x in $files; do
         $x
     done
+}
+
+# @param 1 hook type. Must be (pre|post|error).
+# @param 2 path to the hooks directory, e,g. '/path/.emu/hooks/exec'.
+get_hooks_list() {
+    local type="$1"
+    local dir="$2"
+
+    echo "$(find "$dir" -executable -type f -name '*.'$type 2>/dev/null)"
 }
 
 # Execute hooks of a given type. First, it executes the 'exec' hooks, then it
@@ -618,7 +618,7 @@ execute_hooks() {
     fi
 }
 
-## SINKS #######################################################################
+## Sinks #######################################################################
 
 # return the number of snapshots in sink
 #  @param $1 Path to sink directory
@@ -697,7 +697,7 @@ EOF
     fi
 }
 
-## SNAPSHOTS ###################################################################
+## Snapshots ###################################################################
 
 # calculate and compare the snapshot hash against the node hash
 #  @param $1 Path to snapshot
