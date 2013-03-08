@@ -98,6 +98,24 @@ assert_is_not_file ()
     fi
 }
 
+assert_does_not_exist ()
+{
+    if [ -e "$1" ]
+    then
+        exit $EXIT_ASSERT_FAIL
+    fi
+}
+
+assert_is_broken_link ()
+{
+    if [ ! -L "$1" ]; then
+        if readlink -q "$1" &>/dev/null ; then
+            exit $EXIT_ASSERT_FAIL
+        fi
+    fi
+}
+
+
 assert_dir_is_empty ()
 {
     if [ $(find "$1" | wc -l) -gt 1 ]
