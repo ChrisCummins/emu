@@ -48,7 +48,9 @@ main ()
         exit $EMU_EXIT_INCORRECT_COMMAND
     fi
 
-    $(verify_node "$SNAPSHOT_DIR")
+    set -e
+    verify_node "$SNAPSHOT_DIR"
+    set +e
     emu_echo "pass"
 
     exit 0
