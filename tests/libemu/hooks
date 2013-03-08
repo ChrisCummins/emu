@@ -1,68 +1,47 @@
 set -e
-test_setup
 source /usr/local/lib/libemu
 
-cd $EMU_TEST_DIR/test-source
+test_execute_hooks() {
+    type="$1"
+    dir="$2"
 
-emu init -v
-
-cat <<EOF > $EMU_TEST_DIR/test-source/.emu/hooks/exec/test.pre
+    test_setup
+    emu init
+    cat <<EOF > .emu/hooks/exec/test.$type
 #!/bin/bash
-echo "**** PRE EXECUTING *****"
-echo "1234" > $EMU_TEST_DIR/PRE
+echo "1234" > $EMU_TEST_DIR/A
 EOF
 
-cat <<EOF > $EMU_TEST_DIR/test-source/.emu/hooks/exec/test2.pre
+    cat <<EOF > .emu/hooks/exec/test2.$type
 #!/bin/bash
-echo "**** PRE2 EXECUTING *****"
-touch $EMU_TEST_DIR/PRE2
+touch $EMU_TEST_DIR/B
 EOF
 
-cat <<EOF > $EMU_TEST_DIR/test-source/.emu/hooks/exec/test.post
-#!/bin/bash
-echo "**** POST EXECUTING *****"
-echo "1234" > $EMU_TEST_DIR/POST
-EOF
+    chmod +x .emu/hooks/exec/*
 
-cat <<EOF > $EMU_TEST_DIR/test-source/.emu/hooks/exec/test2.post
-#!/bin/bash
-echo "**** POST2 EXECUTING *****"
-touch $EMU_TEST_DIR/POST2
-EOF
+    execute_hooks "$type" "$dir"
+    assert_is_file $EMU_TEST_DIR/A
+    assert_is_file $EMU_TEST_DIR/B
+    assert_strings_match "1234" "$(cat $EMU_TEST_DIR/A)"
+    assert_file_is_empty $EMU_TEST_DIR/B
+    rm -f $EMU_TEST_DIR/A $EMU_TEST_DIR/B
+    rm -f .emu/hooks/exec/test.$type .emu/hooks/exec/test2.$type
+    test_teardown
+}
 
-cat <<EOF > $EMU_TEST_DIR/test-source/.emu/hooks/exec/test.error
-#!/bin/bash
-echo "**** ERROR EXECUTING *****"
-echo "1234" > $EMU_TEST_DIR/ERROR
-EOF
+# First we'll test the exeucte_hooks() function on pre|post|error hooks.
+test_execute_hooks "pre" "$EMU_TEST_DIR"
+test_execute_hooks "post" "$EMU_TEST_DIR"
+test_execute_hooks "error" "$EMU_TEST_DIR"
 
-cat <<EOF > $EMU_TEST_DIR/test-source/.emu/hooks/exec/test2.error
-#!/bin/bash
-echo "**** ERROR2 EXECUTING *****"
-touch $EMU_TEST_DIR/ERROR2
-EOF
+# Now let's test execute_hooks() without giving a source dir parameter.
+test_execute_hooks "pre"
+test_execute_hooks "post"
+test_execute_hooks "error"
 
-chmod +x .emu/hooks/exec/*
-
-echo "pre_exec_hooks"
-pre_exec_hooks
-assert_is_file $EMU_TEST_DIR/PRE
-assert_strings_match "1234" "$(cat $EMU_TEST_DIR/PRE)"
-assert_is_file $EMU_TEST_DIR/PRE2
-assert_file_is_empty $EMU_TEST_DIR/PRE2
-
-echo "post_exec_hooks"
-post_exec_hooks
-assert_is_file $EMU_TEST_DIR/POST
-assert_strings_match "1234" "$(cat $EMU_TEST_DIR/POST)"
-assert_is_file $EMU_TEST_DIR/POST2
-assert_file_is_empty $EMU_TEST_DIR/POST2
-
-echo "error_exec_hooks"
-error_exec_hooks
-assert_is_file $EMU_TEST_DIR/ERROR
-assert_strings_match "1234" "$(cat $EMU_TEST_DIR/ERROR)"
-assert_is_file $EMU_TEST_DIR/ERROR2
-assert_file_is_empty $EMU_TEST_DIR/ERROR2
+# Finally let's test execute_hooks(), but giving an invalid typex
+execute_hooks "__invalid__"
+assert_is_not_file $EMU_TEST_DIR/A
+assert_is_not_file $EMU_TEST_DIR/B
 
 test_teardown

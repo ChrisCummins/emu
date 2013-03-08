@@ -177,7 +177,7 @@ emu_panic ()
 
     if [ -n "$SOURCE_DIR" ] && is_source "$SOURCE_DIR"
     then
-        error_exec_hooks "$SOURCE_DIR"
+        execute_hooks "error" "$SOURCE_DIR"
         unlock_dir "$SOURCE_DIR"
 
         # unlock all sinks
@@ -560,37 +560,62 @@ hash_directory ()
     echo $HASH
 }
 
-## HOOKS #################################################################
+## Hooks #######################################################################
 
-_exec_hooks_list ()
-{
-    local ext="$1"
+# @param 1 hook type. Must be (pre|post|error).
+# @param 2 path to the hooks directory, e,g. '/path/.emu/hooks/exec'.
+get_hooks_list() {
+    local type="$1"
+    local dir="$2"
 
-    get_source_dir_if_empty
-    local hooks_list="$(find "$SOURCE_DIR/$EMU_DIR/hooks/exec/" -name '*.'$ext 2>/dev/null)"
+    echo "$(find "$dir" -executable -type f -name '*.'$type 2>/dev/null)"
+}
 
-    for exec in $hooks_list
-    do
-        $exec
+# Execute a list of files.
+#
+# @param @ files.
+execute_file_list() {
+    local files="$@"
+
+    for x in $files; do
+        $x
     done
 }
 
-# execute pre-execution hooks
-pre_exec_hooks ()
-{
-    _exec_hooks_list "pre"
-}
+# Execute hooks of a given type. First, it executes the 'exec' hooks, then it
+# will run hooks specific to the current command. The command is implied from
+# the $EMU_ECHO_PREFIX variable. So for example, if emu-init calls:
+#
+#    'execute_hooks pre /path'
+#
+# This function will look in '/path/$EMU_DIR/hooks/exec' and run any executable
+# files it finds with the extension '.pre', then look in
+# '/path/$EMU_DIR/hooks/init' and run any executable '.pre' files there.
+#
+# @param 1 hook type. Must be (pre|post|error).
+# @param 2 [optiona] path to the source directory eg /path/to/dir/.
+#          If not given, current directory is used.
+execute_hooks() {
+    local type="$1"
+    local source="$2"
 
-# execute post-execution hooks
-post_exec_hooks ()
-{
-    _exec_hooks_list "post"
-}
+    # Sanity check to ensure we have the correct type.
+    if [[ ! $type =~ (pre|post|error) ]]; then
+        return
+    fi
 
-# execute error condition hooks
-error_exec_hooks ()
-{
-    _exec_hooks_list "error"
+    # Set the source to current dir if needed.
+    test -z "$source" && source=.
+
+    # Execute generic hooks (located in 'hooks/exec/').
+    execute_file_list "$(get_hooks_list "$type" "$source/$EMU_DIR/hooks/exec")"
+
+    # Execute command specific hooks (located in 'hoos/<command>/').
+    if [ -n "$EMU_ECHO_PREFIX" ]; then
+        local command="$(echo $EMU_ECHO_PREFIX | sed 's/^emu-//')"
+
+        execute_file_list "$(get_hooks_list "$type" "$source/$EMU_DIR/hooks/$command")"
+    fi
 }
 
 ## SINKS #######################################################################
