@@ -101,7 +101,7 @@ done
 # execute tests
 for test in $test_files
 do
-    if [ "$test" != "./run-tests.sh" ] && [ "$test" != "./libtest.sh" ]
+    if [ "$test" != "./.gitignore" ] && [ "$test" != "./libtest.sh" ]
     then
         if [ "$test_dir" == "." ]
         then
