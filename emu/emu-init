@@ -2,43 +2,34 @@
 
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
-SOURCE_DIR="$(pwd)"
-CONF_DIR="$SOURCE_DIR/.emu"
-
-help ()
-{
-    man emu-init
-}
 
 clean_emu_dir ()
 {
-    if [ ! -d "$SOURCE_DIR/.emu/sinks" ]
-    then
-        emu_error "not an emu source"
-        exit 5
-    fi
+    get_source_dir_or_fail
 
-    rm $EMU_VERBOSE -rf "$SOURCE_DIR/.emu"
-
-    if ! (( $EMU_QUIET ))
-    then
-        emu_echo "emptied source in $SOURCE_DIR/.emu"
-    fi
+    rm $EMU_VERBOSE -rf "$SOURCE_DIR/$EMU_DIR"
+    emu_echo "emptied source in $SOURCE_DIR/$EMU_DIR"
 }
 
 create_directories ()
 {
-    mkdir $EMU_VERBOSE -p "$CONF_DIR"
-    mkdir $EMU_VERBOSE -p "$CONF_DIR/config"
-    mkdir $EMU_VERBOSE -p "$CONF_DIR/hooks"
-    mkdir $EMU_VERBOSE -p "$CONF_DIR/sinks"
-    chmod 0755 "$CONF_DIR/sinks"
+    mkdir $EMU_VERBOSE -p "$SOURCE_DIR/$EMU_DIR"
+    mkdir $EMU_VERBOSE -p "$SOURCE_DIR/$EMU_DIR/config"
+    mkdir $EMU_VERBOSE -p "$SOURCE_DIR/$EMU_DIR/hooks"
+    mkdir $EMU_VERBOSE -p "$SOURCE_DIR/$EMU_DIR/sinks"
+    chmod 0755 "$SOURCE_DIR/$EMU_DIR/sinks"
 }
 
 copy_template_files ()
 {
-    # Copy over files from shared templates dir.
-    rsync $EMU_VERBOSE -ah $TEMPLATE_UPDATE "$EMU_SOURCE_TEMPLATE_DIR/" "$SOURCE_DIR/.emu/"
+    # copy over files from shared templates dir
+    rsync \
+        $EMU_VERBOSE \
+        --archive \
+        --human-readable \
+        $EMU_TEMPLATE_UPDATE \
+        "$EMU_SOURCE_TEMPLATE_DIR/" \
+        "$SOURCE_DIR/$EMU_DIR/"
 }
 
 init_filesystem ()
@@ -49,26 +40,26 @@ init_filesystem ()
 
 emu_init ()
 {
-    if [[ -d .emu ]]
+    local msg=""
+
+    if [ -d "$EMU_DIR" ]
     then
-        init_filesystem
-        if ! (( $EMU_QUIET ))
-        then
-            emu_echo "reinitialized existing source in $CONF_DIR"
-        fi
+        msg="reinitialized existing source in $SOURCE_DIR/$EMU_DIR"
     else
-        init_filesystem
-        if ! (( $EMU_QUIET ))
-        then
-            emu_echo "initialized source in $CONF_DIR"
-        fi
+        msg="initialized source in $SOURCE_DIR/$EMU_DIR"
     fi
+
+    init_filesystem
+    emu_echo "$msg"
 }
 
 
 main ()
 {
-    TEMPLATE_UPDATE="-u"
+    EMU_TEMPLATE_UPDATE="-u"
+
+    test -n "$EMU_DEBUG" && set -x
+    exit_on_help_version $@
 
     while getopts ":qvCRt:" OPT
     do
@@ -80,10 +71,11 @@ main ()
                 EMU_DIR_CLEAN=1
                 ;;
             v)
+                EMU_QUIET=0
                 EMU_VERBOSE="-v"
                 ;;
             R)
-                TEMPLATE_UPDATE=""
+                EMU_TEMPLATE_UPDATE=""
                 ;;
             t)
                 EMU_SOURCE_TEMPLATE_DIR="$OPTARG"
@@ -104,24 +96,19 @@ main ()
         esac
     done
 
-    # Dispose of args.
+    # dispose of args
     while [ "${1:0:1}" = "-" ]
     do
         shift
     done
 
-    if [ "$1" = "help" ]
-    then
-        help
-        exit 0
-    fi
+    SOURCE_DIR=$(pwd -P)
+    exit_if_no_dir_permissions "$SOURCE_DIR"
 
-    if [ "$EMU_SOURCE_TEMPLATE_DIR" == "" ]
+    if [ -z "$EMU_SOURCE_TEMPLATE_DIR" ]
     then
         EMU_SOURCE_TEMPLATE_DIR="/usr/share/emu/source-templates"
     fi
-
-    exit_if_no_dir_permissions "$SOURCE_DIR"
 
     if (( $EMU_DIR_CLEAN ))
     then

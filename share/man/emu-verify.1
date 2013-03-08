@@ -1,0 +1,55 @@
+.TH emu-verify 1  "March 08, 2013" "version 0.0.4" "Emu Manual"
+.SH NAME
+emu\-verify \- Verify the contents of a sink snapshot
+.SH SYNOPSIS
+.B emu snapshot
+[\-\-help] [\-\-version] [option...] [<sink>:]<snapshot>
+.SH DESCRIPTION
+Performs a checksum of a snapshot within a sink directory, and reports on
+whether this calculated checksum matches the calculation made at the time of
+snapshot creation. If these checksums do not match, it is safe to assume that
+the snapshot is in someway corrupted or has been tampered with. For further
+details of the checksumming process, see the section HASH ALGORITHM.
+.PP
+The format for specifying snapshot is in the form <sink>:<snapshot>. If this
+command is executed from a sink directory, the <sink>: specifier may be
+ommitted, and will be assumed to be the current sink directory. The <snapshot>
+value is the 40 digit snapshot UID, and can be obtained from 'emu log'.
+.SH OPTIONS
+.TP
+\-\-help
+show this help and quit
+.TP
+\-\-version
+show version information
+.TP
+\-q
+only print error and warning messages, all other output will be suppressed
+.TP
+.SH HASH ALGORITHM
+The algorithm used to determine the checksum of a snapshot is not a perfect
+hasing algorithm, that is, it would be possible to make two different snapshots
+compute to the same checksum value, giving the appearance that their contents
+are the same. This is not a mistake on our part, but an intentional engineering
+decision to try to address the imbalance between quality of hashing algorithms
+and computational expense.
+.PP
+A traditional approach to verifying the contents of a directory would be be to
+create a list of checksums for every file in the directory and to then perform a
+checksum of this list. While this reduces the threshold for collisions down to
+that of the checksumming algorithm itself, it required reading every byte within
+the directory, and for especially large sources, this can be unrealistically
+time consuming.
+.PP
+The algorithm that emu uses forgoes checksumming every file within a directory,
+trading in the ability for perfect hasing for a 2600% execution time decrease.
+.SH EMU
+Part of the
+.B emu
+(1)
+suite
+.SH AUTHOR
+Chris Cummins <chrisc.101@gmail.com>
+.SH SEE ALSO
+.B emu
+(1)

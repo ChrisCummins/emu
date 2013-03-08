@@ -1,0 +1,35 @@
+set -eu
+test_setup
+
+cd $EMU_TEST_DIR/test-source
+emu init
+
+touch .emu/test
+echo "hello, test!" > .emu/test
+assert_is_file .emu/test
+
+emu init
+assert_is_file .emu/test
+
+emu init -R
+assert_is_file .emu/test
+
+echo "hello, test!" >> .emu/excludes
+if [ $(cat .emu/excludes | head -n-1) != "hello, test!" ]
+then
+    exit 5
+fi
+
+emu init
+if [ $(cat .emu/excludes | head -n-1) != "hello, test!" ]
+then
+    exit 5
+fi
+
+emu init -R
+if [ $(cat .emu/excludes | head -n-1) == "hello, test!" ]
+then
+    exit 5
+fi
+
+test_teardown

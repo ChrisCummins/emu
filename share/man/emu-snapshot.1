@@ -1,10 +1,11 @@
-.TH emu-snapshot 1  "January 17, 2013" "version 0.0.3" "Emu Manual"
+.TH emu-snapshot 1  "March 08, 2013" "version 0.0.4" "Emu Manual"
 .SH NAME
 emu\-snapshot \- Record a snapshot of the source directory
 .SH SYNOPSIS
 .B emu snapshot
-[\-v] [\-p] [\-f] [\-F]
-             [\-n] [\-m | \-M [editor]] [<sink>...]
+[\-\-help] [\-\-version]
+             [\-v] [\-p] [\-f] [\-F]
+             [\-n] [\-M] [<sink>...]
 .SH DESCRIPTION
 Store the current contents of the source directory in a new snapshot.
 .PP
@@ -35,12 +36,16 @@ Rsync finds files that need to be transferred using a "quick check" algorithm
 that looks for files that have changed in size or in last\-modified time.
 .SH OPTIONS
 .TP
-\-m <message>
-add a snapshot message <message>
+\-\-help
+show this help and quit
 .TP
-\-M [<editor>]
-open an editor to add a snapshot message (use EDITOR variable, if <editor>
-argument not given
+\-\-version
+show version information
+.TP
+\-M
+open an editor to add a snapshot message (editor determined by EDITOR
+environment variable). Alternatively, the message can be set in the
+EMU_SNAPSHOT_MESSAGE environment variable.
 .TP
 \-n
 perform a trial run with no changes made, equivalent to

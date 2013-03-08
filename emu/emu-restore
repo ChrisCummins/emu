@@ -2,20 +2,13 @@
 
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
-SOURCE_DIR="$(pwd)"
-
-help ()
-{
-    man emu-restore
-}
 
 main ()
 {
-    if [ "$1" = "help" ]
-    then
-        help
-        exit 0
-    fi
+    test -n "$EMU_DEBUG" && set -x
+    exit_on_help_version $@
+
+    get_source_dir_or_fail
 
     pre_exec_hooks "$SOURCE_DIR"
     lock_dir "$SOURCE_DIR"
@@ -24,9 +17,9 @@ main ()
 
     if [[ $(echo "$IN" | wc -l) -ne 2 ]]
     then
-        if [[ $(ls "$SOURCE_DIR/.emu/sinks" | wc -l) -eq 1 ]]
+        if [[ $(ls "$SOURCE_DIR/$EMU_DIR/sinks" | wc -l) -eq 1 ]]
         then
-            SINK="$(ls $SOURCE_DIR/.emu/sinks)"
+            SINK="$(ls $SOURCE_DIR/$EMU_DIR/sinks)"
         else
             emu_error "invalid snapshot"
             emu_panic
@@ -39,7 +32,7 @@ main ()
         SINK=$(echo "$IN" | head -n1)
     fi
 
-    SINK_DIR="$(cat $SOURCE_DIR/.emu/sinks/$SINK 2>/dev/null)"
+    SINK_DIR="$(cat $SOURCE_DIR/$EMU_DIR/sinks/$SINK 2>/dev/null)"
     if [[ ! -d "$SINK_DIR" ]]
     then
         emu_error "sink '$SINK' does not exist"
@@ -52,10 +45,10 @@ main ()
     SNAPSHOT=$(echo "$IN" | tail -n1)
     if [ "$SNAPSHOT" = "HEAD" ]
     then
-        SNAPSHOT="$(cat "$SINK_DIR/.emu/HEAD")"
+        SNAPSHOT="$(cat "$SINK_DIR/$EMU_DIR/HEAD")"
     fi
 
-    SNAPSHOT_DIR="$SINK_DIR/.emu/trees/$SNAPSHOT"
+    SNAPSHOT_DIR="$SINK_DIR/$EMU_DIR/trees/$SNAPSHOT"
     if [[ ! -d "$SNAPSHOT_DIR" ]]
     then
         emu_error "snapshot '$SNAPSHOT' does not exist"
@@ -67,7 +60,7 @@ main ()
         --delete \
         --archive \
         --human-readable \
-        --exclude-from="$SOURCE_DIR/.emu/excludes" \
+        --exclude-from="$SOURCE_DIR/$EMU_DIR/excludes" \
         "$SNAPSHOT_DIR/" "$SOURCE_DIR"
     if (( $? ))
     then

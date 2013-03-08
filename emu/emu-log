@@ -2,78 +2,153 @@
 
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
-SOURCE_DIR="$(pwd)"
 
-help ()
+# print the nodes for a sink
+#  @param $1 name of sink
+print_all_node_details ()
 {
-    man emu-log
-}
+    local sink="$1"
+    local counter=0
 
-print_node_verbose ()
-{
-cat <<EOF >>.emu_log
-$NODE
-  Date: $DATE
-  Size: $SIZE
-
-EOF
-}
-
-print_node_dense ()
-{
-cat <<EOF >>.emu_log
- $NODE * $DATE
-EOF
-}
-
-# Print the nodes for a sink.
-#
-# @param $1 Name of sink.
-print_nodes ()
-{
-    print_sink_details $1 >> .emu_log
-
-    SINK_PATH="$(cat $SOURCE_DIR/.emu/sinks/$1)"
-    for NODE in $(ls "$SINK_DIR/.emu/nodes" | sort -r)
+    for node in $(ls "$SINK_DIR/$EMU_DIR/nodes" | sort -r)
     do
-        NODE_PATH="$SINK_PATH/.emu/nodes/$NODE"
-        DATE="$(cat $NODE_PATH | grep Date | sed -r 's/Date +(.*)/\1/')"
-        SIZE="$(cat $NODE_PATH | grep Size | sed -r 's/Size +(.*)/\1/')"
-
-        print_node_verbose $NODE
+        counter=$((counter+1))
+        if [[ $counter -le $EMU_LOG_MAX ]]
+        then
+            if (( $(cat .emu_log | wc -l ) )) && ! (( $EMU_LOG_SUMMARY ))
+            then
+                echo ""
+            fi
+            print_node_details "$node"
+        fi
     done
-    cat .emu_log | less
-    rm -f .emu_log
 }
 
 main ()
 {
-    if [[ "$1" == "help" ]]
+    EMU_LOG_MAX=10000
+
+    test -n "$EMU_DEBUG" && set -x
+    exit_on_help_version $@
+
+    while getopts ":n:s" OPT
+    do
+        case $OPT in
+            n)
+                EMU_LOG_MAX=$OPTARG
+                ;;
+            s)
+                EMU_LOG_SUMMARY=1
+                ;;
+            \?)
+                emu_error "invalid option: -$OPTARG"
+                exit 1
+                ;;
+            :)
+                emu_error "option -$OPTARG requires an argument"
+                exit 1
+                ;;
+        esac
+    done
+
+    # dispose of args
+    while [ "${1:0:1}" = "-" ]
+    do
+        shift
+    done
+
+    get_source_dir_or_fail
+    pre_exec_hooks
+
+    local arg_list="$@"
+
+    if [ -z "$1" ]
     then
-        help
-        exit 0
+        # if no argument is given, generate a sink list of all sinks
+        arg_list="$(ls "$SOURCE_DIR/$EMU_DIR/sinks")"
     fi
 
-    pre_exec_hooks "$SOURCE_DIR"
-
-    if [[ "$1" == "" ]]
+    if ! (( $(ls "$SOURCE_DIR/$EMU_DIR/sinks" | wc -l) ))
     then
-        emu_error "no sink specified"
-        emu_panic
-        exit $EMU_EXIT_INCORRECT_COMMAND
-    fi
-
-    SINK_DIR="$(cat $SOURCE_DIR/.emu/sinks/$1 2>/dev/null)"
-    if [[ ! -d "$SINK_DIR" ]]
-    then
-        emu_error "sink '$1' does not exist"
+        # there are no sinks
+        emu_error "no sinks. See 'emu help sink'"
         emu_panic
         exit $EMU_EXIT_ERROR
     fi
 
-    print_nodes "$1"
+    rm -f .emu_log
+    touch .emu_log
 
-    post_exec_hooks "$SOURCE_DIR"
+    for arg in $arg_list
+    do
+        local in=$(echo "$1" | tr ":" "\n")
+        local sink=""
+        local snapshot=""
+
+        if [[ $(echo "$in" | wc -l) -eq 2 ]]
+        then
+            # <sink>:<snapshot> format
+            sink=$(echo "$in" | head -n1)
+        else
+            # not a ':' delimited input
+            sink="$arg"
+        fi
+
+        if [[ ! -f "$SOURCE_DIR/$EMU_DIR/sinks/$sink" ]]
+        then
+            emu_error "sink '$sink' does not exist"
+            rm -f .emu_log
+            emu_panic
+            exit $EMU_EXIT_ERROR
+        fi
+
+        SINK_DIR="$(cat $SOURCE_DIR/$EMU_DIR/sinks/$sink 2>/dev/null)"
+
+        if [ -z "$SINK_DIR" ] || [[ ! -d "$SINK_DIR" ]]
+        then
+            # sink files do not exist
+            emu_error "sink '$sink' is corrrupt"
+            rm -f .emu_log
+            emu_panic
+            exit $EMU_EXIT_ERROR
+        fi
+
+        if [[ $(echo "$in" | wc -l) -eq 2 ]]
+        then
+            # <sink>:<snapshot> format
+            snapshot=$(echo "$in" | tail -n1)
+
+            if [ "$snapshot" = "HEAD" ]
+            then
+                snapshot="$(cat "$SINK_DIR/$EMU_DIR/HEAD")"
+            fi
+
+            if [[ ! -d "$SINK_DIR/$EMU_DIR/trees/$snapshot" ]]
+            then
+                emu_error "snapshot '$snapshot' does not exist"
+                rm -f .emu_log
+                emu_panic
+                exit $EMU_EXIT_ERROR
+            fi
+        fi
+
+        if [ -z "$snapshot" ]
+        then
+            if [[ $(cat .emu_log | wc -l) -gt 0 ]]
+            then
+                echo "" >> .emu_log
+            fi
+            print_sink_details "$sink" >> .emu_log
+            print_all_node_details "$sink" >> .emu_log
+        else
+            print_node_details "$snapshot" > .emu_log
+        fi
+    done
+
+    less .emu_log
+    rm -f .emu_log
+
+    post_exec_hooks
     exit 0
 }
 main $@

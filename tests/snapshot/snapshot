@@ -1,0 +1,13 @@
+set -eu
+test_setup
+
+cd $EMU_TEST_DIR/test-source
+
+assert_fail "emu snapshot"
+emu init -v
+echo "hello, world!" > test
+emu sink -v add origin ../test-sink
+emu snapshot
+assert_strings_match "hello, world!" "$(cat ../test-sink/.emu/trees/*/test)"
+
+test_teardown
