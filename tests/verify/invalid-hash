@@ -1,0 +1,20 @@
+set -ex
+test_setup
+
+source=source
+
+# Make a snapshot
+emu init
+mkdir $source
+emu sink add origin $source
+emu snapshot
+hash=$(ls $source/.emu/nodes)
+
+set +e
+emu verify "abc$hash"
+if ! (( $? ))
+then
+    exit $EXIT_ASSERT_FAIL
+fi
+
+test_teardown
