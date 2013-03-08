@@ -120,11 +120,22 @@ fi
 echo ""
 
 # print failed test logs
-for log in $(find . -name "*.log")
-do
+failed_tests="$(find . -name '*.log')"
+error_log=../ERROR.log
+
+if [ -n "$failed_tests" ]; then
+    rm -f $error_log
+fi
+
+for log in $failed_tests; do
     log_name="${log%.log}"
-    echo ""
-    echo "$colour_fail${log_name:2}$colour_reset ($(cat $log | tail -n-1))"
-    cat $log | head -n-1
+    echo "" >> $error_log
+    echo "$colour_fail${log_name:2}$colour_reset ($(cat $log | tail -n-1))" >> $error_log
+    cat $log | head -n-1 >> $error_log
     rm -rf $log
 done
+
+if [ -n "$failed_tests" ]; then
+    echo ''
+    echo "A log file of failed tests can be found at '$(basename $error_log)'"
+fi
