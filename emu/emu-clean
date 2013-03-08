@@ -59,9 +59,7 @@ clean_in_progress() {
             rm -rf "$new"
             emu_echo "Removed directory '$new'"
         else
-            if [ -d "$new" ]; then
-                emu_echo "Directory '$new' will be removed"
-            fi
+            emu_echo "Directory '$new' will be removed"
         fi
     fi
 }
