@@ -30,7 +30,7 @@ add_sink ()
 
     if [ -z "$sink_name" ] || [ -z "$sink_path" ]
     then
-        print_help
+        emu_error "must specify <name> <path>"
         exit $EMU_EXIT_INCORRECT_COMMAND
     fi
 
