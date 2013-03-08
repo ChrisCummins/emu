@@ -11,10 +11,12 @@ test_setup ()
     rm -rvf "$EMU_TEST_DIR"
     mkdir -pv "$EMU_TEST_DIR"
     mkdir -pv "$EMU_TEST_DIR"/test-source
+    pushd "$EMU_TEST_DIR"
 }
 
 test_teardown ()
 {
+    popd
     rm -rvf "$EMU_TEST_DIR"
 }
 
