@@ -22,6 +22,10 @@ create_directories ()
 
 copy_template_files ()
 {
+    if [ -n "$EMU_VERBOSE" ]; then
+        emu_echo "using template dir '$EMU_SOURCE_TEMPLATE_DIR'"
+    fi
+
     # copy over files from shared templates dir
     rsync \
         $EMU_VERBOSE \
@@ -107,7 +111,7 @@ main ()
 
     if [ -z "$EMU_SOURCE_TEMPLATE_DIR" ]
     then
-        EMU_SOURCE_TEMPLATE_DIR="/usr/share/emu/source-templates"
+        EMU_SOURCE_TEMPLATE_DIR="/usr/local/share/emu/source-templates"
     fi
 
     if (( $EMU_DIR_CLEAN ))

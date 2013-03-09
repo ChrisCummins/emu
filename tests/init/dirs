@@ -10,7 +10,7 @@ assert_is_dir .emu/hooks/exec
 assert_is_dir .emu/hooks/snapshot
 assert_is_dir .emu/sinks
 assert_dir_is_empty .emu/sinks
-assert_files_match .emu/excludes /usr/share/emu/source-templates/excludes
-assert_dirs_match .emu/hooks /usr/share/emu/source-templates/hooks
+assert_files_match .emu/excludes /usr/local/share/emu/source-templates/excludes
+assert_dirs_match .emu/hooks /usr/local/share/emu/source-templates/hooks
 
 test_teardown
