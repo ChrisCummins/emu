@@ -3,11 +3,11 @@ test_setup
 
 source=source
 
-# Make a snapshot
+# Push a snapshot
 emu init
 mkdir $source
 emu sink add origin $source
-emu snapshot
+emu push
 hash=$(ls $source/.emu/nodes)
 
 # Verify snapshot

@@ -5,21 +5,13 @@ cd $EMU_TEST_DIR/test-source
 emu init -v
 emu sink add origin ../test-sink
 
-emu snapshot
-
 set +u
 source /usr/local/lib/libemu
 lock_dir
 set -u
 
+assert_fail "emu push"
 sleep 1
-assert_fail "emu snapshot"
-
-set +u
-unlock_dir
-set -u
-
-sleep 1
-emu snapshot
+emu push -f
 
 test_teardown

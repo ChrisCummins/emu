@@ -4,9 +4,9 @@ test_setup
 cd $EMU_TEST_DIR/test-source
 emu init -v
 
-assert_fail "emu snapshot"
+assert_fail "emu push"
 
 emu sink add origin ../test-sink
-emu snapshot
+emu push
 
 test_teardown

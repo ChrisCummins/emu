@@ -186,11 +186,11 @@ pop_tails ()
     done
 }
 
-# perform the a snapshot on sink
+# push the a snapshot on sink
 #  @param  $1 Path to sink directory
 #  @param  $2 Name of sink
 #  @return    Integer success value (non-zero indicates failure)
-perform_snapshot_on_sink ()
+push_snapshot_on_sink ()
 {
     local sink_dir="$1"
     local sink_name="$2"
@@ -205,7 +205,7 @@ perform_snapshot_on_sink ()
         pop_tails "$sink_dir" "$sink_name"
     fi
 
-    emu_echo "$sink_name: creating snapshot ($(sink_snapshot_count $sink_dir) of $(sink_max_snapshots $sink_dir))"
+    emu_echo "$sink_name: pushing snapshot ($(sink_snapshot_count $sink_dir) of $(sink_max_snapshots $sink_dir))"
 
     rsync \
         $EMU_VERBOSE \
@@ -249,9 +249,9 @@ perform_snapshot_on_sink ()
     return 0
 }
 
-# perform snapshots on all sink files
+# push snapshots to all sink files
 #  @var $SINK_FILES List of paths to sink files
-perform_snapshots ()
+push_snapshots ()
 {
     local snapshot_failed=0
 
@@ -260,7 +260,7 @@ perform_snapshots ()
         local sink="$(cat $sink_file)"
         local sink_name="$(basename $sink_file)"
 
-        perform_snapshot_on_sink "$sink" "$sink_name"
+        push_snapshot_on_sink "$sink" "$sink_name"
         if (( $? ))
         then
             snapshot_failed=1
@@ -339,7 +339,7 @@ main ()
 
     lock_dir "$SOURCE_DIR"
 
-    perform_snapshots
+    push_snapshots
     if (( $? ))
     then
         emu_error "at least one snapshot failed"

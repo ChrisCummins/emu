@@ -1,13 +1,14 @@
-.TH emu-snapshot 1  "March 08, 2013" "version 0.0.4" "Emu Manual"
+.TH emu-push 1  "March 08, 2013" "version 0.0.4" "Emu Manual"
 .SH NAME
-emu\-snapshot \- Record a snapshot of the source directory
+emu\-push \- Record a snapshot of the source directory
 .SH SYNOPSIS
-.B emu snapshot
+.B emu push
 [\-\-help] [\-\-version]
              [\-v] [\-p] [\-f] [\-F]
              [\-n] [\-M] [\-V] [<sink>...]
 .SH DESCRIPTION
-Store the current contents of the source directory in a new snapshot.
+Create a snapshot of the contents of the source directory and push onto all sink
+stacks.
 .PP
 The difference between the content of the source and the last snapshot in the
 sink is added to the sink and linked against the existing content, combining to
@@ -20,7 +21,7 @@ destination as the "sink". This is analogous to a electrical sources and sinks,
 the critical difference being of course that data can flow from the sink back to
 the source (in the case of a restore).
 .PP
-Some of the features of the snapshot features are:
+Some of the features of snapshot creation are:
 .IP \[bu]
 supports copying links, devices, owners, groups, and permissions
 .IP \[bu]
@@ -58,9 +59,9 @@ increase verbosity
 show progress during transfer
 .TP
 \-f
-force snapshot. This causes the program to disregard any exclusivity locks that
+force push. This causes the program to disregard any exclusivity locks that
 the source or sink directories may have. Not recommended for everyday
-consumption, but is useful after a previous snapshot attempt failed
+consumption, but is useful after a previous push attempt failed
 .TP
 \-F
 equivalent to \-f force option, but in addition causing emu to kill any process

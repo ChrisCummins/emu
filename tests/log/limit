@@ -6,11 +6,11 @@ emu init -v
 
 emu sink -v add origin ../test-sink
 
-emu snapshot -v
+emu push -v
 sleep 1
-emu snapshot -v
+emu push -v
 sleep 1
-emu snapshot -v
+emu push -v
 
 emu log -s > $EMU_TEST_DIR/log-summary
 if [[ "$(wc -l $EMU_TEST_DIR/log-summary | awk '{ print $1 }')" -ne 4 ]]

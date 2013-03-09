@@ -2,7 +2,7 @@
 .SH NAME
 emu\-verify \- Verify the contents of a sink snapshot
 .SH SYNOPSIS
-.B emu snapshot
+.B emu verify
 [\-\-help] [\-\-version] [option...] [<sink>:]<snapshot>
 .SH DESCRIPTION
 Performs a checksum of a snapshot within a sink directory, and reports on
@@ -27,7 +27,7 @@ show version information
 only print error and warning messages, all other output will be suppressed
 .SH HASH ALGORITHM
 The algorithm used to determine the checksum of a snapshot is not a perfect
-hasing algorithm, that is, it would be possible to make two different snapshots
+hashing algorithm, that is, it would be possible to make two different snapshots
 compute to the same checksum value, giving the appearance that their contents
 are the same. This is not a mistake on our part, but an intentional engineering
 decision to try to address the imbalance between quality of hashing algorithms

@@ -7,7 +7,7 @@ emu init -v
 emu sink -v add origin ../test-sink
 assert_zero "$(ls ../test-sink/.emu/nodes | wc -l)"
 assert_zero "$(ls ../test-sink/.emu/trees | wc -l)"
-emu snapshot -n
+emu push -n
 assert_zero "$(ls ../test-sink/.emu/nodes | wc -l)"
 assert_zero "$(ls ../test-sink/.emu/trees | wc -l)"
 

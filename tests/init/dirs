@@ -7,7 +7,7 @@ assert_is_dir .emu
 assert_is_dir .emu/config
 assert_is_dir .emu/hooks
 assert_is_dir .emu/hooks/exec
-assert_is_dir .emu/hooks/snapshot
+assert_is_dir .emu/hooks/push
 assert_is_dir .emu/sinks
 assert_dir_is_empty .emu/sinks
 assert_files_match .emu/excludes /usr/local/share/emu/source-templates/excludes

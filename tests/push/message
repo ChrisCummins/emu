@@ -3,12 +3,12 @@ test_setup
 
 cd $EMU_TEST_DIR/test-source
 
-assert_fail "emu snapshot"
+assert_fail "emu push"
 
 emu init -v
 emu sink -v add origin ../test-sink
 
-EMU_SNAPSHOT_MESSAGE="hello, world!" emu snapshot
+EMU_SNAPSHOT_MESSAGE="hello, world!" emu push
 
 assert_strings_match "$(cat ../test-sink/.emu/nodes/*.MSG)" "hello, world!"
 

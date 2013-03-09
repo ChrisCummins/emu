@@ -6,7 +6,7 @@ emu init -v
 
 emu sink -v add origin ../test-sink
 
-emu snapshot -v
+emu push -v
 
 snapshot=$(ls ../test-sink/.emu/nodes)
 

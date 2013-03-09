@@ -3,22 +3,22 @@ test_setup
 
 cd $EMU_TEST_DIR/test-source
 
-assert_fail "emu snapshot"
+assert_fail "emu push"
 
 emu init -v
 emu sink -v add origin ../test-sink
 
-emu snapshot
-emu snapshot
-emu snapshot
-emu snapshot
-emu snapshot
-emu snapshot
-emu snapshot
-emu snapshot
-emu snapshot
-emu snapshot
-emu snapshot
+emu push
+emu push
+emu push
+emu push
+emu push
+emu push
+emu push
+emu push
+emu push
+emu push
+emu push
 
 assert_strings_match "$(cat ../test-sink/.emu/config/SNAPSHOT-COUNT)" "$(ls ../test-sink/.emu/nodes | wc -l)"
 assert_strings_match "$(cat ../test-sink/.emu/config/SNAPSHOT-COUNT)" "$(ls ../test-sink/.emu/trees | wc -l)"

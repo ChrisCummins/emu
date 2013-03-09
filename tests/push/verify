@@ -8,7 +8,7 @@ emu init
 mkdir $source
 emu sink add origin $source
 
-# Make a snapshot and ensure the last line contains 'pass'
-emu snapshot -V | tail -n2 | grep 'pass'
+# Push a snapshot and ensure the last line contains 'pass'
+emu push -V | tail -n2 | grep 'pass'
 
 test_teardown

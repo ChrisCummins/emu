@@ -6,9 +6,9 @@ cd $EMU_TEST_DIR/test-source
 emu init -v
 emu sink -v add origin ../test-sink
 
-emu snapshot
-emu snapshot > ../tmp
-emu snapshot -v > ../tmp2
+emu push
+emu push > ../tmp
+emu push -v > ../tmp2
 
 if [[ "$(wc -l ../tmp2 | awk '{ print $1 }')" -le "$(wc -l ../tmp | awk '{ print $1 }')" ]]
 then
@@ -20,8 +20,8 @@ then
     exit 5
 fi
 
-emu snapshot -vp > ../tmp
-emu snapshot -p > ../tmp2
+emu push -vp > ../tmp
+emu push -p > ../tmp2
 
 if [[ "$(wc -l ../tmp2 | awk '{ print $1 }')" -lt "$(wc -l ../tmp | awk '{ print $1 }')" ]]
 then

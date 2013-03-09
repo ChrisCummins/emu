@@ -7,14 +7,14 @@ emu init -v
 emu sink -v add origin ../test-sink
 emu sink -v add test ../test-sink2
 
-emu snapshot -v
+emu push -v
 
 emu log > $EMU_TEST_DIR/log
 emu log origin > $EMU_TEST_DIR/log-origin
 emu log test > $EMU_TEST_DIR/log-test
 
 sleep 1
-emu snapshot -v
+emu push -v
 
 if [[ "$(wc -l $EMU_TEST_DIR/log | awk '{ print $1 }')" -lt "$(wc -l "$EMU_TEST_DIR"/log-origin | awk '{ print $1 }')" ]]
 then

@@ -7,11 +7,11 @@ emu init
 mkdir -pv $sink
 emu sink add origin $sink
 
-emu snapshot
+emu push
 sleep 1
-emu snapshot
+emu push
 sleep 1
-emu snapshot
+emu push
 cd $sink
 
 node=$(ls .emu/nodes | head -n1)
