@@ -1,8 +1,8 @@
-.TH emu-restore 1  "March 08, 2013" "version 0.0.4" "Emu Manual"
+.TH emu-peek 1  "March 08, 2013" "version 0.0.4" "Emu Manual"
 .SH NAME
-emu\-restore \- restore source to snapshot
+emu\-peek \- restore source to snapshot
 .SH SYNOPSIS
-.B emu restore
+.B emu peek
 [\-\-help] [\-\-verbose] [\-s] [\-V] [\-n] [\-v] [\-p] [\-f] [<stack>:]<snapshot>
 .SH DESCRIPTION
 Restores the contents of a snapshot to the source directory.
@@ -20,10 +20,10 @@ show this help and quit
 show version information
 .TP
 \-s
-push a snapshot at stack prior to restore
+push a snapshot at stack prior to peek
 .TP
 \-V
-verify snapshot prior to restore
+verify snapshot prior to peek
 .TP
 \-n
 perform a trial run with no changes made
@@ -35,7 +35,7 @@ increase verbosity
 show progress during transfer
 .TP
 \-f
-force restore. This makes emu disregard any exclusivity locks that the source or
+force peek. This makes emu disregard any exclusivity locks that the source or
 stack directories may have
 .SH EMU
 Part of the

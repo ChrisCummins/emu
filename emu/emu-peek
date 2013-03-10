@@ -64,7 +64,7 @@ main ()
         "$SNAPSHOT_DIR/" "$SOURCE_DIR"
     if (( $? ))
     then
-        emu_error "restore of '$STACK:$SNAPSHOT' failed"
+        emu_error "peek of '$STACK:$SNAPSHOT' failed"
     fi
 
     emu_echo "SOURCE at '$STACK:$SNAPSHOT'"

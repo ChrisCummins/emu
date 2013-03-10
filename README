@@ -29,7 +29,7 @@ the state of the filesystem from any one snapshot. Emu refers to the filesystem
 that is to be backed up as a "source". The destination for these source
 snapshots is referred to as a "stack". This is analogous tox electrical sources
 and stacks, the critical difference being of course that data can flow from an
-emu stack to the source (in the case of a restore).
+emu stack to the source (in the case of a peek).
 
 There are many different ways of creating snapshot backups. The first technique
 - the "tarball approach" - is to create a full copy of the source filesystem for
