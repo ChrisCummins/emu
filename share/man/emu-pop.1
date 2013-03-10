@@ -1,17 +1,20 @@
 .TH emu-pop 1  "March 08, 2013" "version 0.0.4" "Emu Manual"
 .SH NAME
-emu\-pop \- Reset source to snapshot
+emu\-pop \- pop snapshot from stack
 .SH SYNOPSIS
 .B emu pop
-[\-\-help] [\-\-version] [\-V] [\-n] [\-v] [\-p] [\-f]
-          [<stack>:]<snapshot>
+[\-\-help] [\-\-version]
+        [\-V] [\-n] [\-v] [\-p] [\-f]
+        [<stack>:]<snapshot>
 .SH DESCRIPTION
-Resets the contents of a snapshot to the source directory and stack HEAD. This
-means that all snapshot pushed after the given <snapshot> will be discarded.
+This is a destructive from of the
+.B emu-peek
+(1) command. It resets the contents of a snapshot to the source directory, and
+discards all snapshots on the stack more recent than the restored one.
 .PP
-If you have a stack with a set of sequential snapshot [A\->B\->C], running pop
-against snapshot A will reset the source to snapshot A and discard snapshots B
-and C, effectively re\-winding time.
+If you have a stack consisting of a set of sequential snapshot [A\->B\->C],
+popping snapshot B will discard snapshot C, restoring the working directory to
+snapshot B, leaving the stack in the state [A\->B].
 .SH OPTIONS
 .TP
 \-\-help

@@ -1,13 +1,13 @@
 .TH emu 1  "March 08, 2013" "version 0.0.4" "Emu Manual"
 .SH NAME
-emu \- Backup software that does what it should
+emu \- Snapshot backup software that builds stacks
 .SH SYNOPSIS
 .B emu
 [\-\-help] [\-\-version] <command> [<options>...]
 .SH OPTIONS
 .TP
 \-\-help
-show help pages specific to a given <command>
+show this help and quit
 .TP
 \-\-version
 print version information
@@ -15,7 +15,11 @@ print version information
 Below is a brief summary of the available commands. For more information on any,
 see
 .B emu help
+<command>, or
+.B emu
 <command>
+.B \-\-help
+.
 
           clean         remove locks and orphaned data
           hook          manage hooks
@@ -27,6 +31,8 @@ see
           push          push snapshot to stacks
           status        source status
           verify        validate snapshots
+.SH BACKGROUND
+
 .SH LICENSE
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in

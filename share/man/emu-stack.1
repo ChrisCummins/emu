@@ -1,13 +1,14 @@
 .TH emu-stack 1  "March 08, 2013" "version 0.0.4" "Emu Manual"
 .SH NAME
-emu\-stack \- Manage emu snapshot stacks
+emu\-stack \- manage set of emu stacks
 .SH SYNOPSIS
-.B emu stack
-[\-\-help] [\-\-version] [\-v] [\-q]
-          [add [\-s <number>] <stack> <path>]
-          [rm <stack>]
-          [mv <old> <new>]
-          [show <stack>]
+.sp
+.nf
+\fIemu stack\fR      [\-\-help] [\-\-version] [\-v] [\-q]
+\fIemu stack\fR add  [\-s <number>] <stack> <path>
+\fIemu stack\fR rm   <stack>
+\fIemu stack\fR mv   <old> <new>
+\fIemu stack\fR show <stack>
 .SH DESCRIPTION
 With no arguments, show a list of existing stacks. Alternatively, use one of the
 following subcommands.

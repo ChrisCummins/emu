@@ -3,9 +3,13 @@
 emu\-peek \- restore source to snapshot
 .SH SYNOPSIS
 .B emu peek
-[\-\-help] [\-\-verbose] [\-s] [\-V] [\-n] [\-v] [\-p] [\-f] [<stack>:]<snapshot>
+[\-\-help] [\-\-verbose]
+         [\-s] [\-V] [\-n]
+         [\-v] [\-p] [\-f]
+         [<stack>:]<snapshot>
 .SH DESCRIPTION
-Restores the contents of a snapshot to the source directory.
+Restores the contents of a snapshot to the source directory, without affect the
+status of the stack.
 .PP
 It uses the same difference and transfer algorithm as emu push, except the stack
 and source have been swapped so that the difference between the content of the

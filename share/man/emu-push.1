@@ -1,40 +1,39 @@
 .TH emu-push 1  "March 08, 2013" "version 0.0.4" "Emu Manual"
 .SH NAME
-emu\-push \- Record a snapshot of the source directory
+emu\-push \- record a snapshot of the source directory and push to stacks
 .SH SYNOPSIS
 .B emu push
 [\-\-help] [\-\-version]
-             [\-v] [\-p] [\-f] [\-F]
-             [\-n] [\-M] [\-V] [<stack>...]
+         [\-v] [\-p] [\-f] [\-F]
+         [\-n] [\-M] [\-V] [<stack>...]
 .SH DESCRIPTION
-Create a snapshot of the contents of the source directory and push onto all stack
+Create a snapshot of the contents of the source directory and push onto all
 stacks.
 .PP
 The difference between the content of the source and the last snapshot in the
-stack is added to the stack and linked against the existing content, combining to
-produce a full snapshot of the source directory. This enables emu stacks to be
-very compact, allowing multiple full snapshots to be stored in a space little
+stack is added to the stack and linked against the existing content, combining
+to produce a full snapshot of the source directory. This enables emu stacks to
+be very compact, allowing multiple full snapshots to be stored in a space little
 larger than a single full snapshot.
 .PP
-emu refers to the directory to be backed up as the "source" and the backup
-destination as the "stack". This is analogous to a electrical sources and stacks,
-the critical difference being of course that data can flow from the stack back to
-the source (in the case of a peek).
+Emu refers to the directory to be backed up as the "source" and the backup
+destination as the "stack"; this is because multiple snapshots are arranged in a
+stacking fashion. New snapshots are "pushed" form the source onto the stack, and
+snapshots can be "popped" from a stack onto the source.
 .PP
 Some of the features of snapshot creation are:
 .IP \[bu]
 supports copying links, devices, owners, groups, and permissions
 .IP \[bu]
-exclude and exclude\-from options in .emu/excludes
+exclude and exclude\-from options
 .IP \[bu]
 does not require super\-user privileges
 .PP
 emu uses the rsync file\-copying tool for its delta\-transfer algorithm, which
 reduces the amount of data sent by sending only the differences between the
-source files and the existing files in the stack.
-.PP
-Rsync finds files that need to be transferred using a "quick check" algorithm
-that looks for files that have changed in size or in last\-modified time.
+source files and the existing files in the stack. Rsync finds files that need to
+be transferred using a "quick check" algorithm that looks for files that have
+changed in size or in last\-modified time.
 .SH OPTIONS
 .TP
 \-\-help
