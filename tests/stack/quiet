@@ -8,15 +8,15 @@ emu init -v
 rm -fv output
 echo "touch output"
 touch output
-echo "emu sink -q add origin $EMU_TEST_DIR/test-sink &> output"
-emu sink -q add origin $EMU_TEST_DIR/test-sink &> output
+echo "emu stack -q add origin $EMU_TEST_DIR/test-stack &> output"
+emu stack -q add origin $EMU_TEST_DIR/test-stack &> output
 assert_file_is_empty output
 
 rm -fv output
 echo "touch output"
 touch output
-echo "emu sink -q rm origin &> output"
-emu sink -q rm origin &> output
+echo "emu stack -q rm origin &> output"
+emu stack -q rm origin &> output
 assert_file_is_empty output
 
 test_teardown

@@ -1,13 +1,13 @@
 set -ex
 test_setup
 
-sink=sink
+stack=stack
 
 emu init
-mkdir -pv $sink
-emu sink add origin $sink
+mkdir -pv $stack
+emu stack add origin $stack
 
-cd $sink
+cd $stack
 
 mkdir .emu/trees/new
 touch .emu/trees/new/test

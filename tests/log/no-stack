@@ -6,7 +6,7 @@ emu init -v
 
 assert_fail "emu log"
 
-emu sink -v add origin ../test-sink
+emu stack -v add origin ../test-stack
 
 emu log origin
 assert fail "emu log abc"

@@ -4,15 +4,15 @@ source /usr/local/lib/libemu
 cd $EMU_TEST_DIR/test-source
 
 emu init -v
-emu sink -v add test ../test-sink
+emu stack -v add test ../test-stack
 
-print_sink_details test > tmp
+print_stack_details test > tmp
 
 assert_file_is_not_empty tmp
 
 cat <<EOF > tmp2
 * test
-  Path:           $EMU_TEST_DIR/test-sink
+  Path:           $EMU_TEST_DIR/test-stack
   Size:           8.0K
   Last snapshot:  
   Snapshot count: 0 (0%)

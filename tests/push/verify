@@ -3,10 +3,10 @@ test_setup
 
 source=source
 
-# Create a sink
+# Create a stack
 emu init
 mkdir $source
-emu sink add origin $source
+emu stack add origin $source
 
 # Push a snapshot and ensure the last line contains 'pass'
 emu push -V | tail -n2 | grep 'pass'

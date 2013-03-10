@@ -3,97 +3,97 @@
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
 
-init_sink ()
+init_stack ()
 {
-    SINK_DIR="$1"
-    TEMPLATE_DIR="/usr/local/share/emu/sink-templates"
+    STACK_DIR="$1"
+    TEMPLATE_DIR="/usr/local/share/emu/stack-templates"
 
     exit_if_no_dir_permissions "$1"
-    mkdir $EMU_VERBOSE -p "$SINK_DIR/$EMU_DIR"
-    mkdir $EMU_VERBOSE -p "$SINK_DIR/$EMU_DIR/trees"
-    mkdir $EMU_VERBOSE -p "$SINK_DIR/$EMU_DIR/nodes"
-    mkdir $EMU_VERBOSE -p "$SINK_DIR/$EMU_DIR/config"
-    touch "$SINK_DIR/$EMU_DIR/HEAD"
-    echo $(pwd) > "$SINK_DIR/$EMU_DIR/SOURCE"
-    cp -n $EMU_VERBOSE "$TEMPLATE_DIR/config/SNAPSHOT-COUNT" "$SINK_DIR/$EMU_DIR/config"
+    mkdir $EMU_VERBOSE -p "$STACK_DIR/$EMU_DIR"
+    mkdir $EMU_VERBOSE -p "$STACK_DIR/$EMU_DIR/trees"
+    mkdir $EMU_VERBOSE -p "$STACK_DIR/$EMU_DIR/nodes"
+    mkdir $EMU_VERBOSE -p "$STACK_DIR/$EMU_DIR/config"
+    touch "$STACK_DIR/$EMU_DIR/HEAD"
+    echo $(pwd) > "$STACK_DIR/$EMU_DIR/SOURCE"
+    cp -n $EMU_VERBOSE "$TEMPLATE_DIR/config/SNAPSHOT-COUNT" "$STACK_DIR/$EMU_DIR/config"
 
     if ! (( $EMU_QUIET ))
     then
-        emu_echo "initialized sink at $SINK_DIR/$EMU_DIR"
+        emu_echo "initialized stack at $STACK_DIR/$EMU_DIR"
     fi
 }
 
-add_sink ()
+add_stack ()
 {
-    local sink_name="$1"
-    local sink_path="$2"
+    local stack_name="$1"
+    local stack_path="$2"
 
-    if [ -z "$sink_name" ] || [ -z "$sink_path" ]
+    if [ -z "$stack_name" ] || [ -z "$stack_path" ]
     then
         emu_error "must specify <name> <path>"
         exit $EMU_EXIT_INCORRECT_COMMAND
     fi
 
-    if [[ -f "$EMU_DIR/sinks/$sink_name" ]]
+    if [[ -f "$EMU_DIR/stacks/$stack_name" ]]
     then
-        emu_error "sink '$sink_name' already exists"
+        emu_error "stack '$stack_name' already exists"
         exit 1
     fi
 
     exit_if_no_dir_permissions "$EMU_DIR"
 
     # get absolute path
-    mkdir -p "$sink_path"
-    sink_path="$(get_absolute_path "$sink_path")"
+    mkdir -p "$stack_path"
+    stack_path="$(get_absolute_path "$stack_path")"
     pushd . &>/dev/null
-    cd "$sink_path"
-    if is_sink
+    cd "$stack_path"
+    if is_stack
     then
-        emu_error "'$sink_path' is already an emu sink"
+        emu_error "'$stack_path' is already an emu stack"
         exit $EMU_EXIT_ERROR
     fi
     popd &>/dev/null
 
-    echo "$sink_path" > "$EMU_DIR/sinks/$sink_name"
+    echo "$stack_path" > "$EMU_DIR/stacks/$stack_name"
 
-    # initialize sink
-    init_sink "$sink_path"
+    # initialize stack
+    init_stack "$stack_path"
 }
 
-rm_sink ()
+rm_stack ()
 {
-    if [[ ! -f "$EMU_DIR/sinks/$1" ]]
+    if [[ ! -f "$EMU_DIR/stacks/$1" ]]
     then
-        emu_error "sink '$1' does not exist"
+        emu_error "stack '$1' does not exist"
         exit 1
     fi
 
-    if (( $EMU_RM_SINK ))
+    if (( $EMU_RM_STACK ))
     then
-        rm $EMU_VERBOSE -rf "$(cat $EMU_DIR/sinks/$1)"
+        rm $EMU_VERBOSE -rf "$(cat $EMU_DIR/stacks/$1)"
     fi
 
-    rm $EMU_VERBOSE -f "$EMU_DIR/sinks/$1"
+    rm $EMU_VERBOSE -f "$EMU_DIR/stacks/$1"
     if ! (( $EMU_QUIET ))
     then
-        emu_echo "sink '$1' removed"
+        emu_echo "stack '$1' removed"
     fi
 }
 
-show_sink ()
+show_stack ()
 {
     if [[ $@ == "" ]]
     then
-        SINKS="$(ls $EMU_DIR/sinks)"
+        STACKS="$(ls $EMU_DIR/stacks)"
     else
         FAILURE=0
         for ARG in $@
         do
-            if [[ -f "$EMU_DIR/sinks/$ARG" ]]
+            if [[ -f "$EMU_DIR/stacks/$ARG" ]]
             then
-                SINKS="$SINKS\n$ARG"
+                STACKS="$STACKS\n$ARG"
             else
-                emu_error "sink '$ARG' does not exist"
+                emu_error "stack '$ARG' does not exist"
                 FAILURE=1
             fi
 
@@ -103,27 +103,27 @@ show_sink ()
                 exit $EMU_EXIT_ERROR
             fi
 
-            SINKS="$(echo -e SINKS | tail -n+2)"
+            STACKS="$(echo -e STACKS | tail -n+2)"
         done
     fi
 
-    for SINK in $SINKS
+    for STACK in $STACKS
     do
-        print_sink_details "$SINK"
+        print_stack_details "$STACK"
     done
 }
 
-list_sinks ()
+list_stacks ()
 {
     if [ -z $EMU_VERBOSE ]
     then
-        ls "$EMU_DIR/sinks"
+        ls "$EMU_DIR/stacks"
     else
-        local table=.emu-sink.TMP
+        local table=.emu-stack.TMP
 
-        for SINK in $(ls "$EMU_DIR/sinks")
+        for STACK in $(ls "$EMU_DIR/stacks")
         do
-            echo -e "$SINK \t$(cat $EMU_DIR/sinks/$SINK)" >> $table
+            echo -e "$STACK \t$(cat $EMU_DIR/stacks/$STACK)" >> $table
         done
 
         # Print the table.
@@ -150,7 +150,7 @@ main ()
                 EMU_SNAPSHOT_COUNT="$OPTARG"
                 ;;
             R)
-                EMU_RM_SINK=1
+                EMU_RM_STACK=1
                 ;;
             t)
                 EMU_SOURCE_TEMPLATE_DIR="$OPTARG"
@@ -179,7 +179,7 @@ main ()
 
     get_source_dir_or_fail
 
-    if [ ! -d "$SOURCE_DIR/$EMU_DIR/sinks" ]
+    if [ ! -d "$SOURCE_DIR/$EMU_DIR/stacks" ]
     then
         emu_error "not an emu source"
         emu_panic
@@ -188,19 +188,19 @@ main ()
 
     case "$1" in
         "")
-            list_sinks
+            list_stacks
             ;;
         "add")
             shift
-            add_sink $1 $2
+            add_stack $1 $2
             ;;
         "rm")
             shift
-            rm_sink $@
+            rm_stack $@
             ;;
         "show")
             shift
-            show_sink $@
+            show_stack $@
             ;;
         *)
             command_not_found "$1"

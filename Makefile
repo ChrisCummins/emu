@@ -59,7 +59,7 @@ uninstall-exec:
 	rm -f /usr/local/bin/emu-log
 	rm -f /usr/local/bin/emu-reset
 	rm -f /usr/local/bin/emu-restore
-	rm -f /usr/local/bin/emu-sink
+	rm -f /usr/local/bin/emu-stack
 	rm -f /usr/local/bin/emu-status
 	rm -f /usr/local/bin/emu-push
 	rm -f /usr/local/bin/emu-verify

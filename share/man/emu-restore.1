@@ -3,13 +3,13 @@
 emu\-restore \- restore source to snapshot
 .SH SYNOPSIS
 .B emu restore
-[\-\-help] [\-\-verbose] [\-s] [\-V] [\-n] [\-v] [\-p] [\-f] [<sink>:]<snapshot>
+[\-\-help] [\-\-verbose] [\-s] [\-V] [\-n] [\-v] [\-p] [\-f] [<stack>:]<snapshot>
 .SH DESCRIPTION
 Restores the contents of a snapshot to the source directory.
 .PP
-It uses the same difference and transfer algorithm as emu push, except the sink
+It uses the same difference and transfer algorithm as emu push, except the stack
 and source have been swapped so that the difference between the content of the
-sink snapshot and source is written to the source, restoring the state of the
+stack snapshot and source is written to the source, restoring the state of the
 source to match that of the snapshot.
 .SH OPTIONS
 .TP
@@ -20,7 +20,7 @@ show this help and quit
 show version information
 .TP
 \-s
-push a snapshot at sink prior to restore
+push a snapshot at stack prior to restore
 .TP
 \-V
 verify snapshot prior to restore
@@ -36,7 +36,7 @@ show progress during transfer
 .TP
 \-f
 force restore. This makes emu disregard any exclusivity locks that the source or
-sink directories may have
+stack directories may have
 .SH EMU
 Part of the
 .B emu

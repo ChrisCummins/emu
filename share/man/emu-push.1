@@ -5,20 +5,20 @@ emu\-push \- Record a snapshot of the source directory
 .B emu push
 [\-\-help] [\-\-version]
              [\-v] [\-p] [\-f] [\-F]
-             [\-n] [\-M] [\-V] [<sink>...]
+             [\-n] [\-M] [\-V] [<stack>...]
 .SH DESCRIPTION
-Create a snapshot of the contents of the source directory and push onto all sink
+Create a snapshot of the contents of the source directory and push onto all stack
 stacks.
 .PP
 The difference between the content of the source and the last snapshot in the
-sink is added to the sink and linked against the existing content, combining to
-produce a full snapshot of the source directory. This enables emu sinks to be
+stack is added to the stack and linked against the existing content, combining to
+produce a full snapshot of the source directory. This enables emu stacks to be
 very compact, allowing multiple full snapshots to be stored in a space little
 larger than a single full snapshot.
 .PP
 emu refers to the directory to be backed up as the "source" and the backup
-destination as the "sink". This is analogous to a electrical sources and sinks,
-the critical difference being of course that data can flow from the sink back to
+destination as the "stack". This is analogous to a electrical sources and stacks,
+the critical difference being of course that data can flow from the stack back to
 the source (in the case of a restore).
 .PP
 Some of the features of snapshot creation are:
@@ -31,7 +31,7 @@ does not require super\-user privileges
 .PP
 emu uses the rsync file\-copying tool for its delta\-transfer algorithm, which
 reduces the amount of data sent by sending only the differences between the
-source files and the existing files in the sink.
+source files and the existing files in the stack.
 .PP
 Rsync finds files that need to be transferred using a "quick check" algorithm
 that looks for files that have changed in size or in last\-modified time.
@@ -60,12 +60,12 @@ show progress during transfer
 .TP
 \-f
 force push. This causes the program to disregard any exclusivity locks that
-the source or sink directories may have. Not recommended for everyday
+the source or stack directories may have. Not recommended for everyday
 consumption, but is useful after a previous push attempt failed
 .TP
 \-F
 equivalent to \-f force option, but in addition causing emu to kill any process
-owning a sink or source lock and removing any in\-progress snapshot
+owning a stack or source lock and removing any in\-progress snapshot
 data. Exercise caution or heads will explode
 .TP
 \-V

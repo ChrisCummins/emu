@@ -4,11 +4,11 @@ test_setup
 cd $EMU_TEST_DIR/test-source
 emu init -v
 
-emu sink -v add origin ../test-sink
+emu stack -v add origin ../test-stack
 
 emu push -v
 
-snapshot=$(ls ../test-sink/.emu/nodes)
+snapshot=$(ls ../test-stack/.emu/nodes)
 
 echo "emu log origin:$snapshot"
 emu log origin:$snapshot

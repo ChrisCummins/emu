@@ -10,8 +10,8 @@ finish() {
         dir="$SOURCE_DIR"
     fi
 
-    if [ -n "$SINK_DIR" ]; then
-        dir="$SINK_DIR"
+    if [ -n "$STACK_DIR" ]; then
+        dir="$STACK_DIR"
     fi
 
     if [ -n "$dir" ]; then
@@ -179,14 +179,14 @@ emu_panic ()
         execute_hooks "error" "$SOURCE_DIR"
         unlock_dir "$SOURCE_DIR"
 
-        # unlock all sinks
-        for sink_file in "$SOURCE_DIR/$EMU_DIR/sinks"
+        # unlock all stacks
+        for stack_file in "$SOURCE_DIR/$EMU_DIR/stacks"
         do
-            if [[ -f "$sink_file" ]]
+            if [[ -f "$stack_file" ]]
             then
-                local sink="$(cat $sink_file)"
+                local stack="$(cat $stack_file)"
 
-                unlock_dir "$sink"
+                unlock_dir "$stack"
             fi
         done
     fi
@@ -262,7 +262,7 @@ is_source ()
 
     if [[ -f "$dir/$EMU_DIR/excludes" ]] \
         && [[ -d "$dir/$EMU_DIR/hooks" ]] \
-        && [[ -d "$dir/$EMU_DIR/sinks" ]]
+        && [[ -d "$dir/$EMU_DIR/stacks" ]]
     then
         return 0
     else
@@ -338,9 +338,9 @@ get_source_dir_or_fail ()
     fi
 }
 
-# returns whether a directory is a sink or not
+# returns whether a directory is a stack or not
 #  @param $1 (optional) path to directory
-is_sink ()
+is_stack ()
 {
     local dir="$1"
 
@@ -358,30 +358,30 @@ is_sink ()
     fi
 }
 
-_test_sink_dir ()
+_test_stack_dir ()
 {
     dir="$(pwd -P)"
 
-    if ! is_sink "$dir"
+    if ! is_stack "$dir"
     then
         if [[ "$dir" != "/" ]]
         then
             cd ..
-            get_sink_dir
+            get_stack_dir
         else
-            # reached top of tree (/), sink dir not found
-            SINK_DIR=""
+            # reached top of tree (/), stack dir not found
+            STACK_DIR=""
         fi
     else
-        SINK_DIR="$dir"
+        STACK_DIR="$dir"
     fi
 }
 
-# recurse up a directory tree, looking for an emu sink
+# recurse up a directory tree, looking for an emu stack
 #  @param   $1        (optional) The directory to start the search for the
-#                     sink in
-#  @preturn $SINK_DIR The sink directory, or empty if not found
-get_sink_dir ()
+#                     stack in
+#  @preturn $STACK_DIR The stack directory, or empty if not found
+get_stack_dir ()
 {
     local dir="$1"
 
@@ -393,7 +393,7 @@ get_sink_dir ()
     pushd . &>/dev/null
     # navigate to and recurse the directory tree
     cd "$dir"
-    if _test_sink_dir
+    if _test_stack_dir
     then
         r=0
     else
@@ -617,53 +617,53 @@ execute_hooks() {
     fi
 }
 
-## Sinks #######################################################################
+## Stacks #######################################################################
 
-# return the number of snapshots in sink
-#  @param $1 Path to sink directory
-sink_snapshot_count ()
+# return the number of snapshots in stack
+#  @param $1 Path to stack directory
+stack_snapshot_count ()
 {
     echo "$(ls -l "$1/$EMU_DIR/trees" | wc -l)"
 }
 
-# return the max number of snapshots for sink
-#  @param $1 Path to sink directory
-sink_max_snapshots ()
+# return the maximum size of the stack
+#  @param $1 Path to stack directory
+stack_max_snapshots ()
 {
     echo "$(cat $1/$EMU_DIR/config/SNAPSHOT-COUNT)"
 }
 
-# prints details about a given sink
-#  @param $1          name of the sink
+# prints details about a given stack
+#  @param $1          name of the stack
 #  @var   $SOURCE_DIR (optional) path of source directory
-print_sink_details ()
+print_stack_details ()
 {
-    local sink_name="$1"
+    local stack_name="$1"
 
     if [ -z "$SOURCE_DIR" ]
     then
         get_source_dir
     fi
 
-    local sink_path="$(cat $SOURCE_DIR/$EMU_DIR/sinks/$sink_name)"
-    local size="$(du -sh $sink_path | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')"
-    local head="$(cat $sink_path/$EMU_DIR/HEAD)"
-    local snapshot_count="$(ls $sink_path/$EMU_DIR/trees | wc -l)"
-    local load=$(echo "$snapshot_count / $(cat $sink_path/$EMU_DIR/config/SNAPSHOT-COUNT) * 100" | bc -l)
+    local stack_path="$(cat $SOURCE_DIR/$EMU_DIR/stacks/$stack_name)"
+    local size="$(du -sh $stack_path | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')"
+    local head="$(cat $stack_path/$EMU_DIR/HEAD)"
+    local snapshot_count="$(ls $stack_path/$EMU_DIR/trees | wc -l)"
+    local load=$(echo "$snapshot_count / $(cat $stack_path/$EMU_DIR/config/SNAPSHOT-COUNT) * 100" | bc -l)
 
     if (( $EMU_LOG_SUMMARY ))
     then
-        # summary sink info
+        # summary stack info
         cat <<EOF
-* $1 ($sink_path)
+* $1 ($stack_path)
 EOF
     else
-        # verbose sink info
+        # verbose stack info
         cat <<EOF | less
 * $1
-  Path:           $sink_path
+  Path:           $stack_path
   Size:           $size
-  Last snapshot:  $(cat $sink_path/$EMU_DIR/nodes/$head 2>/dev/null | grep Date | sed -r 's/Date +(.*)/\1/')
+  Last snapshot:  $(cat $stack_path/$EMU_DIR/nodes/$head 2>/dev/null | grep Date | sed -r 's/Date +(.*)/\1/')
   Snapshot count: $snapshot_count (${load::2}%)
 EOF
     fi
@@ -671,11 +671,11 @@ EOF
 
 # prints details about a given node
 #  @param $1          name of the node
-#  @var   $SINK_DIR   directory of the node sink
+#  @var   $STACK_DIR   directory of the node stack
 print_node_details ()
 {
     local node="$1"
-    local node_path="$SINK_DIR/$EMU_DIR/nodes/$node"
+    local node_path="$STACK_DIR/$EMU_DIR/nodes/$node"
     local node_date="$(cat $node_path | grep Date | sed -r 's/Date +(.*)/\1/')"
     local node_size="$(cat $node_path | grep Size | sed -r 's/Size +(.*)/\1/')"
 

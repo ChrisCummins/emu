@@ -27,14 +27,14 @@ A snapshot backup system is one in which multiple full "snapshots" of a file
 system are built up incrementally, allowing the user to see, explore or restore
 the state of the filesystem from any one snapshot. Emu refers to the filesystem
 that is to be backed up as a "source". The destination for these source
-snapshots is referred to as a "sink". This is analogous tox electrical sources
-and sinks, the critical difference being of course that data can flow from an
-emu sink to the source (in the case of a restore).
+snapshots is referred to as a "stack". This is analogous tox electrical sources
+and stacks, the critical difference being of course that data can flow from an
+emu stack to the source (in the case of a restore).
 
 There are many different ways of creating snapshot backups. The first technique
 - the "tarball approach" - is to create a full copy of the source filesystem for
 each snapshot, and to store them in a common location. This is the least
-efficient means of backup creation possible, as the size of the sink dataset
+efficient means of backup creation possible, as the size of the stack dataset
 becomes a linear multiple of the size of the source. So two snapshots require
 double the space of a single snapshot. However, this technique is robust, as the
 independence of the sanpshots means that the loss of one will not affect any
@@ -49,15 +49,15 @@ chain), and the extra computation required to reverse engineer a source from a
 set of snapshots can make snapshots and restorations more time consuming.
 
 The technique that emu uses combines the strenghts of the tarball and
-incremental approaches to produce a robust sink with minimal data bandwidth
+incremental approaches to produce a robust stack with minimal data bandwidth
 requirements and fast execution times.
 
 HOW IT WORKS
 --------------------------------------------------------------------------------
 One of the key features of emu is the way in which snapshots are stored within a
-sink.
+stack.
 
-There is a 1-n relationship of sources to sinks. That means that for any
+There is a 1-n relationship of sources to stacks. That means that for any
 filesystem that the user wishes to backup, there may be as many backup
 destinations as they wish. This enables multiple redundancy in the case of
 catastrophic data loss.

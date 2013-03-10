@@ -16,9 +16,9 @@ main ()
 
     if [[ $(echo "$IN" | wc -l) -ne 2 ]]
     then
-        if [[ $(ls "$SOURCE_DIR/$EMU_DIR/sinks" | wc -l) -eq 1 ]]
+        if [[ $(ls "$SOURCE_DIR/$EMU_DIR/stacks" | wc -l) -eq 1 ]]
         then
-            SINK="$(ls $SOURCE_DIR/$EMU_DIR/sinks)"
+            STACK="$(ls $SOURCE_DIR/$EMU_DIR/stacks)"
         else
             emu_error "invalid snapshot"
             emu_panic
@@ -26,15 +26,15 @@ main ()
         fi
     fi
 
-    if [ "$SINK" = "" ]
+    if [ "$STACK" = "" ]
     then
-        SINK=$(echo "$IN" | head -n1)
+        STACK=$(echo "$IN" | head -n1)
     fi
 
-    SINK_DIR="$(cat $SOURCE_DIR/$EMU_DIR/sinks/$SINK 2>/dev/null)"
-    if [[ ! -d "$SINK_DIR" ]]
+    STACK_DIR="$(cat $SOURCE_DIR/$EMU_DIR/stacks/$STACK 2>/dev/null)"
+    if [[ ! -d "$STACK_DIR" ]]
     then
-        emu_error "sink '$SINK' does not exist"
+        emu_error "stack '$STACK' does not exist"
         emu_panic
         exit $EMU_EXIT_ERROR
     fi
@@ -42,10 +42,10 @@ main ()
     SNAPSHOT=$(echo "$IN" | tail -n1)
     if [ "$SNAPSHOT" = "HEAD" ]
     then
-        SNAPSHOT="$(cat "$SINK_DIR/$EMU_DIR/HEAD")"
+        SNAPSHOT="$(cat "$STACK_DIR/$EMU_DIR/HEAD")"
     fi
 
-    SNAPSHOT_DIR="$SINK_DIR/$EMU_DIR/trees/$SNAPSHOT"
+    SNAPSHOT_DIR="$STACK_DIR/$EMU_DIR/trees/$SNAPSHOT"
     if [[ ! -d "$SNAPSHOT_DIR" ]]
     then
         emu_error "snapshot '$SNAPSHOT' does not exist"

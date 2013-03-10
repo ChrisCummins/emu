@@ -6,7 +6,7 @@ emu\-init \- Create or reinitialize an existing emu source
 [\-\-help] [\-\-version] [\-v] q[\-t <template-dir>] [\-q] [\-R] [\-C]
 .SH DESCRIPTION
 This command creates an empty emu source. This means creating a .emu
-directory with subdirectories for hooks, sink refs and configuration files.
+directory with subdirectories for hooks, stack refs and configuration files.
 .PP
 During the init process, template files are copied from the global templates
 path, normally /usr/share/emu. Use of option -t to specify a template directory
@@ -40,7 +40,7 @@ file with the template
 .TP
 \-C
 clean directory. This undoes the effect of an init, clearing the .emu
-directory. It does not affect sinks, though it will remove refs to them
+directory. It does not affect stacks, though it will remove refs to them
 .SH EXAMPLES
 .TP
 Start an emu source in the current directory:

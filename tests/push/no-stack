@@ -6,7 +6,7 @@ emu init -v
 
 assert_fail "emu push"
 
-emu sink add origin ../test-sink
+emu stack add origin ../test-stack
 emu push
 
 test_teardown

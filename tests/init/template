@@ -11,7 +11,7 @@ assert_is_not_dir .emu
 mkdir -pv $EMU_TEST_DIR/test-template
 mkdir -pv $EMU_TEST_DIR/test-template/config
 mkdir -pv $EMU_TEST_DIR/test-template/hooks
-mkdir -pv $EMU_TEST_DIR/test-template/sinks
+mkdir -pv $EMU_TEST_DIR/test-template/stacks
 echo "test" > $EMU_TEST_DIR/test-template/excludes
 echo "hello, test!" > $EMU_TEST_DIR/test-template/abc
 

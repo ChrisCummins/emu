@@ -3,7 +3,7 @@ test_setup
 
 cd $EMU_TEST_DIR/test-source
 emu init -v
-emu sink add origin ../test-sink
+emu stack add origin ../test-stack
 
 set +u
 source /usr/local/lib/libemu

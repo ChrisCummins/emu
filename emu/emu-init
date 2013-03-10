@@ -16,8 +16,8 @@ create_directories ()
     mkdir $EMU_VERBOSE -p "$SOURCE_DIR/$EMU_DIR"
     mkdir $EMU_VERBOSE -p "$SOURCE_DIR/$EMU_DIR/config"
     mkdir $EMU_VERBOSE -p "$SOURCE_DIR/$EMU_DIR/hooks"
-    mkdir $EMU_VERBOSE -p "$SOURCE_DIR/$EMU_DIR/sinks"
-    chmod 0755 "$SOURCE_DIR/$EMU_DIR/sinks"
+    mkdir $EMU_VERBOSE -p "$SOURCE_DIR/$EMU_DIR/stacks"
+    chmod 0755 "$SOURCE_DIR/$EMU_DIR/stacks"
 }
 
 copy_template_files ()

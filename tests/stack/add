@@ -4,13 +4,13 @@ test_setup
 cd $EMU_TEST_DIR/test-source
 echo "emu init -v"
 emu init -v
-echo "emu sink add origin $EMU_TEST_DIR/test-sink"
-emu sink add origin $EMU_TEST_DIR/test-sink
+echo "emu stack add origin $EMU_TEST_DIR/test-stack"
+emu stack add origin $EMU_TEST_DIR/test-stack
 
-assert_fail "emu sink -v add origin $EMU_TEST_DIR/test-sink"
+assert_fail "emu stack -v add origin $EMU_TEST_DIR/test-stack"
 
 emu init -v
-emu sink -v add test $EMU_TEST_DIR/test-new
+emu stack -v add test $EMU_TEST_DIR/test-new
 
 assert_is_dir "$EMU_TEST_DIR/test-new"
 assert_dir_is_not_empty "$EMU_TEST_DIR/test-new"

@@ -3,14 +3,14 @@
 source /usr/local/lib/libemu
 EMU_ECHO_PREFIX=$(basename "$0")
 
-# print the nodes for a sink
-#  @param $1 name of sink
+# print the nodes for a stack
+#  @param $1 name of stack
 print_all_node_details ()
 {
-    local sink="$1"
+    local stack="$1"
     local counter=0
 
-    for node in $(ls "$SINK_DIR/$EMU_DIR/nodes" | sort -r)
+    for node in $(ls "$STACK_DIR/$EMU_DIR/nodes" | sort -r)
     do
         counter=$((counter+1))
         if [[ $counter -le $EMU_LOG_MAX ]]
@@ -60,14 +60,14 @@ main ()
 
     if [ -z "$1" ]
     then
-        # if no argument is given, generate a sink list of all sinks
-        arg_list="$(ls "$SOURCE_DIR/$EMU_DIR/sinks")"
+        # if no argument is given, generate a stack list of all stacks
+        arg_list="$(ls "$SOURCE_DIR/$EMU_DIR/stacks")"
     fi
 
-    if ! (( $(ls "$SOURCE_DIR/$EMU_DIR/sinks" | wc -l) ))
+    if ! (( $(ls "$SOURCE_DIR/$EMU_DIR/stacks" | wc -l) ))
     then
-        # there are no sinks
-        emu_error "no sinks. See 'emu help sink'"
+        # there are no stacks
+        emu_error "no stacks. See 'emu help stack'"
         emu_panic
         exit $EMU_EXIT_ERROR
     fi
@@ -78,32 +78,32 @@ main ()
     for arg in $arg_list
     do
         local in=$(echo "$1" | tr ":" "\n")
-        local sink=""
+        local stack=""
         local snapshot=""
 
         if [[ $(echo "$in" | wc -l) -eq 2 ]]
         then
-            # <sink>:<snapshot> format
-            sink=$(echo "$in" | head -n1)
+            # <stack>:<snapshot> format
+            stack=$(echo "$in" | head -n1)
         else
             # not a ':' delimited input
-            sink="$arg"
+            stack="$arg"
         fi
 
-        if [[ ! -f "$SOURCE_DIR/$EMU_DIR/sinks/$sink" ]]
+        if [[ ! -f "$SOURCE_DIR/$EMU_DIR/stacks/$stack" ]]
         then
-            emu_error "sink '$sink' does not exist"
+            emu_error "stack '$stack' does not exist"
             rm -f .emu_log
             emu_panic
             exit $EMU_EXIT_ERROR
         fi
 
-        SINK_DIR="$(cat $SOURCE_DIR/$EMU_DIR/sinks/$sink 2>/dev/null)"
+        STACK_DIR="$(cat $SOURCE_DIR/$EMU_DIR/stacks/$stack 2>/dev/null)"
 
-        if [ -z "$SINK_DIR" ] || [[ ! -d "$SINK_DIR" ]]
+        if [ -z "$STACK_DIR" ] || [[ ! -d "$STACK_DIR" ]]
         then
-            # sink files do not exist
-            emu_error "sink '$sink' is corrrupt"
+            # stack files do not exist
+            emu_error "stack '$stack' is corrrupt"
             rm -f .emu_log
             emu_panic
             exit $EMU_EXIT_ERROR
@@ -111,15 +111,15 @@ main ()
 
         if [[ $(echo "$in" | wc -l) -eq 2 ]]
         then
-            # <sink>:<snapshot> format
+            # <stack>:<snapshot> format
             snapshot=$(echo "$in" | tail -n1)
 
             if [ "$snapshot" = "HEAD" ]
             then
-                snapshot="$(cat "$SINK_DIR/$EMU_DIR/HEAD")"
+                snapshot="$(cat "$STACK_DIR/$EMU_DIR/HEAD")"
             fi
 
-            if [[ ! -d "$SINK_DIR/$EMU_DIR/trees/$snapshot" ]]
+            if [[ ! -d "$STACK_DIR/$EMU_DIR/trees/$snapshot" ]]
             then
                 emu_error "snapshot '$snapshot' does not exist"
                 rm -f .emu_log
@@ -134,8 +134,8 @@ main ()
             then
                 echo "" >> .emu_log
             fi
-            print_sink_details "$sink" >> .emu_log
-            print_all_node_details "$sink" >> .emu_log
+            print_stack_details "$stack" >> .emu_log
+            print_all_node_details "$stack" >> .emu_log
         else
             print_node_details "$snapshot" > .emu_log
         fi

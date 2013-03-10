@@ -81,7 +81,7 @@ clean_broken_symlinks() {
     done
 }
 
-clean_sink() {
+clean_stack() {
     local dir="$1"
 
     execute_hooks "pre" "$dir"
@@ -134,14 +134,14 @@ main() {
     dir="$(pwd)"
 
     get_source_dir
-    get_sink_dir
+    get_stack_dir
 
-    if [ -n "$SINK_DIR" ]; then
-        clean_sink "$SINK_DIR"
+    if [ -n "$STACK_DIR" ]; then
+        clean_stack "$STACK_DIR"
     elif [ -n "$SOURCE_DIR" ]; then
         clean_source "$SOURCE_DIR"
     else
-        emu_error "'$dir' is neither a sink or a source"
+        emu_error "'$dir' is neither a stack or a source"
         exit $EMU_EXIT_ERROR
     fi
 

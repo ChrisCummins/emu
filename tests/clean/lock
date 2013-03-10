@@ -2,7 +2,7 @@ set -eux
 test_setup
 
 lock=.emu/LOCK
-sink=sink
+stack=stack
 
 emu init
 echo -e "DATE: $(date)\nPID:  $$" > $lock
@@ -18,9 +18,9 @@ emu clean
 set -e
 assert_is_not_file $lock
 
-mkdir -pv $sink
-emu sink add origin $sink
-cd $sink
+mkdir -pv $stack
+emu stack add origin $stack
+cd $stack
 echo -e "DATE: $(date)\nPID:  $$" > $lock
 assert_is_file $lock
 

@@ -1,14 +1,14 @@
 set -ex
 test_setup
 
-sink=sink
+stack=stack
 link=broken-link
 
 emu init
-mkdir -pv $sink
-emu sink add origin $sink
+mkdir -pv $stack
+emu stack add origin $stack
 
-cd $sink
+cd $stack
 
 ln -s /broken/file/path $link
 assert_is_broken_link "$link"
