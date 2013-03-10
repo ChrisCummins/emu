@@ -8,7 +8,10 @@ main ()
     test -n "$EMU_DEBUG" && set -x
     exit_on_help_version $@
 
+    set -e
     emu peek $@
+    set +e
+
     get_source_dir_or_fail
     execute_hooks "pre" "$SOURCE_DIR"
 
