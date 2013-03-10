@@ -5,6 +5,12 @@ cd $EMU_TEST_DIR/test-source
 emu init -v
 
 emu stack -v add origin ../test-stack
-emu log
+
+emu push -v
+
+snapshot=$(ls ../test-stack/.emu/nodes)
+
+echo "emu log origin:$snapshot"
+emu log origin:$snapshot
 
 test_teardown

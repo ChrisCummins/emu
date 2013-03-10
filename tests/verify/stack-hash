@@ -2,21 +2,22 @@ set -ex
 test_setup
 
 source=source
+name=origin
 
 # Push a snapshot
 emu init
 mkdir $source
-emu stack add origin $source
+emu stack add $name $source
 emu push
 hash=$(ls $source/.emu/nodes)
 
 # Verify snapshot
-emu verify $hash
+emu verify $name:$hash
 
 # Break snapshot and test verify failure
 touch $source/.emu/trees/$hash/a
 set +e
-emu verify $hash
+emu verify $name:$hash
 if ! (( $? ))
 then
     exit $EXIT_ASSERT_FAIL

@@ -1,0 +1,31 @@
+set -eu
+test_setup
+
+cd $EMU_TEST_DIR/test-source
+assert_fail "emu stack"
+
+emu init -v
+assert_success "emu stack"
+
+assert_is_not_dir "$EMU_TEST_DIR/test-stack"
+
+echo "emu stack add origin $EMU_TEST_DIR/test-stack"
+emu stack add origin $EMU_TEST_DIR/test-stack
+echo "emu stack"
+if [ "$(emu stack)" != origin ]
+then
+    exit 5
+fi
+
+echo "emu stack -v"
+emu stack -v
+
+echo "emu stack add master $EMU_TEST_DIR/test-master"
+emu stack add master $EMU_TEST_DIR/test-master
+echo "emu stack"
+if [ "$(emu stack)" != $(ls .emu/stacks) ]
+then
+    exit 5
+fi
+
+test_teardown

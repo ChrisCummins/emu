@@ -1,14 +1,14 @@
 .TH emu-log 1  "March 08, 2013" "version 0.0.4" "Emu Manual"
 .SH NAME
-emu\-log \- Show sink snapshot logs
+emu\-log \- Show stack snapshot logs
 .SH SYNOPSIS
 .B emu log
-[\-\-help] [\-\-version] [\-n<number>] [\-s] [[<sink>:]<snapshot>]...
+[\-\-help] [\-\-version] [\-n<number>] [\-s] [[<stack>:]<snapshot>]...
 .SH DESCRIPTION
-Show emu snapshot logs for one or more sinks. If no <sink> is speficied, show
-logs for all sinks. If a <sink> is specified, show snapshot logs for only that
-sink. By specifying a :<snapshot>, the log for only that snapshot will be
-shown. The command uses the standard <sink>:<snapshot> syntax.
+Show snapshot logs for one or more stacks. If no <stack> is speficied, show logs
+for all stacks. If a <stack> is specified, show snapshot logs for only that
+stack. By specifying a :<snapshot>, the log for only that snapshot will be
+shown. The command uses the standard <stack>:<snapshot> syntax.
 .SH OPTIONS
 .TP
 \-\-help

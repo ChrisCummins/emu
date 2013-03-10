@@ -15,10 +15,10 @@ main ()
 
     if [[ $(echo "$input" | wc -l) -ne 2 ]]
     then
-        if [[ $(ls "$SOURCE_DIR/$EMU_DIR/sinks" | wc -l) -eq 1 ]]
+        if [[ $(ls "$SOURCE_DIR/$EMU_DIR/stacks" | wc -l) -eq 1 ]]
         then
-            # If there's only 1 sink, use that.
-            local sink="$(ls $SOURCE_DIR/$EMU_DIR/sinks)"
+            # If there's only 1 stack, use that.
+            local stack="$(ls $SOURCE_DIR/$EMU_DIR/stacks)"
         else
             emu_error "invalid snapshot"
             emu_panic
@@ -26,21 +26,21 @@ main ()
         fi
     fi
 
-    if [ -z "$sink" ]
+    if [ -z "$stack" ]
     then
-        local sink=$(echo "$input" | head -n1)
+        local stack=$(echo "$input" | head -n1)
     fi
 
-    local sink_dir="$(cat $SOURCE_DIR/$EMU_DIR/sinks/$sink 2>/dev/null)"
-    if [[ ! -d "$sink_dir" ]]
+    local stack_dir="$(cat $SOURCE_DIR/$EMU_DIR/stacks/$stack 2>/dev/null)"
+    if [[ ! -d "$stack_dir" ]]
     then
-        emu_error "sink '$sink' does not exist"
+        emu_error "stack '$stack' does not exist"
         emu_panic
         exit $EMU_EXIT_INCORRECT_COMMAND
     fi
 
     local snapshot=$(echo "$input" | tail -n1)
-    local node="$sink_dir/$EMU_DIR/trees/$snapshot"
+    local node="$stack_dir/$EMU_DIR/trees/$snapshot"
     if [[ ! -d "$node" ]]
     then
         emu_error "snapshot '$snapshot' does not exist"

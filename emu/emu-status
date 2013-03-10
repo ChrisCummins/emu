@@ -5,24 +5,24 @@ EMU_ECHO_PREFIX=$(basename "$0")
 
 print_status_table() {
     local dir="$1"
-    local sinks="$(ls "$dir/$EMU_DIR/sinks")"
+    local stacks="$(ls "$dir/$EMU_DIR/stacks")"
     local table=.status-TMP
 
     echo -e " REMOTE\t LAST SNAPSHOT\t CAPACITY\t SIZE\t DEV\t DISK USAGE" >> $table
-    for sink in $sinks; do
-        local sink_dir="$(cat $dir/$EMU_DIR/sinks/$sink)"
-        local newest="$(ls $sink_dir | sort | head -n1)"
-        local count="$(ls $sink_dir | wc -l)"
-        local max="$(cat "$sink_dir/$EMU_DIR/config/SNAPSHOT-COUNT")"
+    for stack in $stacks; do
+        local stack_dir="$(cat $dir/$EMU_DIR/stacks/$stack)"
+        local newest="$(ls $stack_dir | sort | head -n1)"
+        local count="$(ls $stack_dir | wc -l)"
+        local max="$(cat "$stack_dir/$EMU_DIR/config/SNAPSHOT-COUNT")"
         local perc="$(echo "($count / $max) * 100" | bc -l | xargs printf "%1.0f")%"
-        local du="$(df -h "$sink_dir" | tail -n1)"
+        local du="$(df -h "$stack_dir" | tail -n1)"
         local dev=$(echo "$du" | awk '{ print $6 }')
-        local size=$(du -s -h "$sink_dir" | awk '{ print $1 }')
+        local size=$(du -s -h "$stack_dir" | awk '{ print $1 }')
         local use=$(echo "$du" | awk '{ print $3 }')
         local dsize=$(echo "$du" | awk '{ print $2 }')
         local cap=$(echo "$du" | awk '{ print $5 }')
 
-        echo -e " $sink\t $newest\t ($count/$max) $perc\t $size\t $dev\t ($use/$dsize) $cap" >> $table
+        echo -e " $stack\t $newest\t ($count/$max) $perc\t $size\t $dev\t ($use/$dsize) $cap" >> $table
     done
 
     # Print the table.

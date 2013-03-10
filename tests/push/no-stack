@@ -4,7 +4,9 @@ test_setup
 cd $EMU_TEST_DIR/test-source
 emu init -v
 
-emu stack -v add origin ../test-stack
-emu log
+assert_fail "emu push"
+
+emu stack add origin ../test-stack
+emu push
 
 test_teardown

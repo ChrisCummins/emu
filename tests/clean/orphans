@@ -1,18 +1,18 @@
 set -eux
 test_setup
 
-sink=sink
+stack=stack
 
 emu init
-mkdir -pv $sink
-emu sink add origin $sink
+mkdir -pv $stack
+emu stack add origin $stack
 
-emu snapshot
+emu push
 sleep 1
-emu snapshot
+emu push
 sleep 1
-emu snapshot
-cd $sink
+emu push
+cd $stack
 
 node=$(ls .emu/nodes | head -n1)
 tree=$(ls .emu/trees | tail -n1)

@@ -4,9 +4,9 @@ test_setup
 cd $EMU_TEST_DIR/test-source
 emu init -v
 
-emu sink -v add origin ../test-sink
+emu stack -v add origin ../test-stack
 
-emu snapshot -v
+emu push -v
 
 emu log > $EMU_TEST_DIR/log
 emu log -s > $EMU_TEST_DIR/log-summary
@@ -30,7 +30,7 @@ then
 fi
 
 sleep 1
-emu snapshot -v
+emu push -v
 emu log -s > $EMU_TEST_DIR/log-summary
 if [[ "$(wc -l $EMU_TEST_DIR/log-summary | awk '{ print $1 }')" -ne 3 ]]
 then

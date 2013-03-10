@@ -1,0 +1,15 @@
+set -e
+test_setup
+
+cd $EMU_TEST_DIR/test-source
+
+assert_fail "emu push"
+
+emu init -v
+emu stack -v add origin ../test-stack
+
+EMU_SNAPSHOT_MESSAGE="hello, world!" emu push
+
+assert_strings_match "$(cat ../test-stack/.emu/nodes/*.MSG)" "hello, world!"
+
+test_teardown

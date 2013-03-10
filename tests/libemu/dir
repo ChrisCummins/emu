@@ -15,29 +15,29 @@ popd
 
 # test empty source
 get_source_dir
-get_sink_dir
+get_stack_dir
 assert_string_is_empty $SOURCE_DIR
-assert_string_is_empty $SINK_DIR
+assert_string_is_empty $STACK_DIR
 
 echo "assert_fail is_source"
 assert_fail is_source
-echo "assert_fail is_sink"
-assert_fail is_sink
+echo "assert_fail is_stack"
+assert_fail is_stack
 
 # test populated source
 emu init -v
 
 echo "assert_success is_source"
 assert_success is_source
-echo "assert_fail is_sink"
-assert_fail is_sink
+echo "assert_fail is_stack"
+assert_fail is_stack
 
 get_source_dir
-get_sink_dir
+get_stack_dir
 
 assert_string_is_not_empty $SOURCE_DIR
 assert_strings_match "$SOURCE_DIR" "$(pwd)"
-assert_string_is_empty $SINK_DIR
+assert_string_is_empty $STACK_DIR
 
 # test empty source
 rm -fr .emu
@@ -54,37 +54,37 @@ assert_string_is_not_empty $SOURCE_DIR
 cd ../../../../../
 assert_strings_match "$SOURCE_DIR" "$(pwd)"
 
-# test empty sink
-mkdir -pv ../test-sink
-cd ../test-sink
+# test empty stack
+mkdir -pv ../test-stack
+cd ../test-stack
 get_source_dir
-get_sink_dir
+get_stack_dir
 assert_string_is_empty $SOURCE_DIR
-assert_string_is_empty $SINK_DIR
+assert_string_is_empty $STACK_DIR
 echo "assert_fail is_source"
 assert_fail is_source
-echo "assert_fail is_sink"
-assert_fail is_sink
+echo "assert_fail is_stack"
+assert_fail is_stack
 
-# test populated sink
+# test populated stack
 cd ../test-source
-emu sink -v add test ../test-sink
-cd ../test-sink
-get_sink_dir
+emu stack -v add test ../test-stack
+cd ../test-stack
+get_stack_dir
 get_source_dir
-assert_string_is_not_empty $SINK_DIR
+assert_string_is_not_empty $STACK_DIR
 assert_string_is_empty $SOURCE_DIR
-echo "assert_success is_sink"
-assert_success is_sink
+echo "assert_success is_stack"
+assert_success is_stack
 echo "assert_fail is_source"
 assert_fail is_source
 
 # test empty source recurse
 mkdir -pv test/a/b/c/d
 cd test/a/b/c/d
-get_sink_dir
-assert_string_is_not_empty $SINK_DIR
+get_stack_dir
+assert_string_is_not_empty $STACK_DIR
 cd ../../../../../
-assert_strings_match "$SINK_DIR" "$(pwd)"
+assert_strings_match "$STACK_DIR" "$(pwd)"
 
 test_teardown

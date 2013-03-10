@@ -1,0 +1,76 @@
+#!/bin/bash
+
+source /usr/local/lib/libemu
+EMU_ECHO_PREFIX=$(basename "$0")
+
+main ()
+{
+    test -n "$EMU_DEBUG" && set -x
+    exit_on_help_version $@
+
+    get_source_dir_or_fail
+
+    execute_hooks "pre" "$SOURCE_DIR"
+    lock_dir "$SOURCE_DIR"
+
+    IN=$(echo "$1" | tr ":" "\n")
+
+    if [[ $(echo "$IN" | wc -l) -ne 2 ]]
+    then
+        if [[ $(ls "$SOURCE_DIR/$EMU_DIR/stacks" | wc -l) -eq 1 ]]
+        then
+            STACK="$(ls $SOURCE_DIR/$EMU_DIR/stacks)"
+        else
+            emu_error "invalid snapshot"
+            emu_panic
+            exit $EMU_EXIT_ERROR
+        fi
+    fi
+
+    if [ "$STACK" = "" ]
+    then
+        STACK=$(echo "$IN" | head -n1)
+    fi
+
+    STACK_DIR="$(cat $SOURCE_DIR/$EMU_DIR/stacks/$STACK 2>/dev/null)"
+    if [[ ! -d "$STACK_DIR" ]]
+    then
+        emu_error "stack '$STACK' does not exist"
+        emu_panic
+        exit $EMU_EXIT_ERROR
+    fi
+
+    lock_dir "$STACK_DIR"
+
+    SNAPSHOT=$(echo "$IN" | tail -n1)
+    if [ "$SNAPSHOT" = "HEAD" ]
+    then
+        SNAPSHOT="$(cat "$STACK_DIR/$EMU_DIR/HEAD")"
+    fi
+
+    SNAPSHOT_DIR="$STACK_DIR/$EMU_DIR/trees/$SNAPSHOT"
+    if [[ ! -d "$SNAPSHOT_DIR" ]]
+    then
+        emu_error "snapshot '$SNAPSHOT' does not exist"
+        emu_panic
+        exit $EMU_EXIT_ERROR
+    fi
+
+    rsync \
+        --delete \
+        --archive \
+        --human-readable \
+        --exclude-from="$SOURCE_DIR/$EMU_DIR/excludes" \
+        "$SNAPSHOT_DIR/" "$SOURCE_DIR"
+    if (( $? ))
+    then
+        emu_error "peek of '$STACK:$SNAPSHOT' failed"
+    fi
+
+    emu_echo "SOURCE at '$STACK:$SNAPSHOT'"
+
+    unlock_dir "$STACK_DIR"
+    unlock_dir "$SOURCE_DIR"
+    execute_hooks "post" "$SOURCE_DIR"
+}
+main $@
