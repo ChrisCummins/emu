@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -eux
+test_setup
+
+exec_dir=/usr/local/bin
+exec="$(find $exec_dir -name 'emu*')"
+
+# Ensure we have some executables to test
+test -n "$exec" || exit 2
+
+for bin in $exec; do
+    e=$(basename $bin)
+
+    # man emu-command
+    man $e > $e.man
+    assert_file_is_not_empty $e.man
+
+    # emu help command
+    emu help ${e:4} > $e.emu
+    assert_file_is_not_empty $e.emu
+
+    # emu command --help
+    $e --help > $e.help
+    assert_file_is_not_empty $e.help
+
+    assert_files_match $e.man $e.emu
+    assert_files_match $e.man $e.help
+    rm -f $e.man $e.emu $e.help
+done
+
+test_teardown
