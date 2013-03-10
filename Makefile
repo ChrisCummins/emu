@@ -57,7 +57,7 @@ uninstall-exec:
 	rm -f /usr/local/bin/emu-clean
 	rm -f /usr/local/bin/emu-init
 	rm -f /usr/local/bin/emu-log
-	rm -f /usr/local/bin/emu-reset
+	rm -f /usr/local/bin/emu-pop
 	rm -f /usr/local/bin/emu-peek
 	rm -f /usr/local/bin/emu-stack
 	rm -f /usr/local/bin/emu-status

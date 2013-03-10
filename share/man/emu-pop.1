@@ -1,15 +1,15 @@
-.TH emu-reset 1  "March 08, 2013" "version 0.0.4" "Emu Manual"
+.TH emu-pop 1  "March 08, 2013" "version 0.0.4" "Emu Manual"
 .SH NAME
-emu\-reset \- Reset source to snapshot
+emu\-pop \- Reset source to snapshot
 .SH SYNOPSIS
-.B emu reset
+.B emu pop
 [\-\-help] [\-\-version] [\-V] [\-n] [\-v] [\-p] [\-f]
           [<stack>:]<snapshot>
 .SH DESCRIPTION
 Resets the contents of a snapshot to the source directory and stack HEAD. This
 means that all snapshot pushed after the given <snapshot> will be discarded.
 .PP
-If you have a stack with a set of sequential snapshot [A\->B\->C], running reset
+If you have a stack with a set of sequential snapshot [A\->B\->C], running pop
 against snapshot A will reset the source to snapshot A and discard snapshots B
 and C, effectively re\-winding time.
 .SH OPTIONS
@@ -21,7 +21,7 @@ show this help and quit
 show version information
 .TP
 \-V
-verify snapshot prior to reset
+verify snapshot prior to pop
 .TP
 \-n
 perform a trial run with no changes made
@@ -33,7 +33,7 @@ increase verbosity
 show progress during transfer
 .TP
 \-f
-force reset. This causes the program to disregard any exclusivity locks that
+force pop. This causes the program to disregard any exclusivity locks that
 the source or stack directories may have
 .SH EMU
 Part of the
