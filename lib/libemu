@@ -88,8 +88,7 @@ _emu_echo ()
     local reset_color="$(tput sgr0)"
 
     echo -n $emu_prefix_color >&$stream
-    if [ -z $EMU_ECHO_PREFIX ]
-    then
+    if [ -z $EMU_ECHO_PREFIX ]; then
         echo -n "emu" >&$stream
     else
         echo -n "$EMU_ECHO_PREFIX" >&$stream
@@ -107,13 +106,11 @@ emu_echo ()
 {
     local msg="$1"
 
-    if [ $(which tput 2>/dev/null) ]
-    then
+    if [ $(which tput 2>/dev/null) ]; then
         local emu_prefix_color="$(tput setaf 2)"
     fi
 
-    if ! (( $EMU_QUIET ))
-    then
+    if ! (( $EMU_QUIET )); then
         _emu_echo "$msg" 1
     fi
 
@@ -128,13 +125,11 @@ emu_warning ()
 {
     local msg="$1"
 
-    if [ $(which tput 2>/dev/null) ]
-    then
+    if [ $(which tput 2>/dev/null) ]; then
         local emu_prefix_color="$(tput setaf 3)"
     fi
 
-    if ! (( $EMU_QUIET ))
-    then
+    if ! (( $EMU_QUIET )); then
         _emu_echo "$msg" 2
     fi
 
@@ -148,8 +143,7 @@ emu_error ()
 {
     local msg="$1"
 
-    if [ $(which tput 2>/dev/null) ]
-    then
+    if [ $(which tput 2>/dev/null) ]; then
         local emu_prefix_color="$(tput setaf 1)"
     fi
 
@@ -174,16 +168,13 @@ emu_panic ()
 {
     get_source_dir_if_empty
 
-    if [ -n "$SOURCE_DIR" ] && is_source "$SOURCE_DIR"
-    then
+    if [ -n "$SOURCE_DIR" ] && is_source "$SOURCE_DIR"; then
         execute_hooks "error" "$SOURCE_DIR"
         unlock_dir "$SOURCE_DIR"
 
         # unlock all stacks
-        for stack_file in "$SOURCE_DIR/$EMU_DIR/stacks"
-        do
-            if [[ -f "$stack_file" ]]
-            then
+        for stack_file in "$SOURCE_DIR/$EMU_DIR/stacks"; do
+            if [[ -f "$stack_file" ]]; then
                 local stack="$(cat $stack_file)"
 
                 unlock_dir "$stack"
@@ -201,13 +192,11 @@ get_absolute_path ()
 {
     local dir="$1"
 
-    if [ -z "$dir" ]
-    then
+    if [ -z "$dir" ]; then
         dir="$(pwd -P)"
     else
         # get absolute path
-        if [ ${dir:0:1} != "/" ]
-        then
+        if [ ${dir:0:1} != "/" ]; then
             # relative path
             dir="$(pwd)/$dir"
         fi
@@ -227,14 +216,12 @@ exit_if_no_dir_permissions ()
 {
     local dir="$1"
 
-    if ! [ -d "$dir" ]
-    then
+    if ! [ -d "$dir" ]; then
         mkdir -p "$dir"
     fi
 
     touch "$dir/.emu-permissions-test" &>/dev/null
-    if (( $? ))
-    then
+    if (( $? )); then
         emu_error "insufficient user permissions for '$dir'"
         exit $EMU_EXIT_INSUFFICIENT_PERMISSIONS
     fi
@@ -242,8 +229,7 @@ exit_if_no_dir_permissions ()
     local return=$?
     rm -f "$dir/.emu-permissions-test" &>/dev/null
 
-    if (( $return ))
-    then
+    if (( $return )); then
         emu_error "insufficient user permissions for '$dir'"
         exit $EMU_EXIT_INSUFFICIENT_PERMISSIONS
     fi
@@ -255,15 +241,13 @@ is_source ()
 {
     local dir="$1"
 
-    if [ -z "$dir" ]
-    then
+    if [ -z "$dir" ]; then
         dir="$(pwd)"
     fi
 
     if [[ -f "$dir/$EMU_DIR/excludes" ]] \
         && [[ -d "$dir/$EMU_DIR/hooks" ]] \
-        && [[ -d "$dir/$EMU_DIR/stacks" ]]
-    then
+        && [[ -d "$dir/$EMU_DIR/stacks" ]]; then
         return 0
     else
         return 15
@@ -274,10 +258,8 @@ _test_source_dir ()
 {
     dir="$(pwd -P)"
 
-    if ! is_source "$dir"
-    then
-        if [[ "$dir" != "/" ]]
-        then
+    if ! is_source "$dir"; then
+        if [[ "$dir" != "/" ]]; then
             cd ..
             get_source_dir
         else
@@ -297,16 +279,14 @@ get_source_dir ()
 {
     local dir="$1"
 
-    if [ -z "$dir" ]
-    then
+    if [ -z "$dir" ]; then
         dir="$(pwd)"
     fi
 
     pushd . &>/dev/null
     # navigate to and recurse the directory tree
     cd "$dir"
-    if _test_source_dir
-    then
+    if _test_source_dir; then
         r=0
     else
         r=1
@@ -320,8 +300,7 @@ get_source_dir ()
 
 get_source_dir_if_empty ()
 {
-    if [ -z "$SOURCE_DIR" ]
-    then
+    if [ -z "$SOURCE_DIR" ]; then
         get_source_dir
     fi
 }
@@ -330,8 +309,7 @@ get_source_dir_if_empty ()
 get_source_dir_or_fail ()
 {
     get_source_dir
-    if [ -z "$SOURCE_DIR" ]
-    then
+    if [ -z "$SOURCE_DIR" ]; then
         emu_panic
         emu_error "not an emu source"
         exit $EMU_EXIT_ERROR
@@ -344,14 +322,12 @@ is_stack ()
 {
     local dir="$1"
 
-    if [ -z "$dir" ]
-    then
+    if [ -z "$dir" ]; then
         dir="$(pwd)"
     fi
 
     if [[ -f "$dir/$EMU_DIR/HEAD" ]] \
-        && [[ -d "$dir/$EMU_DIR/nodes" ]]
-    then
+        && [[ -d "$dir/$EMU_DIR/nodes" ]]; then
         return 0
     else
         return 15
@@ -362,10 +338,8 @@ _test_stack_dir ()
 {
     dir="$(pwd -P)"
 
-    if ! is_stack "$dir"
-    then
-        if [[ "$dir" != "/" ]]
-        then
+    if ! is_stack "$dir"; then
+        if [[ "$dir" != "/" ]]; then
             cd ..
             get_stack_dir
         else
@@ -385,16 +359,14 @@ get_stack_dir ()
 {
     local dir="$1"
 
-    if [ -z "$dir" ]
-    then
+    if [ -z "$dir" ]; then
         dir="$(pwd)"
     fi
 
     pushd . &>/dev/null
     # navigate to and recurse the directory tree
     cd "$dir"
-    if _test_stack_dir
-    then
+    if _test_stack_dir; then
         r=0
     else
         r=1
@@ -418,14 +390,11 @@ block_until_dir_free ()
     local dir="$1"
     local lock_file="$dir/$EMU_DIR/LOCK"
 
-    if [[ -f "$lock_file" ]]
-    then
+    if [[ -f "$lock_file" ]]; then
         BLOCK_COUNTER=$((BLOCK_COUNTER+1))
 
-        if [[ $BLOCK_COUNTER_MAX -ne -1 ]]
-        then
-            if [[ $BLOCK_COUNTER -gt $BLOCK_COUNTER_MAX ]]
-            then
+        if [[ $BLOCK_COUNTER_MAX -ne -1 ]]; then
+            if [[ $BLOCK_COUNTER -gt $BLOCK_COUNTER_MAX ]]; then
                 echo ""
                 emu_error "failed to get exclusive access to directory:\n  $dir"
                 emu_panic
@@ -439,8 +408,7 @@ block_until_dir_free ()
 
         # print status of blocking process
         BLOCK_STATUS=$(ps -p "$BLOCK_PID")
-        if (( $? ))
-        then
+        if (( $? )); then
             echo -n "[dead]"
         else
             echo -n "[$(echo $BLOCK_STATUS | cut -d' ' -f8)]"
@@ -461,15 +429,12 @@ lock_dir ()
     local dir="$1"
     local lock_file="$1/$EMU_DIR/LOCK"
 
-    if [ -z "$dir" ]
-    then
+    if [ -z "$dir" ]; then
         dir="$(pwd -P)"
     fi
 
-    if (( $EMU_LOCK_FORCE ))
-    then
-        if [ -f "$lock_file" ] && (( $EMU_LOCK_KILL ))
-        then
+    if (( $EMU_LOCK_FORCE )); then
+        if [ -f "$lock_file" ] && (( $EMU_LOCK_KILL )); then
             # force with kill - kill lock process
             local block_pid=$(cat "$lock_file" | grep PID | sed -r 's/PID:\s+//')
             kill -9 $block_pid
@@ -491,8 +456,7 @@ lock_dir_force ()
 {
     local dir="$1"
 
-    if [ -z "$dir" ]
-    then
+    if [ -z "$dir" ]; then
         dir="$(pwd -P)"
     fi
 
@@ -505,13 +469,11 @@ lock_dir_kill ()
 {
     local dir="$1"
 
-    if [ -z "$dir" ]
-    then
+    if [ -z "$dir" ]; then
         dir="$(pwd -P)"
     fi
 
-    if [ -f "$dir/$EMU_DIR/LOCK" ]
-    then
+    if [ -f "$dir/$EMU_DIR/LOCK" ]; then
         # kill lock process
         local block_pid=$(cat "$dir/$EMU_DIR/LOCK" | grep PID | sed -r 's/PID: +//')
         kill -9 $block_pid
@@ -526,20 +488,17 @@ unlock_dir ()
 {
     local dir="$1"
 
-    if [ -z "$dir" ]
-    then
+    if [ -z "$dir" ]; then
         dir="$(pwd -P)"
     fi
 
     LOCK=$(cat "$dir/$EMU_DIR/LOCK" 2> /dev/null)
-    if [[ "$LOCK" == "" ]]
-    then
+    if [[ "$LOCK" == "" ]]; then
         return
     fi
     LOCK_PID=$(echo "$LOCK" | grep PID | sed -r 's/PID: +//')
 
-    if [[ $$ -eq $LOCK_PID ]]
-    then
+    if [[ $$ -eq $LOCK_PID ]]; then
         rm -f "$dir/$EMU_DIR/LOCK"
     else
         emu_error "cannot free lock $LOCK_PID with key $$"
@@ -617,7 +576,7 @@ execute_hooks() {
     fi
 }
 
-## Stacks #######################################################################
+## Stacks ######################################################################
 
 # return the number of snapshots in stack
 #  @param $1 Path to stack directory
@@ -640,8 +599,7 @@ print_stack_details ()
 {
     local stack_name="$1"
 
-    if [ -z "$SOURCE_DIR" ]
-    then
+    if [ -z "$SOURCE_DIR" ]; then
         get_source_dir
     fi
 
@@ -651,8 +609,7 @@ print_stack_details ()
     local snapshot_count="$(ls $stack_path/$EMU_DIR/trees | wc -l)"
     local load=$(echo "$snapshot_count / $(cat $stack_path/$EMU_DIR/config/SNAPSHOT-COUNT) * 100" | bc -l)
 
-    if (( $EMU_LOG_SUMMARY ))
-    then
+    if (( $EMU_LOG_SUMMARY )); then
         # summary stack info
         cat <<EOF
 * $1 ($stack_path)
@@ -679,8 +636,7 @@ print_node_details ()
     local node_date="$(cat $node_path | grep Date | sed -r 's/Date +(.*)/\1/')"
     local node_size="$(cat $node_path | grep Size | sed -r 's/Size +(.*)/\1/')"
 
-    if (( $EMU_LOG_SUMMARY ))
-    then
+    if (( $EMU_LOG_SUMMARY )); then
         # summary node info
         cat <<EOF
    $node_date * $node
@@ -706,8 +662,7 @@ verify_node ()
     NODE_HASH=${NODE:0:32}
     HASH=$(hash_directory "$1")
 
-    if [ "$NODE_HASH" = "$HASH" ]
-    then
+    if [ "$NODE_HASH" = "$HASH" ]; then
         return 0
     else
         emu_error "verification failed!\n  Expected: $NODE_HASH\n  Actual:   $HASH"
