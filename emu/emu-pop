@@ -13,15 +13,15 @@ main ()
     set +e
 
     get_source_dir_or_fail
-    execute_hooks "pre" "$SOURCE_DIR"
+    local dir="$SOURCE_DIR"
 
-    IN=$(echo "$1" | tr ":" "\n")
+    execute_hooks "pre" "$dir"
 
-    if [[ $(echo "$IN" | wc -l) -ne 2 ]]
-    then
-        if [[ $(ls "$SOURCE_DIR/$EMU_DIR/stacks" | wc -l) -eq 1 ]]
-        then
-            STACK="$(ls $SOURCE_DIR/$EMU_DIR/stacks)"
+    local in=$(echo "$1" | tr ":" "\n")
+
+    if [[ $(echo "$in" | wc -l) -ne 2 ]]; then
+        if [[ $(ls "$dir/$EMU_DIR/stacks" | wc -l) -eq 1 ]]; then
+            local stack="$(ls $dir/$EMU_DIR/stacks)"
         else
             emu_error "invalid snapshot"
             emu_panic
@@ -29,33 +29,31 @@ main ()
         fi
     fi
 
-    if [ "$STACK" = "" ]
-    then
-        STACK=$(echo "$IN" | head -n1)
+    if [ -z "$stack" ]; then
+        local stack=$(echo "$in" | head -n1)
     fi
 
-    STACK_DIR="$(cat $SOURCE_DIR/$EMU_DIR/stacks/$STACK 2>/dev/null)"
-    if [[ ! -d "$STACK_DIR" ]]
-    then
-        emu_error "stack '$STACK' does not exist"
+    local stack_dir="$(cat $dir/$EMU_DIR/stacks/$stack 2>/dev/null)"
+    if [[ ! -d "$stack_dir" ]]; then
+        emu_error "stack '$stack' does not exist"
         emu_panic
         exit $EMU_EXIT_ERROR
     fi
 
-    SNAPSHOT=$(echo "$IN" | tail -n1)
-    if [ "$SNAPSHOT" = "HEAD" ]
-    then
-        SNAPSHOT="$(cat "$STACK_DIR/$EMU_DIR/HEAD")"
+    local snapshot=$(echo "$in" | tail -n1)
+    if [ "$snapshot" = "HEAD" ]; then
+        local snapshot="$(cat "$stack_dir/$EMU_DIR/HEAD")"
     fi
 
-    SNAPSHOT_DIR="$STACK_DIR/$EMU_DIR/trees/$SNAPSHOT"
-    if [[ ! -d "$SNAPSHOT_DIR" ]]
-    then
-        emu_error "snapshot '$SNAPSHOT' does not exist"
+    local snapshot_dir="$stack_dir/$EMU_DIR/trees/$snapshot"
+    if [[ ! -d "$snapshot_dir" ]]; then
+        emu_error "snapshot '$snapshot' does not exist"
         emu_panic
         exit $EMU_EXIT_ERROR
     fi
 
-    execute_hooks "post" "$SOURCE_DIR"
+    # FIXME
+
+    execute_hooks "post" "$dir"
 }
 main $@
