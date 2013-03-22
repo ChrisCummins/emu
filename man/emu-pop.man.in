@@ -1,4 +1,4 @@
-.TH emu-pop 1 March 22, 2013 "version 0.0.5" "Emu Manual"
+.TH emu-pop @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
 .SH NAME
 emu\-pop \- pop snapshot from stack
 .SH SYNOPSIS

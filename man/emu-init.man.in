@@ -1,4 +1,4 @@
-.TH emu-init 1 March 22, 2013 "version 0.0.5" "Emu Manual"
+.TH emu-init @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
 .SH NAME
 emu\-init \- create or reinitialize an existing emu source
 .SH SYNOPSIS

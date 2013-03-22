@@ -1,4 +1,4 @@
-.TH emu-clean 1 March 22, 2013 "version 0.0.5" "Emu Manual"
+.TH emu-clean @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
 .SH NAME
 emu\-status \- show source status
 .SH SYNOPSIS

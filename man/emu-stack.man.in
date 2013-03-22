@@ -1,4 +1,4 @@
-.TH emu-stack 1 March 22, 2013 "version 0.0.5" "Emu Manual"
+.TH emu-stack @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
 .SH NAME
 emu\-stack \- manage set of emu stacks
 .SH SYNOPSIS

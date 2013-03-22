@@ -1,4 +1,4 @@
-.TH emu 1 March 22, 2013 "version 0.0.5" "Emu Manual"
+.TH emu @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
 .SH NAME
 emu \- Snapshot backup software that builds stacks
 .SH SYNOPSIS

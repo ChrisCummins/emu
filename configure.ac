@@ -39,6 +39,11 @@ AC_SUBST([SOURCE_TEMPLATES])
 STACK_TEMPLATES="$prefix/share/emu/templates/stack-templates"
 AC_SUBST([STACK_TEMPLATES])
 
+AC_SUBST([MANSECTION], [1])
+
+DATE="$(date +'%B %d, %Y')"
+AC_SUBST([DATE])
+
 AM_INIT_AUTOMAKE([1.11 foreign no-dist-gzip dist-xz -Wall -Werror -Wno-portability])
 
 AC_OUTPUT([
@@ -56,6 +61,16 @@ emu/emu-stack.sh
 emu/emu-push.sh
 emu/emu-pop.sh
 man/Makefile
+man/emu-status.man
+man/emu-log.man
+man/emu-pop.man
+man/emu.man
+man/emu-init.man
+man/emu-push.man
+man/emu-stack.man
+man/emu-clean.man
+man/emu-verify.man
+man/emu-peek.man
 templates/Makefile
 tests/peek/peek
 tests/clean/in-progress

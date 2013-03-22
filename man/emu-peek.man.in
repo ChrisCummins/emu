@@ -1,4 +1,4 @@
-.TH emu-peek 1 March 22, 2013 "version 0.0.5" "Emu Manual"
+.TH emu-peek @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
 .SH NAME
 emu\-peek \- restore source to snapshot
 .SH SYNOPSIS
