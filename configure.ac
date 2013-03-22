@@ -44,7 +44,7 @@ AC_SUBST([MANSECTION], [1])
 DATE="$(date +'%B %d, %Y')"
 AC_SUBST([DATE])
 
-AM_INIT_AUTOMAKE([1.11 foreign no-dist-gzip dist-xz -Wall -Werror -Wno-portability])
+AM_INIT_AUTOMAKE([1.11 foreign -Wall -Werror -Wno-portability])
 
 AC_OUTPUT([
 Makefile
