@@ -7,6 +7,8 @@ SUBDIRS = 				\
 docdir = $(datadir)/doc/@PACKAGE@
 doc_DATA = README
 
+EXTRA_DIST = autogen.sh
+
 .PHONY: check test todo help
 check test:
 	@./run-tests.sh
