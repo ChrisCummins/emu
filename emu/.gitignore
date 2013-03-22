@@ -1,0 +1,23 @@
+# Build files.
+emu-clean
+emu-clean.sh
+emu-init
+emu-init.sh
+emu-log
+emu-log.sh
+emu-peek
+emu-peek.sh
+emu-pop
+emu-pop.sh
+emu-push
+emu-push.sh
+emu
+emu.sh
+emu-stack
+emu-stack.sh
+emu-status
+emu-status.sh
+emu-verify
+emu-verify.sh
+libemu
+libemu.sh

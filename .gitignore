@@ -1,5 +1,20 @@
-ERROR.log
-
-# Temporary and backup files
+# Temporary and backup files.
 [#]*[#]
+.[#]*
 *~
+
+# Autotools files.
+/autom4te.cache/
+/configure
+/install-sh
+/aclocal.m4
+/autoscan.log
+/config.log
+/config.status
+/configure.scan
+/missing
+Makefile
+Makefile.in
+
+# Tests output.
+ERROR.log
