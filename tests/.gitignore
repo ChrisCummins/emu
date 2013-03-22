@@ -1,1 +1,6 @@
+# Temporary test files.
 *.log
+
+# We ignore everything except .in files.
+*
+!*.in
