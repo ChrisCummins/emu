@@ -3,6 +3,9 @@
 .[#]*
 *~
 
+# Release tarballs.
+emu-*.tar.gz
+
 # Autotools files.
 /autom4te.cache/
 /configure
