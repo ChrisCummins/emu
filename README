@@ -1,14 +1,14 @@
-README for emu version 0.0.4
+README for emu version 0.0.5
 --------------------------------------------------------------------------------
-Copyright (C) 2012 Chris Cummins <chrisc.101@gmail.com>
+Copyright (C) 2012 Chris Cummins <chrisc.101@gmail.com>.
 See the end of this file for license conditions.
 
-This directory tree holds version 0.0.4 of emu, a simple, rotating backup
-program. Emu takes advantages of some of the many tools available on UNIX-like
-systems to transparently and simply record snapshots of a file system. It does
-not store data in proprietary file formats, nor does it hide anything from the
-user, and its simplicity makes it incredibly fast. See the HOW IT WORKS section
-below for a detailed description.
+This directory contains version 0.0.5 of emu, a snapshot backup program. Emu
+takes advantages of some of the many tools available on *nix systems to
+transparently and simply record snapshots of a directory tree. It does not store
+data in proprietary file formats, nor does it hide anything from the user, with
+its simplicity making it incredibly fast. See the HOW IT WORKS section below for
+a detailed description.
 
 The file INSTALL in this directory contains installation instructions.
 
@@ -23,44 +23,54 @@ this will pick up on most system incompatabilities. On most systems:
 
 BACKGROUND
 --------------------------------------------------------------------------------
-A snapshot backup system is one in which multiple full "snapshots" of a file
-system are built up incrementally, allowing the user to see, explore or restore
-the state of the filesystem from any one snapshot. Emu refers to the filesystem
-that is to be backed up as a "source". The destination for these source
-snapshots is referred to as a "sink". This is analogous tox electrical sources
-and sinks, the critical difference being of course that data can flow from an
-emu sink to the source (in the case of a restore).
+A snapshot backup system is one in which multiple full "snapshots" of a
+directory tree are built up incrementally, allowing the user to see, explore or
+restore the state of the tree from any one snapshot. Emu refers to the target
+directory that is to be backed up as a "source". The destination for these
+source snapshots is referred to as a "stack"; this is because multiple snapshots
+are arranged in a stacking fashion. New snapshots are "pushed" form the source
+onto the stack, and snapshots can be "popped" from a stack onto the source.
 
 There are many different ways of creating snapshot backups. The first technique
-- the "tarball approach" - is to create a full copy of the source filesystem for
+- the "tarball approach" - is to create a full copy of the source directory for
 each snapshot, and to store them in a common location. This is the least
-efficient means of backup creation possible, as the size of the sink dataset
-becomes a linear multiple of the size of the source. So two snapshots require
-double the space of a single snapshot. However, this technique is robust, as the
-independence of the sanpshots means that the loss of one will not affect any
-others.
+efficient means of creating back ups, as the size of the backup dataset is a
+linear multiple of the size of the source; so two snapshots require double the
+space of a single snapshot, and four snapshots require twice the space of
+two. However, this technique is robust, as the independence of the snapshots
+means that the loss of one will not affect any others.
 
-The second technique is the "incremental approach"; in which the difference
-between the last snapshot and the current source are stored so that when
+The second technique is the "incremental approach", in which the difference
+between the last snapshot and the current source are stored, so that when
 combined with the previous snapshots, the full state of the source can be
-created. This massively reduces the data bandwidth requirements, but this "daisy
-chaining" of snapshots is fragile (removing a single link breaks the full
-chain), and the extra computation required to reverse engineer a source from a
-set of snapshots can make snapshots and restorations more time consuming.
+recreated. This massively reduces the data bandwidth requirements, but this
+"daisy chaining" of snapshots is fragile (removing a single link breaks the full
+chain), and the extra computational requirements to reverse engineer a source
+from a set of incomplete snapshots can increase the amount of time required to
+create and restore snapshots.
 
 The technique that emu uses combines the strenghts of the tarball and
-incremental approaches to produce a robust sink with minimal data bandwidth
-requirements and fast execution times.
+incremental approaches to produce a robust stack with minimal data bandwidth
+requirements and fast execution times. It does this by using hardlinks to keep
+multiple references to identical files without storing duplicate data.
 
 HOW IT WORKS
 --------------------------------------------------------------------------------
 One of the key features of emu is the way in which snapshots are stored within a
-sink.
+stack. Unix-like operating systems have the ability to maintain multiple
+references within a filesystem to the same inode, this means that '~/foo' and
+'~/bar' can both refer to the same physical data on the block device, while
+appearing and behaving like separate files. In emu, this ability is exploited in
+order to keep multiple snapshots of the same source without having to duplicate
+identical data. This erases the need for using 'diffs', since the actual
+mechanisms for sharing inodes happens within the kernel, completely
+transparently to emu.
 
-There is a 1-n relationship of sources to sinks. That means that for any
-filesystem that the user wishes to backup, there may be as many backup
+There is a 1-n relationship of sources to stacks. That means that for any
+directory tree that the user wishes to backup, there may be as many backup
 destinations as they wish. This enables multiple redundancy in the case of
-catastrophic data loss.
+catastrophic data loss. Stacks are independent structures, and no data is shared
+between them.
 
 LICENSE
 --------------------------------------------------------------------------------

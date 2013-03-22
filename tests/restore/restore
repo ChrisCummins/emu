@@ -1,7 +1,0 @@
-set -eu
-test_setup
-
-cd $EMU_TEST_DIR/test-source
-emu init -v
-
-test_teardown

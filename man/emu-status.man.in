@@ -1,0 +1,26 @@
+.TH emu-clean @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
+.SH NAME
+emu\-status \- show source status
+.SH SYNOPSIS
+.B emu status
+[\-\-help] [\-\-version]
+.SH DESCRIPTION
+Display information about an emu source.
+.SH OPTIONS
+.TP
+\-\-help
+show this help and quit
+.TP
+\-\-version
+show version information
+.PP
+.SH EMU
+Part of the
+.B emu
+(1)
+suite
+.SH AUTHOR
+Chris Cummins <chrisc.101@gmail.com>
+.SH SEE ALSO
+.B emu
+(1)

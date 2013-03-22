@@ -1,0 +1,50 @@
+#!/bin/bash
+
+set -ex
+test_setup
+
+cd $EMU_TEST_DIR/test-source
+emu init -v
+msg='Hello, world!'
+
+# Give us a starting point.
+emu init
+emu stack add origin origin
+echo "$msg" > test
+emu push
+
+rm -f test
+
+hash=$(ls origin/.emu/nodes)
+
+emu pop $hash
+
+assert_is_file test
+assert_strings_match "$(cat test)" "$msg"
+assert_is_file origin/.emu/nodes/$hash
+if [[ $(ls origin/.emu/nodes | wc -l) -ne 1 ]]; then
+    exit 2
+fi
+
+rm -f test
+
+# Fill the stack up some more.
+emu push
+sleep 1
+emu push
+sleep 1
+emu push
+
+emu pop $hash
+
+assert_is_file test
+if [[ "$msg" != "$(cat test)" ]];then
+    exit 2
+fi
+
+assert_is_file origin/.emu/nodes/$hash
+if [[ $(ls origin/.emu/nodes | wc -l) -ne 1 ]]; then
+    exit 2
+fi
+
+test_teardown

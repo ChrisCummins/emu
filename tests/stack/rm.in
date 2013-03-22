@@ -1,0 +1,36 @@
+set -ue
+test_setup
+
+cd $EMU_TEST_DIR/test-source
+echo "emu init -v"
+emu init -v
+
+assert_is_not_dir "$EMU_TEST_DIR/test-stack"
+
+echo "emu stack add origin $EMU_TEST_DIR/test-stack"
+emu stack add origin $EMU_TEST_DIR/test-stack
+
+assert_is_file ".emu/stacks/origin"
+assert_is_dir "$EMU_TEST_DIR/test-stack"
+
+echo "emu stack -v rm origin"
+emu stack -v rm origin
+
+assert_is_not_file ".emu/stacks/origin"
+assert_is_dir "$EMU_TEST_DIR/test-stack"
+
+# Test -R
+rm -rvf $EMU_TEST_DIR/test-stack
+echo "emu stack add origin $EMU_TEST_DIR/test-stack"
+emu stack add origin $EMU_TEST_DIR/test-stack
+
+assert_is_file ".emu/stacks/origin"
+assert_is_dir "$EMU_TEST_DIR/test-stack"
+
+echo "emu stack -Rv rm origin"
+emu stack -Rv rm origin
+
+assert_is_not_file ".emu/stacks/origin"
+assert_is_not_dir "$EMU_TEST_DIR/test-stack"
+
+test_teardown

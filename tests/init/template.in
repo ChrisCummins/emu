@@ -1,0 +1,49 @@
+set -eu
+test_setup
+cd $EMU_TEST_DIR/test-source
+
+set +e
+emu init -t/dev/null
+set -e
+assert_is_not_dir .emu
+
+# Setup template
+mkdir -pv $EMU_TEST_DIR/test-template
+mkdir -pv $EMU_TEST_DIR/test-template/config
+mkdir -pv $EMU_TEST_DIR/test-template/hooks
+mkdir -pv $EMU_TEST_DIR/test-template/stacks
+echo "test" > $EMU_TEST_DIR/test-template/excludes
+echo "hello, test!" > $EMU_TEST_DIR/test-template/abc
+
+emu init -t$EMU_TEST_DIR/test-template
+assert_dirs_match $EMU_TEST_DIR/test-template "$EMU_TEST_DIR"/test-source/.emu
+
+echo "abc" >> $EMU_TEST_DIR/test-template/abc
+emu init -t$EMU_TEST_DIR/test-template
+if [ "$(cat .emu/abc | tail -n1)" != "abc" ]
+then
+    echo "'$(cat .emu/abc | tail -n1)' != 'abc'"
+    exit 5
+fi
+assert_dirs_match $EMU_TEST_DIR/test-template "$EMU_TEST_DIR"/test-source/.emu
+
+emu init -t$EMU_TEST_DIR/test-template -R
+if [ "$(cat .emu/abc | tail -n1)" != "abc" ]
+then
+    echo "'$(cat .emu/abc | tail -n1)' != 'abc'"
+    exit 5
+fi
+assert_dirs_match $EMU_TEST_DIR/test-template "$EMU_TEST_DIR"/test-source/.emu
+
+emu init -C
+assert_is_not_dir .emu
+
+EMU_SOURCE_TEMPLATE_DIR=$EMU_TEST_DIR/test-template emu init
+if [ "$(cat .emu/abc | tail -n1)" != "abc" ]
+then
+    echo "'$(cat .emu/abc | tail -n1)' != 'abc'"
+    exit 5
+fi
+assert_dirs_match $EMU_TEST_DIR/test-template "$EMU_TEST_DIR"/test-source/.emu
+
+test_teardown

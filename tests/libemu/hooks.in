@@ -1,0 +1,47 @@
+set -e
+source @prefix@/libexec/emu/libemu
+
+test_execute_hooks() {
+    type="$1"
+    dir="$2"
+
+    test_setup
+    emu init
+    cat <<EOF > .emu/hooks/exec/test.$type
+#!/bin/bash
+echo "1234" > $EMU_TEST_DIR/A
+EOF
+
+    cat <<EOF > .emu/hooks/exec/test2.$type
+#!/bin/bash
+touch $EMU_TEST_DIR/B
+EOF
+
+    chmod +x .emu/hooks/exec/*
+
+    execute_hooks "$type" "$dir"
+    assert_is_file $EMU_TEST_DIR/A
+    assert_is_file $EMU_TEST_DIR/B
+    assert_strings_match "1234" "$(cat $EMU_TEST_DIR/A)"
+    assert_file_is_empty $EMU_TEST_DIR/B
+    rm -f $EMU_TEST_DIR/A $EMU_TEST_DIR/B
+    rm -f .emu/hooks/exec/test.$type .emu/hooks/exec/test2.$type
+    test_teardown
+}
+
+# First we'll test the exeucte_hooks() function on pre|post|error hooks.
+test_execute_hooks "pre" "$EMU_TEST_DIR"
+test_execute_hooks "post" "$EMU_TEST_DIR"
+test_execute_hooks "error" "$EMU_TEST_DIR"
+
+# Now let's test execute_hooks() without giving a source dir parameter.
+test_execute_hooks "pre"
+test_execute_hooks "post"
+test_execute_hooks "error"
+
+# Finally let's test execute_hooks(), but giving an invalid typex
+execute_hooks "__invalid__"
+assert_is_not_file $EMU_TEST_DIR/A
+assert_is_not_file $EMU_TEST_DIR/B
+
+test_teardown

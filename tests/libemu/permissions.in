@@ -1,0 +1,42 @@
+set -e
+test_setup
+source @prefix@/libexec/emu/libemu
+
+cd $EMU_TEST_DIR/test-source
+echo "exit_if_no_dir_permissions $EMU_TEST_DIR/test-source"
+exit_if_no_dir_permissions $EMU_TEST_DIR/test-source
+echo "exit_if_no_dir_permissions ../test-source"
+exit_if_no_dir_permissions ../test-source
+echo "exit_if_no_dir_permissions ."
+exit_if_no_dir_permissions .
+
+# Fail tests
+sudo mkdir -pv $EMU_TEST_DIR/root-dir
+cd $EMU_TEST_DIR/root-dir
+
+set +e
+echo "exit_if_no_dir_permissions $EMU_TEST_DIR/root-dir"
+exit_if_no_dir_permisions $EMU_TEST_DIR/root-dir
+if ! (( $? ))
+then
+    exit 5
+fi
+
+echo "exit_if_no_dir_permissions ../root-dir"
+exit_if_no_dir_permisions ../root-dir
+if ! (( $? ))
+then
+    exit 5
+fi
+
+echo "exit_if_no_dir_permissions"
+exit_if_no_dir_permisions
+if ! (( $? ))
+then
+    exit 5
+fi
+
+sudo rmdir -fv $EMU_TEST_DIR/root-dir
+set -e
+
+test_teardown

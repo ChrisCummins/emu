@@ -1,0 +1,57 @@
+.TH emu @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
+.SH NAME
+emu \- Snapshot backup software that builds stacks
+.SH SYNOPSIS
+.B emu
+[\-\-help] [\-\-version] <command> [<options>...]
+.SH OPTIONS
+.TP
+\-\-help
+show this help and quit
+.TP
+\-\-version
+print version information
+.SH COMMANDS
+Below is a brief summary of the available commands. For more information on any,
+see
+.B emu help
+<command>, or
+.B emu
+<command>
+.B \-\-help
+.
+
+          clean         remove locks and orphaned data
+          hook          manage hooks
+          init          initialize a source
+          log           show stack logs
+          stack         manage stacks
+          pop           peek and discard snapshots
+          peek          restore source from snapshot
+          push          push snapshot to stacks
+          status        source status
+          verify        validate snapshots
+.SH BACKGROUND
+
+.SH LICENSE
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+.PP
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+.PP
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.SH AUTHOR
+Chris Cummins <chrisc.101@gmail.com>
+.SH SEE ALSO
+.B emu
+(1)

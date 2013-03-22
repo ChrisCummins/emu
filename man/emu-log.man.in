@@ -1,0 +1,34 @@
+.TH emu-log @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
+.SH NAME
+emu\-log \- Show stack snapshot logs
+.SH SYNOPSIS
+.B emu log
+[\-\-help] [\-\-version] [\-n<number>] [\-s] [[<stack>:]<snapshot>]...
+.SH DESCRIPTION
+Show snapshot logs for one or more stacks. If no <stack> is speficied, show logs
+for all stacks. If a <stack> is specified, show snapshot logs for only that
+stack. By specifying a :<snapshot>, the log for only that snapshot will be
+shown. The command uses the standard <stack>:<snapshot> syntax.
+.SH OPTIONS
+.TP
+\-\-help
+show this help and quit
+.TP
+\-\-version
+show version information
+.TP
+\-n<number>
+limit the number of snapshot logs to the given number
+.TP
+\-s
+show a dense summary of only vital information, suitable for reports or logs
+.SH EMU
+Part of the
+.B emu
+(1)
+suite
+.SH AUTHOR
+Chris Cummins <chrisc.101@gmail.com>
+.SH SEE ALSO
+.B emu
+(1)

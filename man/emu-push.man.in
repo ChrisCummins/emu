@@ -1,0 +1,81 @@
+.TH emu-push @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
+.SH NAME
+emu\-push \- record a snapshot of the source directory and push to stacks
+.SH SYNOPSIS
+.B emu push
+[\-\-help] [\-\-version]
+         [\-v] [\-p] [\-f] [\-F]
+         [\-n] [\-M] [\-V] [<stack>...]
+.SH DESCRIPTION
+Create a snapshot of the contents of the source directory and push onto all
+stacks.
+.PP
+The difference between the content of the source and the last snapshot in the
+stack is added to the stack and linked against the existing content, combining
+to produce a full snapshot of the source directory. This enables emu stacks to
+be very compact, allowing multiple full snapshots to be stored in a space little
+larger than a single full snapshot.
+.PP
+Emu refers to the directory to be backed up as the "source" and the backup
+destination as the "stack"; this is because multiple snapshots are arranged in a
+stacking fashion. New snapshots are "pushed" form the source onto the stack, and
+snapshots can be "popped" from a stack onto the source.
+.PP
+Some of the features of snapshot creation are:
+.IP \[bu]
+supports copying links, devices, owners, groups, and permissions
+.IP \[bu]
+exclude and exclude\-from options
+.IP \[bu]
+does not require super\-user privileges
+.PP
+emu uses the rsync file\-copying tool for its delta\-transfer algorithm, which
+reduces the amount of data sent by sending only the differences between the
+source files and the existing files in the stack. Rsync finds files that need to
+be transferred using a "quick check" algorithm that looks for files that have
+changed in size or in last\-modified time.
+.SH OPTIONS
+.TP
+\-\-help
+show this help and quit
+.TP
+\-\-version
+show version information
+.TP
+\-M
+open an editor to add a snapshot message (editor determined by EDITOR
+environment variable). Alternatively, the message can be set in the
+EMU_SNAPSHOT_MESSAGE environment variable.
+.TP
+\-n
+perform a trial run with no changes made
+'emu status'
+.TP
+\-v
+increase verbosity
+.TP
+\-p
+show progress during transfer
+.TP
+\-f
+force push. This causes the program to disregard any exclusivity locks that
+the source or stack directories may have. Not recommended for everyday
+consumption, but is useful after a previous push attempt failed
+.TP
+\-F
+equivalent to \-f force option, but in addition causing emu to kill any process
+owning a stack or source lock and removing any in\-progress snapshot
+data. Exercise caution or heads will explode
+.TP
+\-V
+verify snapshot contents upon completion
+.SH EMU
+Part of the
+.B emu
+(1)
+suite
+.SH AUTHOR
+Chris Cummins <chrisc.101@gmail.com>
+.SH SEE ALSO
+.B emu
+(1)

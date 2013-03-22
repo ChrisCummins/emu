@@ -1,0 +1,27 @@
+set -ex
+test_setup
+
+stack=stack
+link=broken-link
+
+emu init
+mkdir -pv $stack
+emu stack add origin $stack
+
+cd $stack
+
+ln -s /broken/file/path $link
+assert_is_broken_link "$link"
+
+set +e
+emu clean -n > tmp
+set -e
+assert_is_broken_link "$link"
+grep $link tmp
+
+set +e
+emu clean
+set -e
+assert_does_not_exist "$link"
+
+test_teardown

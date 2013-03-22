@@ -1,0 +1,680 @@
+#!/bin/bash
+
+## Traps #######################################################################
+
+finish() {
+    local dir=""
+
+    set +eu
+    if [ -n "$SOURCE_DIR" ]; then
+        dir="$SOURCE_DIR"
+    fi
+
+    if [ -n "$STACK_DIR" ]; then
+        dir="$STACK_DIR"
+    fi
+
+    if [ -n "$dir" ]; then
+        local hooks="$(find "$dir/$EMU_DIR/hooks/exec/" -name '*.post' 2>/dev/null)"
+
+        for h in $hooks; do
+            $h
+        done
+
+        # Execute command specific hooks.
+        if [ -n "$EMU_ECHO_PREFIX" ]; then
+            local command="$(echo $EMU_ECHO_PREFIX | sed 's/^emu-//')"
+            local command_hooks="$(find "$dir/$EMU_DIR/hooks/$command/" -name '*.post' 2>/dev/null)"
+
+            for h in $command_hooks; do
+                $h
+            done
+        fi
+    fi
+    set -eu
+}
+
+trap finish EXIT
+
+## Variables ###################################################################
+
+export EMU_VERSION="@EMU_VERSION@"
+
+if [ -z "$EMU_DIR" ]; then
+    export EMU_DIR=".emu"
+fi
+
+# exit codes
+export EMU_EXIT=0
+export EMU_EXIT_ERROR=1
+export EMU_EXIT_INSUFFICIENT_PERMISSIONS=2
+export EMU_EXIT_BLOCKED=3
+export EMU_EXIT_INCORRECT_COMMAND=126
+export EMU_EXIT_COMMAND_NOT_FOUND=127
+
+## Help and Version ############################################################
+print_version() {
+    emu_echo "version $EMU_VERSION"
+}
+
+print_help() {
+    if [ -n "$EMU_ECHO_PREFIX" ]; then
+        man "$EMU_ECHO_PREFIX"
+    fi
+}
+
+exit_on_help_version() {
+    for arg in $@; do
+        case "$arg" in
+            "--help")
+                print_help
+                exit 0
+                ;;
+            "--version")
+                print_version
+                exit 0
+                ;;
+        esac
+    done
+}
+
+## Echo ########################################################################
+
+_emu_echo ()
+{
+    local msg="$1"
+    local stream=$2
+    local emu_message_color="$(tput sgr0)"
+    local reset_color="$(tput sgr0)"
+
+    echo -n $emu_prefix_color >&$stream
+    if [ -z $EMU_ECHO_PREFIX ]; then
+        echo -n "emu" >&$stream
+    else
+        echo -n "$EMU_ECHO_PREFIX" >&$stream
+    fi
+    echo -n $emu_message_color >&$stream
+    echo -ne ": $msg" >&$stream
+    echo $reset_color >&$stream
+}
+
+# print a message
+#  @param $1                         msg
+#  @var   EMU_ECHO_PREFIX (optional) output prefix
+#  @var   EMU_QUIET       (optional) silences output
+emu_echo ()
+{
+    local msg="$1"
+
+    if [ $(which tput 2>/dev/null) ]; then
+        local emu_prefix_color="$(tput setaf 2)"
+    fi
+
+    if ! (( $EMU_QUIET )); then
+        _emu_echo "$msg" 1
+    fi
+
+    return 0
+}
+
+# print a warning message
+#  @param $1                         msg
+#  @var   EMU_ECHO_PREFIX (optional) output prefix
+#  @var   EMU_QUIET       (optional) silences output
+emu_warning ()
+{
+    local msg="$1"
+
+    if [ $(which tput 2>/dev/null) ]; then
+        local emu_prefix_color="$(tput setaf 3)"
+    fi
+
+    if ! (( $EMU_QUIET )); then
+        _emu_echo "$msg" 2
+    fi
+
+    return 0
+}
+
+# print an error message
+#  @param $1                         msg
+#  @var   EMU_ECHO_PREFIX (optional) output prefix
+emu_error ()
+{
+    local msg="$1"
+
+    if [ $(which tput 2>/dev/null) ]; then
+        local emu_prefix_color="$(tput setaf 1)"
+    fi
+
+    _emu_echo "$msg" 2
+    return 0
+}
+
+## Errors ######################################################################
+
+# print 'not a command' text and exit
+#  @param $1 name of missing command
+command_not_found ()
+{
+    local command=$1
+
+    emu_echo "'$command' is not an emu command. See 'emu help'."
+    exit $EMU_EXIT_COMMAND_NOT_FOUND
+}
+
+# panic, execute hooks and prepare for crash
+emu_panic ()
+{
+    get_source_dir_if_empty
+
+    if [ -n "$SOURCE_DIR" ] && is_source "$SOURCE_DIR"; then
+        execute_hooks "error" "$SOURCE_DIR"
+        unlock_dir "$SOURCE_DIR"
+
+        # unlock all stacks
+        for stack_file in "$SOURCE_DIR/$EMU_DIR/stacks"; do
+            if [[ -f "$stack_file" ]]; then
+                local stack="$(cat $stack_file)"
+
+                unlock_dir "$stack"
+            fi
+        done
+    fi
+}
+
+## Directories #################################################################
+
+# Returns the absolute path of a given directory
+#  @param  $1 (optional) path to directory
+#  @return    absolute path
+get_absolute_path ()
+{
+    local dir="$1"
+
+    if [ -z "$dir" ]; then
+        dir="$(pwd -P)"
+    else
+        # get absolute path
+        if [ ${dir:0:1} != "/" ]; then
+            # relative path
+            dir="$(pwd)/$dir"
+        fi
+        pushd . &>/dev/null
+        cd "$dir"
+        dir="$(pwd -P)"
+        popd &>/dev/null
+    fi
+
+    echo "$dir"
+}
+
+# check for write permissions
+#  @var   $SCRIPT (optional) echo prefix
+#  @param $1                 path to the directory
+exit_if_no_dir_permissions ()
+{
+    local dir="$1"
+
+    if ! [ -d "$dir" ]; then
+        mkdir -p "$dir"
+    fi
+
+    touch "$dir/.emu-permissions-test" &>/dev/null
+    if (( $? )); then
+        emu_error "insufficient user permissions for '$dir'"
+        exit $EMU_EXIT_INSUFFICIENT_PERMISSIONS
+    fi
+    cat "$dir/.emu-permissions-test" &>/dev/null
+    local return=$?
+    rm -f "$dir/.emu-permissions-test" &>/dev/null
+
+    if (( $return )); then
+        emu_error "insufficient user permissions for '$dir'"
+        exit $EMU_EXIT_INSUFFICIENT_PERMISSIONS
+    fi
+}
+
+# returns whether a directory is a source or not
+#  @param $1 (optional) path to directory
+is_source ()
+{
+    local dir="$1"
+
+    if [ -z "$dir" ]; then
+        dir="$(pwd)"
+    fi
+
+    if [[ -f "$dir/$EMU_DIR/excludes" ]] \
+        && [[ -d "$dir/$EMU_DIR/hooks" ]] \
+        && [[ -d "$dir/$EMU_DIR/stacks" ]]; then
+        return 0
+    else
+        return 15
+    fi
+}
+
+_test_source_dir ()
+{
+    dir="$(pwd -P)"
+
+    if ! is_source "$dir"; then
+        if [[ "$dir" != "/" ]]; then
+            cd ..
+            get_source_dir
+        else
+            # reached top of tree (/), source dir not found
+            SOURCE_DIR=""
+        fi
+    else
+        SOURCE_DIR="$dir"
+    fi
+}
+
+# recurse up a directory tree, looking for an emu source
+#  @param   $1          (optional) The directory to start the search for the
+#                       source in
+#  @return $SOURCE_DIR The source directory, or empty if not found
+get_source_dir ()
+{
+    local dir="$1"
+
+    if [ -z "$dir" ]; then
+        dir="$(pwd)"
+    fi
+
+    pushd . &>/dev/null
+    # navigate to and recurse the directory tree
+    cd "$dir"
+    if _test_source_dir; then
+        r=0
+    else
+        r=1
+    fi
+
+    # return to starting position
+    popd &>/dev/null
+
+    return $r
+}
+
+get_source_dir_if_empty ()
+{
+    if [ -z "$SOURCE_DIR" ]; then
+        get_source_dir
+    fi
+}
+
+# looks for an emu source, if it doesn't find one, it exits
+get_source_dir_or_fail ()
+{
+    get_source_dir
+    if [ -z "$SOURCE_DIR" ]; then
+        emu_panic
+        emu_error "not an emu source"
+        exit $EMU_EXIT_ERROR
+    fi
+}
+
+# returns whether a directory is a stack or not
+#  @param $1 (optional) path to directory
+is_stack ()
+{
+    local dir="$1"
+
+    if [ -z "$dir" ]; then
+        dir="$(pwd)"
+    fi
+
+    if [[ -f "$dir/$EMU_DIR/HEAD" ]] \
+        && [[ -d "$dir/$EMU_DIR/nodes" ]]; then
+        return 0
+    else
+        return 15
+    fi
+}
+
+_test_stack_dir ()
+{
+    dir="$(pwd -P)"
+
+    if ! is_stack "$dir"; then
+        if [[ "$dir" != "/" ]]; then
+            cd ..
+            get_stack_dir
+        else
+            # reached top of tree (/), stack dir not found
+            STACK_DIR=""
+        fi
+    else
+        STACK_DIR="$dir"
+    fi
+}
+
+# recurse up a directory tree, looking for an emu stack
+#  @param   $1        (optional) The directory to start the search for the
+#                     stack in
+#  @preturn $STACK_DIR The stack directory, or empty if not found
+get_stack_dir ()
+{
+    local dir="$1"
+
+    if [ -z "$dir" ]; then
+        dir="$(pwd)"
+    fi
+
+    pushd . &>/dev/null
+    # navigate to and recurse the directory tree
+    cd "$dir"
+    if _test_stack_dir; then
+        r=0
+    else
+        r=1
+    fi
+
+    # return to starting position
+    popd &>/dev/null
+
+    return $r
+}
+
+# check and block directory. If the directory is already locked, it will block
+# and poll periodically until free
+#  @param $1                Path to directory to block on
+#  @var   BLOCK_SLEEP_TIME  Time to sleep between block attempts (s)
+#  @var   BLOCK_COUNTER     Numeric Variable which must be initialised to 0
+#  @var   BLOCK_COUNTER_MAX Maximum number of attempts before failing, or -1 to
+#                           continue indefinitely
+block_until_dir_free ()
+{
+    local dir="$1"
+    local lock_file="$dir/$EMU_DIR/LOCK"
+
+    if [[ -f "$lock_file" ]]; then
+        BLOCK_COUNTER=$((BLOCK_COUNTER+1))
+
+        if [[ $BLOCK_COUNTER_MAX -ne -1 ]]; then
+            if [[ $BLOCK_COUNTER -gt $BLOCK_COUNTER_MAX ]]; then
+                echo ""
+                emu_error "failed to get exclusive access to directory:\n  $dir"
+                emu_panic
+                exit $EMU_EXIT_BLOCKED
+            fi
+        fi
+
+        # print the PID of blocking process
+        BLOCK_PID=$(cat "$lock_file" | grep PID | sed -r 's/PID: +//')
+        echo -en "\r$1 blocking on process: $BLOCK_PID "
+
+        # print status of blocking process
+        BLOCK_STATUS=$(ps -p "$BLOCK_PID")
+        if (( $? )); then
+            echo -n "[dead]"
+        else
+            echo -n "[$(echo $BLOCK_STATUS | cut -d' ' -f8)]"
+        fi
+
+        echo -n " ($BLOCK_COUNTER/$BLOCK_COUNTER_MAX)"
+        sleep $BLOCK_SLEEP_TIME
+        block_until_dir_free "$dir"
+    fi
+}
+
+# lock the specified directory
+#  @param $1            (optional) path to the directory to lock
+#  @var EMU_LOCK_FORCE  set to ignore existing locks
+#  @var EMU_LOCK_KILL   set to kill existing lock processes
+lock_dir ()
+{
+    local dir="$1"
+    local lock_file="$1/$EMU_DIR/LOCK"
+
+    if [ -z "$dir" ]; then
+        dir="$(pwd -P)"
+    fi
+
+    if (( $EMU_LOCK_FORCE )); then
+        if [ -f "$lock_file" ] && (( $EMU_LOCK_KILL )); then
+            # force with kill - kill lock process
+            local block_pid=$(cat "$lock_file" | grep PID | sed -r 's/PID:\s+//')
+            kill -9 $block_pid
+        fi
+    else
+        # polite
+        BLOCK_SLEEP_TIME=1
+        BLOCK_COUNTER=0
+        BLOCK_COUNTER_MAX=10
+        block_until_dir_free "$dir"
+    fi
+
+    echo -e "DATE: $(date)\nPID:  $$" > "$dir/$EMU_DIR/LOCK"
+}
+
+# force lock the specified directory, removing any existing locks
+#  @param $1 (optional) Path to the directory to lock
+lock_dir_force ()
+{
+    local dir="$1"
+
+    if [ -z "$dir" ]; then
+        dir="$(pwd -P)"
+    fi
+
+    echo -e "DATE: $(date)\nPID:  $$" > "$dir/$EMU_DIR/LOCK"
+}
+
+# force lock the specified directory, killing any existing locks
+#  @param $1 (optional) Path to the directory to lock
+lock_dir_kill ()
+{
+    local dir="$1"
+
+    if [ -z "$dir" ]; then
+        dir="$(pwd -P)"
+    fi
+
+    if [ -f "$dir/$EMU_DIR/LOCK" ]; then
+        # kill lock process
+        local block_pid=$(cat "$dir/$EMU_DIR/LOCK" | grep PID | sed -r 's/PID: +//')
+        kill -9 $block_pid
+    fi
+
+    echo -e "DATE: $(date)\nPID:  $$" > "$dir/$EMU_DIR/LOCK"
+}
+
+# remove the lock on source directory
+#  @param $1 (optional) Path to directory to lock
+unlock_dir ()
+{
+    local dir="$1"
+
+    if [ -z "$dir" ]; then
+        dir="$(pwd -P)"
+    fi
+
+    LOCK=$(cat "$dir/$EMU_DIR/LOCK" 2> /dev/null)
+    if [[ "$LOCK" == "" ]]; then
+        return
+    fi
+    LOCK_PID=$(echo "$LOCK" | grep PID | sed -r 's/PID: +//')
+
+    if [[ $$ -eq $LOCK_PID ]]; then
+        rm -f "$dir/$EMU_DIR/LOCK"
+    else
+        emu_error "cannot free lock $LOCK_PID with key $$"
+    fi
+}
+
+# generate a 32 digit hash of a directory
+#  @param $1 Path to directory
+hash_directory ()
+{
+    pushd . > /dev/null
+    cd "$1"
+    HASH=$(find . -type f -printf '%T@ %p\n' 2>/dev/null|sort -k 1nr \
+        |sed 's/^[^ ]* //'|head -n10|md5sum)
+    HASH=${HASH:0:32}
+    popd > /dev/null
+    echo $HASH
+}
+
+## Hooks #######################################################################
+
+# Execute a list of files.
+#
+# @param @ files.
+execute_file_list() {
+    local files="$@"
+
+    for x in $files; do
+        $x
+    done
+}
+
+# @param 1 hook type. Must be (pre|post|error).
+# @param 2 path to the hooks directory, e,g. '/path/.emu/hooks/exec'.
+get_hooks_list() {
+    local type="$1"
+    local dir="$2"
+
+    echo "$(find "$dir" -executable -type f -name '*.'$type 2>/dev/null)"
+}
+
+# Execute hooks of a given type. First, it executes the 'exec' hooks, then it
+# will run hooks specific to the current command. The command is implied from
+# the $EMU_ECHO_PREFIX variable. So for example, if emu-init calls:
+#
+#    'execute_hooks pre /path'
+#
+# This function will look in '/path/$EMU_DIR/hooks/exec' and run any executable
+# files it finds with the extension '.pre', then look in
+# '/path/$EMU_DIR/hooks/init' and run any executable '.pre' files there.
+#
+# @param 1 hook type. Must be (pre|post|error).
+# @param 2 [optiona] path to the source directory eg /path/to/dir/.
+#          If not given, current directory is used.
+execute_hooks() {
+    local type="$1"
+    local source="$2"
+
+    # Sanity check to ensure we have the correct type.
+    if [[ ! $type =~ (pre|post|error) ]]; then
+        return
+    fi
+
+    # Set the source to current dir if needed.
+    test -z "$source" && source=.
+
+    # Execute generic hooks (located in 'hooks/exec/').
+    execute_file_list "$(get_hooks_list "$type" "$source/$EMU_DIR/hooks/exec")"
+
+    # Execute command specific hooks (located in 'hoos/<command>/').
+    if [ -n "$EMU_ECHO_PREFIX" ]; then
+        local command="$(echo $EMU_ECHO_PREFIX | sed 's/^emu-//')"
+
+        execute_file_list "$(get_hooks_list "$type" "$source/$EMU_DIR/hooks/$command")"
+    fi
+}
+
+## Stacks ######################################################################
+
+# return the number of snapshots in stack
+#  @param $1 Path to stack directory
+stack_snapshot_count ()
+{
+    echo "$(ls -l "$1/$EMU_DIR/trees" | wc -l)"
+}
+
+# return the maximum size of the stack
+#  @param $1 Path to stack directory
+stack_max_snapshots ()
+{
+    echo "$(cat $1/$EMU_DIR/config/SNAPSHOT-COUNT)"
+}
+
+# prints details about a given stack
+#  @param $1          name of the stack
+#  @var   $SOURCE_DIR (optional) path of source directory
+print_stack_details ()
+{
+    local stack_name="$1"
+
+    if [ -z "$SOURCE_DIR" ]; then
+        get_source_dir
+    fi
+
+    local stack_path="$(cat $SOURCE_DIR/$EMU_DIR/stacks/$stack_name)"
+    local size="$(du -sh $stack_path | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')"
+    local head="$(cat $stack_path/$EMU_DIR/HEAD)"
+    local snapshot_count="$(ls $stack_path/$EMU_DIR/trees | wc -l)"
+    local load=$(echo "$snapshot_count / $(cat $stack_path/$EMU_DIR/config/SNAPSHOT-COUNT) * 100" | bc -l)
+
+    if (( $EMU_LOG_SUMMARY )); then
+        # summary stack info
+        cat <<EOF
+* $1 ($stack_path)
+EOF
+    else
+        # verbose stack info
+        cat <<EOF | less
+* $1
+  Path:           $stack_path
+  Size:           $size
+  Last snapshot:  $(cat $stack_path/$EMU_DIR/nodes/$head 2>/dev/null | grep Date | sed -r 's/Date +(.*)/\1/')
+  Snapshot count: $snapshot_count (${load::2}%)
+EOF
+    fi
+}
+
+# prints details about a given node
+#  @param $1          name of the node
+#  @var   $STACK_DIR   directory of the node stack
+print_node_details ()
+{
+    local node="$1"
+    local node_path="$STACK_DIR/$EMU_DIR/nodes/$node"
+    local node_date="$(cat $node_path | grep Date | sed -r 's/Date +(.*)/\1/')"
+    local node_size="$(cat $node_path | grep Size | sed -r 's/Size +(.*)/\1/')"
+
+    if (( $EMU_LOG_SUMMARY )); then
+        # summary node info
+        cat <<EOF
+   $node_date * $node
+EOF
+    else
+        # verbose node info
+        cat <<EOF
+
+  $node
+    Date: $node_date
+    Size: $node_size
+EOF
+    fi
+}
+
+## Snapshots ###################################################################
+
+# calculate and compare the snapshot hash against the node hash
+#  @param $1 Path to snapshot
+verify_node ()
+{
+    NODE=$(basename "$1")
+    NODE_HASH=${NODE:0:32}
+    HASH=$(hash_directory "$1")
+
+    if [ "$NODE_HASH" = "$HASH" ]; then
+        return 0
+    else
+        emu_error "verification failed!\n  Expected: $NODE_HASH\n  Actual:   $HASH"
+        return 1
+    fi
+}
+
+# lookup info from an emu node
+#  @param  $1 Node path
+#  @param  $2 Key
+#  @return    Value for key, or empty string if not found
+lookup_node_key ()
+{
+    echo "$(cat $1 2>/dev/null | grep $2 | sed -r 's/'$2' +(.*)/\1/')"
+}

@@ -1,0 +1,14 @@
+set -eu
+test_setup
+
+cd $EMU_TEST_DIR/test-source
+
+emu init -v
+emu stack -v add origin ../test-stack
+assert_zero "$(ls ../test-stack/.emu/nodes | wc -l)"
+assert_zero "$(ls ../test-stack/.emu/trees | wc -l)"
+emu push -n
+assert_zero "$(ls ../test-stack/.emu/nodes | wc -l)"
+assert_zero "$(ls ../test-stack/.emu/trees | wc -l)"
+
+test_teardown

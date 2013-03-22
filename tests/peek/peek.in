@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -ex
+test_setup
+
+msg='Hello, world!'
+
+# Give us a starting point.
+emu init
+emu stack add origin origin
+echo "$msg" > test
+emu push
+
+rm -f test
+
+emu peek $(ls origin/.emu/nodes)
+
+assert_is_file test
+assert_strings_match "$(cat test)" "$msg"
+
+test_teardown
