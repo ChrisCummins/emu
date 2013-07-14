@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 source @LIBEMU@
 EMU_ECHO_PREFIX=$(basename "$0")
