@@ -1,4 +1,4 @@
-AC_PREREQ([2.69])
+AC_PREREQ([2.68])
 
 m4_define([emu_major_version], [0])
 m4_define([emu_minor_version], [0])
