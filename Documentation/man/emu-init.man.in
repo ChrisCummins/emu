@@ -44,17 +44,17 @@ directory. It does not affect stacks, though it will remove refs to them
 .SH EXAMPLES
 .TP
 Start an emu source in the current directory:
-$ emu init -v
+emu init -v
 .TP
 Use a custom template directory:
-$ emu init -vt=~/my-source-templates
+emu init -vt=~/my-source-templates
 .TP
 Repair a broken source:
-$ emu init -R
+emu init -R
 .PP
 .TP
 Delete an emu source:
-$ emu init -C
+emu init -C
 .PP
 .SH EMU
 Part of the
