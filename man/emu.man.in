@@ -1,6 +1,6 @@
 .TH emu @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
 .SH NAME
-emu \- Snapshot backup software that builds stacks
+emu \- Fast incremental snapshot backups
 .SH SYNOPSIS
 .B emu
 [\-\-help] [\-\-version] <command> [<options>...]
