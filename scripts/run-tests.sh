@@ -61,7 +61,7 @@ test_teardown ()
     rm -rvf "$EMU_TEST_DIR"
 }
 
-cd tests &>/dev/null || {
+cd test &>/dev/null || {
     echo "Script must be executed from project base directory!" >&2;
     exit 1;
 }
