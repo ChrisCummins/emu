@@ -29,6 +29,10 @@ EMU_TEMPLATE_DIR='templates'
 EMU_TEMPLATE_FILES=$(cd "$EMU_TEMPLATE_DIR" && find . -type f | grep -v .gitignore | grep -v Makefile | tr '\n' ' ')
 AC_SUBST(EMU_TEMPLATE_FILES)
 
+# Set a default prefix.
+AS_IF([test "x$prefix" = "xNONE"],
+      [prefix="/usr/local"])
+
 # Useful locations.
 LIBEMU="$prefix/libexec/emu/libemu"
 AC_SUBST([LIBEMU])
