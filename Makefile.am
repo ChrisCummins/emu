@@ -11,10 +11,10 @@ EXTRA_DIST = autogen.sh
 
 .PHONY: check test todo help
 check test:
-	@./run-tests.sh
+	@./scripts/run-tests.sh
 
 todo:
-	@./todo.sh
+	@./scripts/todo.sh
 
 help:
 	@echo 'Build targets:'
