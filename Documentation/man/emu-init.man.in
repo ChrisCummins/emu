@@ -8,9 +8,9 @@ emu\-init \- create or reinitialize an existing emu source
 This command creates an empty emu source. This means creating a .emu
 directory with subdirectories for hooks, stack refs and configuration files.
 .PP
-During the init process, template files are copied from the global templates
-path, normally /usr/local/share/emu/templates. Use of option -t to specify a
-template directory will supercede this.
+During the init process, template files are copied from the global
+templates path: @prefix@/share/emu/templates. This can be overridden
+by specifying a -t <template-dir> parameter.
 .PP
 This command is non-destructive, running it on an existing emu source will not
 overwrite any existing data. Instead, it can be used to rescue a broken source,
