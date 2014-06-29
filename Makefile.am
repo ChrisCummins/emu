@@ -27,6 +27,4 @@ help:
 	@echo '  todo       - Show all TODO/FIXME flags in source files'
 	@echo '  help       - Display this help'
 	@echo ''
-	@echo '  make V=0|1 [targets] 0 => quiet build (default), 1 => verbose build'
-	@echo ''
 	@echo 'For further info see the ./README file'
