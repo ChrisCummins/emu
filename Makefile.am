@@ -1,6 +1,6 @@
 SUBDIRS = 				\
 	emu				\
-	man 				\
+	Documentation			\
 	templates			\
 	$(NULL)
 
