@@ -10,7 +10,7 @@ print_all_node_details ()
     local stack="$1"
     local counter=0
 
-    for node in $(ls "$stack_dir/$EMU_DIR/nodes" | sort -r); do
+    for node in $(ls "$STACK_DIR/$EMU_DIR/nodes" | sort -r); do
         counter=$((counter+1))
         if [[ $counter -le $EMU_LOG_MAX ]]; then
             print_node_details "$node"
@@ -39,9 +39,9 @@ show_stack_log() {
         exit $EMU_EXIT_ERROR
     fi
 
-    local stack_dir="$(cat $dir/$EMU_DIR/stacks/$stack 2>/dev/null)"
+    STACK_DIR="$(cat $dir/$EMU_DIR/stacks/$stack 2>/dev/null)"
 
-    if [ -z "$stack_dir" ] || [[ ! -d "$stack_dir" ]]; then
+    if [ -z "$STACK_DIR" ] || [[ ! -d "$STACK_DIR" ]]; then
         # stack files do not exist
         emu_error "stack '$stack' is corrrupt"
         rm -f $log_file
@@ -54,10 +54,10 @@ show_stack_log() {
         snapshot=$(echo "$in" | tail -n1)
 
         if [ "$snapshot" = "HEAD" ]; then
-            snapshot="$(cat "$stack_dir/$EMU_DIR/HEAD")"
+            snapshot="$(cat "$STACK_DIR/$EMU_DIR/HEAD")"
         fi
 
-        if [[ ! -d "$stack_dir/$EMU_DIR/trees/$snapshot" ]]; then
+        if [[ ! -d "$STACK_DIR/$EMU_DIR/trees/$snapshot" ]]; then
             emu_error "snapshot '$snapshot' does not exist"
             rm -f $log_file
             emu_panic
