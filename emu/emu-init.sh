@@ -112,7 +112,7 @@ main ()
 
     if [ -z "$EMU_SOURCE_TEMPLATE_DIR" ]
     then
-        EMU_SOURCE_TEMPLATE_DIR="@SOURCE_TEMPLATES@"
+        EMU_SOURCE_TEMPLATE_DIR="$EMU_DEFAULT_SOURCE_TEMPLATES"
     fi
 
     if (( $EMU_DIR_CLEAN ))

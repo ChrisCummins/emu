@@ -53,17 +53,7 @@ AM_INIT_AUTOMAKE([1.11 foreign -Wall -Werror -Wno-portability])
 AC_OUTPUT([
 Makefile
 emu/Makefile
-emu/emu-clean.sh
 emu/libemu.sh
-emu/emu-peek.sh
-emu/emu-verify.sh
-emu/emu.sh
-emu/emu-init.sh
-emu/emu-log.sh
-emu/emu-status.sh
-emu/emu-stack.sh
-emu/emu-push.sh
-emu/emu-pop.sh
 Documentation/Makefile
 Documentation/man/Makefile
 Documentation/man/emu-status.man

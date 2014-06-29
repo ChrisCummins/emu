@@ -6,7 +6,7 @@ EMU_ECHO_PREFIX=$(basename "$0")
 init_stack ()
 {
     STACK_DIR="$1"
-    TEMPLATE_DIR="@STACK_TEMPLATES@"
+    TEMPLATE_DIR="$EMU_DEFAULT_STACK_TEMPLATES"
 
     exit_if_no_dir_permissions "$1"
     mkdir $EMU_VERBOSE -p "$STACK_DIR/$EMU_DIR"
