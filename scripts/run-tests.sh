@@ -87,7 +87,11 @@ else
     test_dir="."
 fi
 
-test_files="$(find $test_dir -type f 2>/dev/null | sort | grep -v '\.in$')"
+test_files="$(find $test_dir -type f \
+                 -not -name '.gitignore' \
+                 -not -name 'libtest*' \
+                 -not -name '*.in' \
+                 2>/dev/null | sort)"
 
 if [ -z "$test_files" ]
 then
@@ -104,36 +108,33 @@ done
 # execute tests
 for test in $test_files
 do
-    if [ "$test" != "./.gitignore" ] && [ "$test" != "./libtest.sh" ]
+    if [ "$test_dir" == "." ]
     then
-        if [ "$test_dir" == "." ]
-        then
-            test_name="${test:2}"
-        else
-            test_name="$test"
-        fi
-
-        echo -ne "\t$test_name "
-
-        pushd . &>/dev/null
-        chmod +x $test
-        $test &> $test.log
-
-        exit_code=$?
-        if (( $exit_code ))
-        then
-            echo "${colour_fail}FAIL${colour_reset}"
-            echo "$test failed!" >>$test.log
-            test_teardown &>/dev/null
-            echo $exit_code >>$test.log
-            tests_failed=$((tests_failed+1))
-            else
-            echo "${colour_pass}PASS${colour_reset}"
-            rm -f $test.log
-            tests_passed=$((tests_passed+1))
-        fi
-
-        chmod -x $test
-        popd &>/dev/null
+        test_name="${test:2}"
+    else
+        test_name="$test"
     fi
+
+    echo -ne "\t$test_name "
+
+    pushd . &>/dev/null
+    chmod +x $test
+    $test &> $test.log
+
+    exit_code=$?
+    if (( $exit_code ))
+    then
+        echo "${colour_fail}FAIL${colour_reset}"
+        echo "$test failed!" >>$test.log
+        test_teardown &>/dev/null
+        echo $exit_code >>$test.log
+        tests_failed=$((tests_failed+1))
+    else
+        echo "${colour_pass}PASS${colour_reset}"
+        rm -f $test.log
+        tests_passed=$((tests_passed+1))
+    fi
+
+    chmod -x $test
+    popd &>/dev/null
 done
