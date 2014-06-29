@@ -16,10 +16,19 @@ REQUIREMENTS
 --------------------------------------------------------------------------------
 Emu has very few run time dependencies, and should run out-of-the-box on most
 GNU/Linux distributions and Mac OSX. If you are unsure that your system will
-suport emu, it is recommended that the test suite be ran after installation, as
-this will pick up on most system incompatabilities. On most systems:
+suport emu, it is recommended that the test suite be ran after installation.
 
-    $ sudo make install && make test
+INSTALLATION
+--------------------------------------------------------------------------------
+Emu uses a standard configure, make, install routine. Simply execute this
+command from the base project directory:
+
+    ./autogen.sh && ./configure && make && sudo make install
+
+It is recommended that the test suite by ran. Note that this must be performed
+_after_ installation:
+
+    make test
 
 BACKGROUND
 --------------------------------------------------------------------------------
