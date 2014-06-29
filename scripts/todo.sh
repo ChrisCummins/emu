@@ -32,8 +32,6 @@ while [ -f $tmp ]; do
     tmp="$tmp$tmp"
 done
 
-echo $tmp
-
 for f in $file_list; do
     grep -iHn 'TODO\|FIXME\|XXX' $f >> $tmp
 done
