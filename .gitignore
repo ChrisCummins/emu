@@ -20,4 +20,4 @@ Makefile
 Makefile.in
 
 # Tests output.
-ERROR.log
+test.log

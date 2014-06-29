@@ -1,7 +1,7 @@
 #!/bin/bash
 
 EXIT_NO_TESTS=1
-ERROR_LOG=../ERROR.log
+ERROR_LOG=../test.log
 tests_passed=0
 tests_failed=0
 tests_skipped=0
