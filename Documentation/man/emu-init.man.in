@@ -59,6 +59,17 @@ emu init -f
 Delete an emu source:
 emu init -C
 .PP
+.SH HOW IT WORKS
+First, the init program checks for read and write permissions in the
+specified directory (by default, the current directory, unless
+overridden with the \-\-source-dir argument). Once these have been
+established, it creates the .emu directory and required
+sub-directories for an emu source, and copies over any files from the
+templates folder, using the system default if not overriden with the
+\-\-template-dir argument.
+.PP
+If the \-\-clean argument is given, the init program simply deletes
+the .emu directory and any files within it.
 .SH EMU
 Part of the
 .B emu
