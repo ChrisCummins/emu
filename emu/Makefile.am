@@ -16,4 +16,4 @@ pkglibexec_SCRIPTS = libemu
 CLEANFILES = $(pkglibexec_SCRIPTS) $(bin_SCRIPTS)
 
 %: %.sh
-	$(CP) $< $@
+	$(INSTALL) --mode=755 $< $@ &
