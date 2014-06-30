@@ -27,7 +27,7 @@ then
 fi
 assert_dirs_match $EMU_TEST_DIR/test-template "$EMU_TEST_DIR"/test-source/.emu
 
-emu init -t$EMU_TEST_DIR/test-template -R
+emu init -t$EMU_TEST_DIR/test-template -f
 if [ "$(cat .emu/abc | tail -n1)" != "abc" ]
 then
     echo "'$(cat .emu/abc | tail -n1)' != 'abc'"
@@ -37,13 +37,5 @@ assert_dirs_match $EMU_TEST_DIR/test-template "$EMU_TEST_DIR"/test-source/.emu
 
 emu init -C
 assert_is_not_dir .emu
-
-EMU_SOURCE_TEMPLATE_DIR=$EMU_TEST_DIR/test-template emu init
-if [ "$(cat .emu/abc | tail -n1)" != "abc" ]
-then
-    echo "'$(cat .emu/abc | tail -n1)' != 'abc'"
-    exit 5
-fi
-assert_dirs_match $EMU_TEST_DIR/test-template "$EMU_TEST_DIR"/test-source/.emu
 
 test_teardown
