@@ -20,7 +20,7 @@ emu push
 emu push
 emu push
 
-assert_strings_match "$(cat ../test-stack/.emu/config/SNAPSHOT-COUNT)" "$(ls ../test-stack/.emu/nodes | wc -l)"
-assert_strings_match "$(cat ../test-stack/.emu/config/SNAPSHOT-COUNT)" "$(ls ../test-stack/.emu/trees | wc -l)"
+assert_strings_match "$(sed -n 's/max number = \?\(.*\)/\1/ip' ../test-stack/.emu/config)" "$(ls ../test-stack/.emu/nodes | wc -l)"
+assert_strings_match "$(sed -n 's/max number = \?\(.*\)/\1/ip' ../test-stack/.emu/config)" "$(ls ../test-stack/.emu/trees | wc -l)"
 
 test_teardown

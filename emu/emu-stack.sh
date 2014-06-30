@@ -12,10 +12,9 @@ init_stack ()
     mkdir $EMU_VERBOSE -p "$STACK_DIR/$EMU_DIR"
     mkdir $EMU_VERBOSE -p "$STACK_DIR/$EMU_DIR/trees"
     mkdir $EMU_VERBOSE -p "$STACK_DIR/$EMU_DIR/nodes"
-    mkdir $EMU_VERBOSE -p "$STACK_DIR/$EMU_DIR/config"
     touch "$STACK_DIR/$EMU_DIR/HEAD"
     echo $(pwd) > "$STACK_DIR/$EMU_DIR/SOURCE"
-    cp -nr $EMU_VERBOSE "$TEMPLATE_DIR/config/" "$STACK_DIR/$EMU_DIR/"
+    cp -n $EMU_VERBOSE "$TEMPLATE_DIR/config" "$STACK_DIR/$EMU_DIR/"
 
     if ! (( $EMU_QUIET ))
     then

@@ -592,7 +592,7 @@ stack_snapshot_count ()
 #  @param $1 Path to stack directory
 stack_max_snapshots ()
 {
-    echo "$(cat $1/$EMU_DIR/config/SNAPSHOT-COUNT)"
+    echo "$(sed -n 's/max number = \?\(.*\)/\1/ip' $1/$EMU_DIR/config)"
 }
 
 # prints details about a given stack

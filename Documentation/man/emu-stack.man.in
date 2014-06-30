@@ -37,12 +37,10 @@ attempt to add a stack that has previously be removed with 'emu rm'. In this
 situation, 'emu add' will behave the same way that 'emu init' does in an
 existing source. Additionally the command takes the following options:
 .TP
-    \-s <number>
-
-set the maximum size of the new stack, as a number of snapshots. This value can
-be set at any time by editing the SNAPSHOT\-COUNT config file. If this argument
-is ommitted, the default value will be dictated by the contents of the
-$EMU_STACK_TEMPLATE_DIR/config/SNAPSHOT\-COUNT template file
+\-s <number>
+set the maximum size of the new stack, as a number of snapshots. This
+value can be set at any time by editing the "Max number" key in the
+"Snapshots" section of the config file.
 .TP
 rm <stack>
 remove stack <stack> from the source refs. This does not affect the stackSTACKe

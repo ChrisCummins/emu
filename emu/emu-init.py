@@ -41,7 +41,7 @@ def emu_init(options):
     emu = options.source_dir + "/.emu"
 
     # Create directory structure
-    directories = ["/", "/config", "/hooks", "/stacks"]
+    directories = ["/", "/hooks", "/stacks"]
     for d in directories:
         Libemu.mkdir(emu + d, mode=0700, verbose=options.verbose)
 
