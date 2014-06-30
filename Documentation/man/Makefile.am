@@ -1,3 +1,4 @@
+if ENABLE_MAN_PAGES
 man_MANS =	 			\
 	emu.1				\
 	emu-clean.1			\
@@ -12,6 +13,7 @@ man_MANS =	 			\
 	$(NULL)
 
 CLEANFILES = $(man_MANS)
+endif
 
 %.1: %.man
 	cp $< $@
