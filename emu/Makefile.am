@@ -11,11 +11,14 @@ bin_SCRIPTS = 				\
 	emu-verify			\
 	$(NULL)
 
-pkglibexec_SCRIPTS = libemu
+pkglibexec_SCRIPTS = libemu libemu.py
 
 CLEANFILES = $(pkglibexec_SCRIPTS) $(bin_SCRIPTS)
 
 %: %.sh
+	$(INSTALL) --mode=755 $< $@ &
+
+libemu: libemu.sh
 	$(INSTALL) --mode=755 $< $@ &
 
 %: %.py
