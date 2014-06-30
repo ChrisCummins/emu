@@ -17,3 +17,6 @@ CLEANFILES = $(pkglibexec_SCRIPTS) $(bin_SCRIPTS)
 
 %: %.sh
 	$(INSTALL) --mode=755 $< $@ &
+
+%: %.py
+	$(INSTALL) --mode=755 $< $@ &
