@@ -229,8 +229,8 @@ push_snapshot_on_stack ()
     generate_snapshot_name "$stack_dir"
     if [ ! $EMU_DRY_RUN ]
     then
-        mv "$stack_dir/$EMU_DIR/trees/new" "$stack_dir/.emu/trees/$HASH"
-        ln -s $EMU_VERBOSE "$stack_dir/$EMU_DIR/trees/$HASH" "$stack_dir/$SNAPSHOT"
+        mv "$stack_dir/$EMU_DIR/trees/new" "$stack_dir/$SNAPSHOT"
+        ln -s $EMU_VERBOSE "$stack_dir/$SNAPSHOT" "$stack_dir/$EMU_DIR/trees/$HASH"
         generate_node "$stack_dir"
         push_head "$stack_dir"
 
