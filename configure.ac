@@ -1,10 +1,9 @@
 AC_PREREQ([2.68])
 
-m4_define([emu_major_version], [0])
-m4_define([emu_minor_version], [0])
-m4_define([emu_micro_version], [5])
-m4_define([emu_version],
-          [emu_major_version.emu_minor_version.emu_micro_version])
+m4_define([emu_major_version],[0])
+m4_define([emu_minor_version],[0])
+m4_define([emu_micro_version],[7])
+m4_define([emu_version],[emu_major_version.emu_minor_version.emu_micro_version])
 
 AC_INIT([emu],
 	[emu_version],
