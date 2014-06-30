@@ -13,7 +13,7 @@ print_status_table() {
         local stack_dir="$(cat $dir/$EMU_DIR/stacks/$stack)"
         local newest="$(ls $stack_dir | sort | head -n1)"
         local count="$(ls $stack_dir | wc -l)"
-        local max="$(cat "$stack_dir/$EMU_DIR/config/SNAPSHOT-COUNT")"
+        local max="$(stack_max_snapshots "$stack_dir")"
         local perc="$(echo "($count / $max) * 100" | bc -l | xargs printf "%1.0f")%"
         local du="$(df -h "$stack_dir" | tail -n1)"
         local dev=$(echo "$du" | awk '{ print $6 }')

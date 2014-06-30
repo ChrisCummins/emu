@@ -610,7 +610,7 @@ print_stack_details ()
     local size="$(du -sh $stack_path | sed -r 's/([0-9a-zA-Z]+)\s.*/\1/')"
     local head="$(cat $stack_path/$EMU_DIR/HEAD)"
     local snapshot_count="$(ls $stack_path/$EMU_DIR/trees | wc -l)"
-    local load=$(echo "$snapshot_count / $(cat $stack_path/$EMU_DIR/config/SNAPSHOT-COUNT) * 100" | bc -l)
+    local load=$(echo "$snapshot_count / $(stack_max_snapshots "$stack_path") * 100" | bc -l)
 
     if (( $EMU_LOG_SUMMARY )); then
         # summary stack info

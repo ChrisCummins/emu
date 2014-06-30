@@ -15,7 +15,7 @@ init_stack ()
     mkdir $EMU_VERBOSE -p "$STACK_DIR/$EMU_DIR/config"
     touch "$STACK_DIR/$EMU_DIR/HEAD"
     echo $(pwd) > "$STACK_DIR/$EMU_DIR/SOURCE"
-    cp -n $EMU_VERBOSE "$TEMPLATE_DIR/config/SNAPSHOT-COUNT" "$STACK_DIR/$EMU_DIR/config"
+    cp -nr $EMU_VERBOSE "$TEMPLATE_DIR/config/" "$STACK_DIR/$EMU_DIR/"
 
     if ! (( $EMU_QUIET ))
     then
