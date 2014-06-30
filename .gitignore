@@ -3,6 +3,9 @@
 .[#]*
 *~
 
+# Python files.
+*.pyc
+
 # Release tarballs.
 emu-*.tar.gz
 
