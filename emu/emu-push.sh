@@ -71,7 +71,7 @@ generate_hash ()
 #  @return SNAPSHOT A snapshot name
 generate_snapshot_name ()
 {
-    SNAPSHOT=$(date -d @$(printf '%d' 0x5${HASH:32:8}) +'%Y-%m-%d %T')
+    SNAPSHOT=$(date -d @$(printf '%d' 0x5${HASH:32:8}) +'%Y-%m-%d %H.%M.%S')
 }
 
 # generate a snapshot node file
