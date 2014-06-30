@@ -662,7 +662,7 @@ EOF
 verify_node ()
 {
     NODE=$(basename "$1")
-    NODE_HASH=${NODE:0:32}
+    NODE_HASH=${NODE:8:32}
     HASH=$(hash_directory "$1")
 
     if [ "$NODE_HASH" = "$HASH" ]; then

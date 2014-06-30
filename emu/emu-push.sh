@@ -54,8 +54,8 @@ get_stacks ()
 #  @return HASH A 40 digit snapshot UID
 generate_hash ()
 {
-    HASH=$(hash_directory "$1/$EMU_DIR/trees/new")
-    HASH=$HASH$(printf '%x\n' $(date +'%s') | tail -c8)
+    HASH=$(printf '%x\n' $(date +'%s') | tail -c9)
+    HASH=$HASH$(hash_directory "$1/$EMU_DIR/trees/new")
 
     # check if hash exists, and if so, wait
     if [[ -f "$1/$EMU_DIR/nodes/$HASH" ]]
@@ -71,7 +71,7 @@ generate_hash ()
 #  @return SNAPSHOT A snapshot name
 generate_snapshot_name ()
 {
-    SNAPSHOT=$(date -d @$(printf '%d' 0x5${HASH:32:8}) +'%Y-%m-%d %H.%M.%S')
+    SNAPSHOT=$(date -d @$(printf '%d' 0x${HASH:0:8}) +'%Y-%m-%d %H.%M.%S')
 }
 
 # generate a snapshot node file
@@ -155,7 +155,7 @@ remove_snapshot ()
     rm -f $EMU_VERBOSE "$1/$EMU_DIR/nodes/$2"
     rm -f $EMU_VERBOSE "$1/$EMU_DIR/nodes/$2.MSG"
     rm -rf $EMU_VERBOSE "$1/$EMU_DIR/trees/$2"
-    rm -rf $EMU_VERBOSE "$1/$(date -d @$(printf '%d' 0x5${2:32:8}) +'%Y-%m-%d %T')"
+    rm -rf $EMU_VERBOSE "$1/$(date -d @$(printf '%d' 0x5${2:0:8}) +'%Y-%m-%d %T')"
 }
 
 # remove the oldest in tree in a set of snapshots
