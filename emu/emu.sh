@@ -11,7 +11,7 @@ help_command ()
     then
         local exec=emu-$command
         command -v $exec >/dev/null 2>&1 || { command_not_found "$command"; }
-        $exec --help
+        man $exec
         exit 0
     else
         print_help
