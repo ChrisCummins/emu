@@ -33,7 +33,7 @@
 progs="autoconf automake"
 
 ## Minimum versions we need:
-autoconf_min=$(sed -n 's/^ *AC_PREREQ(\([0-9\.]*\)).*/\1/p' configure.ac)
+autoconf_min=$(sed -n 's/^ *AC_PREREQ(\[\?\([0-9\.]*\)\]\?).*/\1/p' configure.ac)
 
 automake_min=$(sed -n 's/^ *AM_INIT_AUTOMAKE( *\[\? *\([0-9\.]*\).*/\1/p' configure.ac)
 
