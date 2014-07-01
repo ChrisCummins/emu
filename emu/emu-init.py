@@ -23,14 +23,14 @@
 # SOFTWARE.
 #
 
-# Resolve and import Libemu
-import sys
 import os
-sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
-from libemu import Libemu
-
+import sys
 from sys import exit
 
+# Resolve and import Libemu
+sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
+from libemu import Libemu
+from libemu import Source
 
 def emu_init(options):
     def err_cb(*data):
@@ -55,11 +55,8 @@ def emu_init(options):
 
 
 def emu_clean(options):
-    emu = options.source_dir + "/.emu"
-    Libemu.exists(emu, err=True)
-    Libemu.rm(emu, verbose=options.verbose)
-
-    print "Removed source at '{0}'".format(emu)
+    source = Source(options.source_dir)
+    source.clean(options.verbose)
     return 0
 
 

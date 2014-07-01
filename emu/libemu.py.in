@@ -118,6 +118,17 @@ class Stack:
         self.snapshots = self._snapshots()
 
 
+class Source:
+
+    def __init__(self, source_dir):
+        self.path = source_dir
+        Libemu.exists(self.path, err=True)
+
+    def clean(self, verbose=False):
+        Libemu.rm(self.path + "/.emu", verbose=verbose)
+        print "Removed source at '{0}'".format(self.path)
+
+
 class Libemu:
     prefix = "/usr/local"
     global_template_dir = prefix + "/share/emu/templates"
