@@ -33,51 +33,30 @@ from libemu import Libemu
 from libemu import Source
 from libemu import SourceCreateError
 
-def emu_init(options):
-    try:
-        source = Source.create(options.source_dir, options.template_dir,
-                               verbose=options.verbose, force=options.force)
-
-        print "Initialised source at '{0}'".format(source.path)
-        return 0
-    except SourceCreateError as e:
-        print e
-        return 1
-
-
-def emu_clean(options):
-    source = Source(options.source_dir)
-    source.clean(verbose=options.verbose)
-    print "Removed source at '{0}'".format(source.path)
-    return 0
-
-
 def main(argv, argc):
     parser = Libemu.get_option_parser(name="emu init",
                                       desc="create or reinitialize an existing emu source")
-
     parser.add_option("-t", "--template-dir", action="store", type="string",
                       dest="template_dir", metavar="DIR",
                       default=Libemu.global_template_dir + "/source-templates",
                       help="Copy templates from the directory DIR")
-
     parser.add_option("-f", "--force", action="store_true", dest="force",
                       default=False, help="Overwrite existing files")
-    parser.add_option("-C", "--clean", action="store_true", dest="clean",
-                      default=False,
-                      help="Clean the working directory, reversing the effect of an init")
-
     (options, args) = parser.parse_args()
 
     # Fail if no read/write permissions
     Libemu.get_user_read_permissions(options.source_dir, err=True)
     Libemu.get_user_write_permissions(options.source_dir, err=True)
 
-    # Perform relevant action
-    if options.clean:
-        return emu_clean(options)
-    else:
-        return emu_init(options)
+    # Perform initialisation
+    try:
+        source = Source.create(options.source_dir, options.template_dir,
+                               verbose=options.verbose, force=options.force)
+        print "Initialised source at '{0}'".format(source.path)
+        return 0
+    except SourceCreateError as e:
+        print e
+        return 1
 
 
 if __name__ == "__main__":

@@ -227,7 +227,6 @@ AS_IF([test "x$enable_tests" = xyes],
               test/init/reinitialize
               test/init/quiet
               test/init/permissions
-              test/init/clean
               test/man
               test/version
               test/verify/hash

@@ -133,10 +133,6 @@ class Source:
         Libemu.exists(self.path + "/.emu/stacks", err=True)
 
 
-    def clean(self, verbose=False):
-        Libemu.rm(self.path + "/.emu", verbose=verbose)
-
-
     @staticmethod
     def create(path, template_dir, verbose=False, force=False):
         def err_cb(*data):

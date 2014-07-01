@@ -4,7 +4,7 @@ emu\-init \- create or reinitialize an existing emu source
 .SH SYNOPSIS
 .B emu init
 [\-\-help] [\-\-version] [\-v] [\-S <source-dir>]
-[\-t <template-dir>] [\-f] [\-C]
+[\-t <template-dir>] [\-f]
 .SH DESCRIPTION
 This command creates an empty emu source. This means creating a .emu
 directory with subdirectories for hooks, stack refs and configuration
@@ -40,10 +40,6 @@ specify the directory from which templates will be copied
 \-f \-\-force
 if a file exists in both the template and source directories, replace
 the source file with the template
-.TP
-\-C \-\-clean
-clean directory. This undoes the effect of an init, clearing the .emu
-directory. It does not affect any stacks
 .SH EXAMPLES
 .TP
 Start an emu source in the current directory:
@@ -55,10 +51,6 @@ emu init -vt=~/my-source-templates
 Repair a broken source:
 emu init -f
 .PP
-.TP
-Delete an emu source:
-emu init -C
-.PP
 .SH HOW IT WORKS
 First, the init program checks for read and write permissions in the
 specified directory (by default, the current directory, unless
@@ -67,9 +59,6 @@ established, it creates the .emu directory and required
 sub-directories for an emu source, and copies over any files from the
 templates folder, using the system default if not overriden with the
 \-\-template-dir argument.
-.PP
-If the \-\-clean argument is given, the init program simply deletes
-the .emu directory and any files within it.
 .SH EMU
 Part of the
 .B emu
