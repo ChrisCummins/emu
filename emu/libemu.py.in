@@ -128,13 +128,15 @@ class Libemu:
 
 
     @staticmethod
-    def get_option_parser(name="", desc=""):
+    def get_option_parser(name="", args="", desc=""):
         string = ""
 
         if len(name):
-            string = name + " [options] "
+            string = name + " [options]"
+            if len(args):
+                string += " " + args
             if len(desc):
-                string += "- " + desc
+                string += " - " + desc
 
         if (len(string)):
             parser = OptionParser(string)
@@ -246,3 +248,39 @@ class Libemu:
                 exit(1)
 
         return ret
+
+
+    @staticmethod
+    def get_snapshots(args, source_dir):
+        def resolve(arg, source_dir):
+            try:
+                return Stack(arg, source_dir).snapshots
+            except StackNotFoundError as e:
+                print e
+                sys.exit(1)
+
+        if not len(args):
+            args = os.listdir(source_dir + "/.emu/stacks")
+
+        paths = []
+        for arg in args:
+            paths += resolve(arg, source_dir)
+
+        return paths
+
+
+    @staticmethod
+    def die_if_not_source(path):
+        if not (os.path.isdir(path + "/.emu") and
+                os.path.exists(path + "/.emu/config")):
+            print "No emu source found!"
+            sys.exit(1)
+
+
+    @staticmethod
+    def hash_dir(path):
+        command = ("cd {0} && find . -type f -printf '%T@ %p\n' 2>/dev/null | "
+                   "sort -k 1nr | sed 's/^[^ ]* //' | head -n100 | md5sum | "
+                   "awk '{{print $1}}'").format(path)
+
+        return subprocess.check_output(command, shell=True).rstrip()
