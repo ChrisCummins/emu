@@ -280,7 +280,6 @@ class Libemu:
     @staticmethod
     def hash_dir(path):
         command = ("cd {0} && find . -type f -printf '%T@ %p\n' 2>/dev/null | "
-                   "sort -k 1nr | sed 's/^[^ ]* //' | head -n100 | md5sum | "
-                   "awk '{{print $1}}'").format(path)
+                   "grep -v ' ./.emu/' | md5sum | awk '{{print $1}}'").format(path)
 
         return subprocess.check_output(command, shell=True).rstrip()

@@ -514,8 +514,8 @@ hash_directory ()
 {
     pushd . > /dev/null
     cd "$1"
-    HASH=$(find . -type f -printf '%T@ %p\n' 2>/dev/null|sort -k 1nr \
-        |sed 's/^[^ ]* //'|head -n10|md5sum)
+    HASH=$(find . -type f -printf '%T@ %p\n' 2>/dev/null | \
+        grep -v ' ./.emu/' | md5sum | awk '{print $1}')
     HASH=${HASH:0:32}
     popd > /dev/null
     echo $HASH
