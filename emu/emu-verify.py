@@ -44,12 +44,11 @@ def main(argv, argc):
     status = 0
 
     for snapshot in snapshots:
-        checksum = Libemu.hash_dir(snapshot.tree)
-        if checksum == snapshot.checksum:
-            print snapshot.stack + ":" + snapshot.id, "ok"
+        if snapshot.verify():
+            print snapshot, "ok"
         else:
             status = 2
-            print snapshot.stack + ":" + snapshot.id, "bad"
+            print snapshot, "bad"
 
     return status
 

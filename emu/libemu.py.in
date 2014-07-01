@@ -55,6 +55,16 @@ class Snapshot:
         if not (os.path.exists(self.node) and os.path.isdir(self.tree)):
             raise SnapshotNotFoundError(shash, stack=stack_name)
 
+    _valid = None
+    def verify(self):
+        if self._valid == None:
+            checksum = Libemu.hash_dir(self.tree)
+            self._valid = checksum == self.checksum
+        return self._valid
+
+    def __repr__(self):
+        return self.stack + ":" + self.id
+
 
 class StackNotFoundError(Exception):
     def __init__(self, name):
