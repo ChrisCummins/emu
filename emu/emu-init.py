@@ -31,32 +31,24 @@ from sys import exit
 sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
 from libemu import Libemu
 from libemu import Source
+from libemu import SourceCreateError
 
 def emu_init(options):
-    def err_cb(*data):
-        emu_clean(options)
-        print "Failed to initialise emu source!"
-        exit(1)
+    try:
+        source = Source.create(options.source_dir, options.template_dir,
+                               verbose=options.verbose, force=options.force)
 
-    emu = options.source_dir + "/.emu"
-
-    # Create directory structure
-    directories = ["/", "/hooks", "/stacks"]
-    for d in directories:
-        Libemu.mkdir(emu + d, mode=0700, verbose=options.verbose)
-
-    # Copy template files
-    Libemu.rsync(options.template_dir + "/", emu + "/", err=err_cb,
-                 archive=True, verbose=options.verbose,
-                 update=options.force)
-
-    print "Initialised source at '{0}'".format(emu)
-    return 0
+        print "Initialised source at '{0}'".format(source.path)
+        return 0
+    except SourceCreateError as e:
+        print e
+        return 1
 
 
 def emu_clean(options):
     source = Source(options.source_dir)
-    source.clean(options.verbose)
+    source.clean(verbose=options.verbose)
+    print "Removed source at '{0}'".format(source.path)
     return 0
 
 
