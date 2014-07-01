@@ -23,10 +23,90 @@
 # SOFTWARE.
 #
 import os
+import re
 import shutil
+import subprocess
 import sys
 from optparse import OptionParser
 from sys import exit
+
+
+class SnapshotNotFoundError(Exception):
+    def __init__(self, hash, stack=''):
+        self.hash = hash
+        self.stack = stack
+    def __str__(self):
+        if len(self.stack):
+            name = self.stack + ":" + self.hash
+        else:
+            name = self.hash
+        return "Snapshot '{0}' not found!".format(name)
+
+
+class Snapshot:
+    def __init__(self, shash, stack_name, stack_dir):
+        self.id = shash
+        self.stack = stack_name
+        self.date = self.id[0:8]
+        self.checksum = self.id[8:]
+        self.node = stack_dir + "/.emu/nodes/" + shash
+        self.tree = stack_dir + "/.emu/trees/" + shash
+
+        if not (os.path.exists(self.node) and os.path.isdir(self.tree)):
+            raise SnapshotNotFoundError(shash, stack=stack_name)
+
+
+class StackNotFoundError(Exception):
+    def __init__(self, name):
+        self.name = name
+    def __str__(self):
+        return "Stack '{0}' not found!".format(self.name)
+
+
+class Stack:
+    re = r"^([^:]+)?(:([a-f0-9]+))?$"
+
+    def _stack(self):
+        try:
+            return re.sub(self.re, r"\1", self.sid)
+        except:
+            return ""
+
+    def _snapshot(self):
+        try:
+            return re.sub(self.re, r"\3", self.sid)
+        except:
+            return ""
+
+    def _path(self):
+        try:
+            pointer = self.source + "/.emu/stacks/" + self.stack
+            with open(pointer, 'r') as f:
+                path = f.read().strip()
+                if not os.path.exists(path):
+                    raise
+                return path
+        except:
+            raise StackNotFoundError(self.sid)
+
+    def _snapshots(self):
+        if len(self.snapshot):
+            ids = [self.snapshot]
+        else:
+            ids = os.listdir(self.path + "/.emu/nodes")
+        snapshots = []
+        for id in ids:
+            snapshots.append(Snapshot(id, self.stack, self.path))
+        return snapshots
+
+    def __init__(self, snapshot_id, source_dir):
+        self.sid = snapshot_id
+        self.source = source_dir
+        self.stack = self._stack()
+        self.snapshot = self._snapshot()
+        self.path = self._path()
+        self.snapshots = self._snapshots()
+
 
 class Libemu:
     prefix = "/usr/local"
