@@ -74,7 +74,7 @@ class StackNotFoundError(Exception):
 
 
 class Stack:
-    re = r"^([^:]+)?(:([a-f0-9]+))?$"
+    re = r"^([^:]+)?(:(([a-f0-9]+)|(HEAD(~([0-9]+)?)?)))?$"
 
     def _stack(self):
         try:
@@ -84,7 +84,22 @@ class Stack:
 
     def _snapshot(self):
         try:
-            return re.sub(self.re, r"\3", self.sid)
+            s = re.sub(self.re, r"\3", self.sid)
+
+            # HEAD~ syntax
+            if re.match(r"^HEAD.*", s):
+                index = 0
+                if re.match(r"HEAD~.*", s):
+                    index += 1
+                    if re.match(r".*\d+", s):
+                        index += int(re.sub(r"HEAD~", r"", s)) - 1
+                ids = os.listdir(self.path + "/.emu/nodes")
+                try:
+                    return ids[index]
+                except IndexError:
+                    SnapshotNotFoundError(self.stack, s)
+
+            return s
         except:
             return ""
 
@@ -113,8 +128,8 @@ class Stack:
         self.sid = snapshot_id
         self.source = source_dir
         self.stack = self._stack()
-        self.snapshot = self._snapshot()
         self.path = self._path()
+        self.snapshot = self._snapshot()
         self.snapshots = self._snapshots()
 
 
@@ -299,7 +314,7 @@ class Libemu:
         def resolve(arg, source_dir):
             try:
                 return Stack(arg, source_dir).snapshots
-            except StackNotFoundError as e:
+            except (StackNotFoundError, SnapshotNotFoundError) as e:
                 print e
                 sys.exit(1)
 
