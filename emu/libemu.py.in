@@ -42,6 +42,15 @@ class SnapshotNotFoundError(Exception):
             name = self.hash
         return "Snapshot '{0}' not found!".format(name)
 
+class Node:
+    def __init__(self, path):
+        with open(path, 'r') as f:
+            node = f.read()
+            self.data = {}
+            for l in node.rstrip().split('\n'):
+                p = re.split(r"\W+", l, 1)
+                self.data[p[0]] = p[1]
+
 
 class Snapshot:
     def __init__(self, shash, stack_name, stack_dir):
@@ -64,6 +73,13 @@ class Snapshot:
 
     def __repr__(self):
         return self.stack + ":" + self.id
+
+    def log(self):
+        node = Node(self.node)
+        s =  "snapshot " + self.id + "\n"
+        s += "Date:    " + node.data['Date'] + "\n"
+        s += "Size:    " + node.data['Size'] + "\n"
+        return s
 
 
 class StackNotFoundError(Exception):
