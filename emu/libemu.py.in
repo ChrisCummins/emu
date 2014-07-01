@@ -27,6 +27,7 @@ import re
 import shutil
 import subprocess
 import sys
+from ConfigParser import ConfigParser
 from optparse import OptionParser
 from sys import exit
 
@@ -140,6 +141,28 @@ class Stack:
             snapshots.append(Snapshot(id, self.stack, self.path))
         return snapshots
 
+    def get_config(self):
+        try:
+            return self._config
+        except AttributeError:
+            self._config = ConfigParser()
+            self._config.read(self.path + "/.emu/config")
+            return self.get_config()
+
+    def get_max_snapshots(self):
+        try:
+            return self._max_snapshots
+        except AttributeError:
+            self._max_snapshots = self.get_config().get('Snapshots', 'Max Number')
+            return self.get_max_snapshots()
+
+    def get_disk_usage(self):
+        try:
+            return self._du
+        except AttributeError:
+            self._du = Libemu.du(self.path)
+            return self.get_disk_usage()
+
     def __init__(self, snapshot_id, source_dir):
         self.sid = snapshot_id
         self.source = source_dir
@@ -147,6 +170,9 @@ class Stack:
         self.path = self._path()
         self.snapshot = self._snapshot()
         self.snapshots = self._snapshots()
+
+    def __str__(self):
+        return self.stack + " " + self.path
 
 
 class SourceCreateError(Exception):
@@ -162,6 +188,10 @@ class Source:
         Libemu.exists(self.path, err=True)
         Libemu.exists(self.path + "/.emu", err=True)
         Libemu.exists(self.path + "/.emu/stacks", err=True)
+
+        self.stacks = []
+        for stack in os.listdir(self.path + "/.emu/stacks"):
+            self.stacks.append(Stack(stack, self.path))
 
 
     @staticmethod
