@@ -158,11 +158,21 @@ class Stack:
             self._config.read(self.path + "/.emu/config")
             return self.get_config()
 
+    def get_config_prop(self, section, prop, err=True):
+        try:
+            return self.get_config().get(section, prop)
+        except:
+            if err:
+                print "Error parsing config file!"
+                print "Could not find property '{0}' in section '{1}'".format(prop, section)
+                sys.exit(1)
+            return ""
+
     def get_max_snapshots(self):
         try:
             return self._max_snapshots
         except AttributeError:
-            self._max_snapshots = self.get_config().get('Snapshots', 'Max Number')
+            self._max_snapshots = self.get_config_prop('Snapshots', 'Max Number')
             return self.get_max_snapshots()
 
     def get_disk_usage(self):
