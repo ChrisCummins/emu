@@ -40,7 +40,7 @@ def main(argv, argc):
     Libemu.die_if_not_source(options.source_dir)
 
     source = Source(options.source_dir)
-    for stack in source.stacks:
+    for stack in Libemu.get_stacks(args, source):
         print stack.stack
         print "Location:        {0}".format(stack.path)
         print "No of snapshots: {0}".format(len(stack.snapshots))

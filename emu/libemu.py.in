@@ -182,7 +182,13 @@ class Stack:
             self._du = Libemu.du(self.path)
             return self.get_disk_usage()
 
-    def __init__(self, snapshot_id, source_dir):
+    def __init__(self, snapshot_id, source_dir, allow_snapshot_id=True):
+
+        # Throw an exception if we have get stack:snapshot syntax and
+        # we don't want it:
+        if re.search(r":", snapshot_id) and not allow_snapshot_id:
+            raise StackNotFoundError(snapshot_id)
+
         self.sid = snapshot_id
         self.source = source_dir
         self.stack = self._stack()
@@ -379,11 +385,30 @@ class Libemu:
         if not len(args):
             args = os.listdir(source_dir + "/.emu/stacks")
 
-        paths = []
+        snapshots = []
         for arg in args:
-            paths += resolve(arg, source_dir)
+            snapshots += resolve(arg, source_dir)
 
-        return paths
+        return snapshots
+
+
+    @staticmethod
+    def get_stacks(args, source):
+        def resolve(arg, source):
+            try:
+                return Stack(arg, source.path, allow_snapshot_id=False)
+            except StackNotFoundError as e:
+                print e
+                sys.exit(1)
+
+        if not len(args):
+            args = os.listdir(source.path + "/.emu/stacks")
+
+        stacks = []
+        for arg in args:
+            stacks.append(resolve(arg, source))
+
+        return stacks
 
 
     @staticmethod
