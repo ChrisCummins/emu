@@ -99,6 +99,13 @@ class StackNotFoundError(Exception):
         return "Stack '{0}' not found!".format(self.name)
 
 
+class StackLockError(Exception):
+    def __init__(self, name):
+        self.name = name
+    def __str__(self):
+        return "Failed to lock stack '{0}'!".format(self.name)
+
+
 class Stack:
     re = r"^([^:]+)?(:(([a-f0-9]+)|(HEAD(~([0-9]+)?)?)))?$"
 
@@ -205,6 +212,13 @@ class SourceCreateError(Exception):
         self.source_dir = source_dir
     def __str__(self):
         return "Failed to create source at '{0}'!".format(self.source_dir)
+
+
+class SourceLockError(Exception):
+    def __init__(self, source_dir):
+        self.source_dir = source_dir
+    def __str__(self):
+        return "Failed to lock source '{0}'!".format(self.source_dir)
 
 
 class Source:
