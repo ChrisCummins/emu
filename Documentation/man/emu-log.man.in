@@ -2,26 +2,38 @@
 .SH NAME
 emu\-log \- Show stack snapshot logs
 .SH SYNOPSIS
-.B emu log
-[\-\-help] [\-\-version] [\-n<number>] [\-s] [[<stack>:]<snapshot>]...
+.B emu log [<options>] <stack>[:<snapshot>] ...
 .SH DESCRIPTION
-Show snapshot logs for one or more stacks. If no <stack> is speficied, show logs
-for all stacks. If a <stack> is specified, show snapshot logs for only that
-stack. By specifying a :<snapshot>, the log for only that snapshot will be
-shown. The command uses the standard <stack>:<snapshot> syntax.
+Show snapshot logs for one or more snapshots.
 .SH OPTIONS
 .TP
-\-\-help
-show this help and quit
+\-n <number> \-\-limit <number>
+limit the number of snapshot logs to the given number.
+.TP
+\-s \-\-short-log
+Show a dense summary of only vital information, suitable for reports or logs.
+.TP
+\-S <dir> \-\-source-dir <dir>
+Specify the directory to use as an emu source. Defaults to `.'.
+.TP
+\-v \-\-verbose
+Increase verbosity.
 .TP
 \-\-version
-show version information
+Show version information and quit.
 .TP
-\-n<number>
-limit the number of snapshot logs to the given number
+\-h \-\-help
+Show this help and quit.
+.SH EXAMPLES
 .TP
-\-s
-show a dense summary of only vital information, suitable for reports or logs
+Show log for stacks `origin' and `remote':
+emu log origin remote
+.TP
+Show only the most recent snapshot for stack `origin':
+emu log origin:HEAD
+.TP
+Show a short log for the 10 most recent snapshots for stack `origin':
+emu log origin -s -n10
 .SH EMU
 Part of the
 .B emu

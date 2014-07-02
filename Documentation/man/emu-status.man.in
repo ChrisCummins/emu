@@ -1,18 +1,24 @@
 .TH emu-clean @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
 .SH NAME
-emu\-status \- show source status
+emu\-status \- Show stack status
 .SH SYNOPSIS
 .B emu status
-[\-\-help] [\-\-version]
+[<options>] [<stack> ...]
 .SH DESCRIPTION
-Display information about an emu source.
+Display information about emu stacks.
 .SH OPTIONS
 .TP
-\-\-help
-show this help and quit
+\-S <dir> \-\-source-dir <dir>
+Specify the directory to use as an emu source. Defaults to `.'.
+.TP
+\-v \-\-verbose
+Increase verbosity.
 .TP
 \-\-version
-show version information
+Show version information and quit.
+.TP
+\-h \-\-help
+Show this help and quit.
 .PP
 .SH EMU
 Part of the

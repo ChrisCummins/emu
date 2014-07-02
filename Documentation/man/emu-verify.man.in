@@ -1,35 +1,35 @@
 .TH emu-verify @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
 .SH NAME
-emu\-verify \- verify the contents snapshots
+emu\-verify \- Verify the contents of snapshots
 .SH SYNOPSIS
 .B emu verify
-[\-\-help] [\-\-version] [\-v] [\-S <source-dir>] [<stack>[:snapshot] ...]
+[<options>] [<stack>[:<snapshot>] ...]
 .SH DESCRIPTION
-Calculates the checksum of snapshots and reports on whether this
-matches the checksum made at the time of snapshot creation. If a
-checksum pair does not match then it indicates that a snapshot is in
-some way corrupted or has been tampered with. For further details of
-the checksumming process, see the section HASH ALGORITHM.
+Verifies snapshot checksums by computing against the stored tree. A
+checksum which does not match is indicative of a snapshot that is in
+some way corrupted or has been tampered with.
 .PP
 The format for specifying snapshots is in the form
-<stack>[:snapshot]. The <snapshot> value is the 40 digit snapshot ID,
-and can be obtained from 'emu log'. If omitted, all of the snapshots
-within a stack will be verified. If no snapshot or stack is specified,
-every stack will be verified.
+<stack>[:<snapshot>]. The <snapshot> value is the 40 digit snapshot
+ID, and can be obtained from 'emu log'. If omitted, all of the
+snapshots within a stack will be verified. If no snapshot or stack is
+specified, every stack will be verified.
+.PP
+The algorithm used to determine snapshot checksums computes the md5sum
+of the directory contents' file names and last modified time stamps.
 .SH OPTIONS
 .TP
-\-\-help
-show this help and quit
-.TP
-\-V \-\-version
-show version information
+\-S <dir> \-\-source-dir <dir>
+Specify the directory to use as an emu source. Defaults to `.'.
 .TP
 \-v \-\-verbose
-increase verbosity
+Increase verbosity.
 .TP
-\-S <dir> \-\-source-dir <dir>
-specify the directory to initialise as an emu source, instead of using
-the current directory
+\-\-version
+Show version information and quit.
+.TP
+\-h \-\-help
+Show this help and quit.
 .SH EXAMPLES
 .TP
 Verify all snapshots for all stacks:
@@ -40,20 +40,9 @@ emu verify origin
 .TP
 Verify a specific snapshot by ID:
 emu verify origin:53b1e624ccedee864cbba76563522be43360ded5
-.SH HASH ALGORITHM
-The algorithm used to determine the checksum of a snapshot is not a
-perfect hashing algorithm, that is, it would be possible to make two
-different snapshots compute to the same checksum value, giving the
-appearance that their contents are the same. This is an intentional
-engineering decision to try to address the balance between the quality
-of the hashing algorithm with computational expense.
-.PP
-A traditional approach to verifying the contents of a directory would
-be be to create a list of checksums for every file in the directory
-and to then perform a checksum of this list. While this reduces the
-threshold for collisions down to that of the checksumming algorithm
-itself, it required reading every byte within the snapshot, and for
-especially large sources, this can be unrealistically time consuming.
+.TP
+Verify last three snapshots:
+emu verify origin:HEAD origin:HEAD~ origin:HEAD~2
 .SH EMU
 Part of the
 .B emu

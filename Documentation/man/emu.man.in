@@ -3,14 +3,14 @@
 emu \- Fast incremental snapshot backups
 .SH SYNOPSIS
 .B emu
-[\-\-help] [\-\-version] <command> [<options>...]
+<command> [<options>]
 .SH OPTIONS
 .TP
-\-\-help
-show this help and quit
-.TP
 \-\-version
-print version information
+Show version information and quit.
+.TP
+\-h \-\-help
+Show this help and quit.
 .SH COMMANDS
 Below is a brief summary of the available commands. For more information on any,
 see
@@ -23,14 +23,14 @@ see
 
           clean         remove locks and orphaned data
           hook          manage hooks
-          init          initialize a source
-          log           show stack logs
+          init          create emu sources
+          log           show stack snapshot logs
           stack         manage stacks
           pop           peek and discard snapshots
           peek          restore source from snapshot
           push          push snapshot to stacks
-          status        source status
-          verify        validate snapshots
+          status        show status status
+          verify        verify the contents of snapshots
 .SH LICENSE
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
