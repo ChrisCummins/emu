@@ -34,14 +34,12 @@ from libemu import Source
 from libemu import SourceCreateError
 
 def main(argv, argc):
-    parser = Libemu.get_option_parser(name="emu init",
-                                      desc="create or reinitialize an existing emu source")
+    parser = Libemu.get_option_parser()
     parser.add_option("-t", "--template-dir", action="store", type="string",
-                      dest="template_dir", metavar="DIR",
-                      default=Libemu.global_template_dir + "/source-templates",
-                      help="Copy templates from the directory DIR")
+                      dest="template_dir",
+                      default=Libemu.global_template_dir + "/source-templates")
     parser.add_option("-f", "--force", action="store_true", dest="force",
-                      default=False, help="Overwrite existing files")
+                      default=False)
     (options, args) = parser.parse_args()
 
     # Fail if no read/write permissions

@@ -34,8 +34,7 @@ from libemu import Source
 from libemu import SourceCreateError
 
 def main(argv, argc):
-    parser = Libemu.get_option_parser(name="emu status",
-                                      desc="show source status")
+    parser = Libemu.get_option_parser()
     (options, args) = parser.parse_args()
 
     Libemu.die_if_not_source(options.source_dir)

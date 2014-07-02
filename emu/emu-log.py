@@ -36,14 +36,11 @@ from libemu import Source
 from libemu import SourceCreateError
 
 def main(argv, argc):
-    parser = Libemu.get_option_parser(name="emu log",
-                                      args="<stack>[:snapshot] ...",
-                                      desc="show snapshot information")
+    parser = Libemu.get_option_parser()
     parser.add_option("-n", "--limit", action="store", type="int",
-                      dest="limit", default=0,
-                      help="limits the number of snapshots to show")
+                      dest="limit", default=0)
     parser.add_option("-s", "--short-log", action="store_true", dest="short",
-                      default=False, help="return a short log of entries")
+                      default=False)
     (options, args) = parser.parse_args()
 
     Libemu.die_if_not_source(options.source_dir)

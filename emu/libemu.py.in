@@ -240,32 +240,25 @@ class Libemu:
         print "emu version", Libemu.version_string
         exit(0)
 
+    @staticmethod
+    def show_help_and_quit(*data):
+        # Call man page for command
+        os.system("man " + os.path.basename(sys.argv[0]))
+        exit(0)
+
 
     @staticmethod
-    def get_option_parser(name="", args="", desc=""):
-        string = ""
-
-        if len(name):
-            string = name + " [options]"
-            if len(args):
-                string += " " + args
-            if len(desc):
-                string += " - " + desc
-
-        if (len(string)):
-            parser = OptionParser(string)
-        else:
-            parser = OptionParser()
+    def get_option_parser():
+        parser = OptionParser(add_help_option=False)
 
         parser.add_option("-S", "--source-dir", action="store", type="string",
-                          dest="source_dir", default=os.getcwd(), metavar="DIR",
-                          help="Specify the emu working directory")
-        parser.add_option("-V", "--version", action="callback",
-                          callback=Libemu.show_version_and_quit,
-                          help="Show version information")
+                          dest="source_dir", default=os.getcwd())
+        parser.add_option("--version", action="callback",
+                          callback=Libemu.show_version_and_quit)
         parser.add_option("-v", "--verbose", action="store_true",
-                          dest="verbose", default=False,
-                          help="Increase verbosity")
+                          dest="verbose", default=False)
+        parser.add_option("-h", "--help", action="callback",
+                          callback=Libemu.show_help_and_quit)
         return parser
 
 

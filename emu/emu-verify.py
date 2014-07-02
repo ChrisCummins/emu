@@ -33,9 +33,7 @@ from libemu import Libemu
 
 
 def main(argv, argc):
-    parser = Libemu.get_option_parser(name="emu verify",
-                                      args="[<stack>[:snapshot] ...]",
-                                      desc="verify snapshots")
+    parser = Libemu.get_option_parser()
     (options, args) = parser.parse_args()
 
     Libemu.die_if_not_source(options.source_dir)
