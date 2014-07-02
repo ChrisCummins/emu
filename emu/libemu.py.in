@@ -75,12 +75,21 @@ class Snapshot:
     def __repr__(self):
         return self.stack + ":" + self.id
 
-    def log(self):
+    def log(self, short=False):
+        def full_log(id, node):
+            s =  "snapshot " + id + "\n"
+            s += "Date:    " + node.data['Date'] + "\n"
+            s += "Size:    " + node.data['Size'] + "\n"
+            return s
+        def short_log(id, node):
+            s = id + "  " + node.data['Date']
+            return s
+
         node = Node(self.node)
-        s =  "snapshot " + self.id + "\n"
-        s += "Date:    " + node.data['Date'] + "\n"
-        s += "Size:    " + node.data['Size'] + "\n"
-        return s
+        if short:
+            return short_log(self.id, node)
+        else:
+            return full_log(self.id, node)
 
 
 class StackNotFoundError(Exception):

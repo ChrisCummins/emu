@@ -41,6 +41,8 @@ def main(argv, argc):
     parser.add_option("-n", "--limit", action="store", type="int",
                       dest="limit", default=0,
                       help="limits the number of snapshots to show")
+    parser.add_option("-s", "--short-log", action="store_true", dest="short",
+                      default=False, help="return a short log of entries")
     (options, args) = parser.parse_args()
 
     Libemu.die_if_not_source(options.source_dir)
@@ -57,7 +59,7 @@ def main(argv, argc):
         options.limit = len(snapshots)
 
     for snapshot in snapshots[:options.limit]:
-        print snapshot.log()
+        print snapshot.log(short=options.short)
 
     # Flush pagination
     tmp_file.flush()
