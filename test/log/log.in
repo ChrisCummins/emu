@@ -5,6 +5,6 @@ cd $EMU_TEST_DIR/test-source
 emu init -v
 
 emu stack -v add origin ../test-stack
-emu log
+emu log origin
 
 test_teardown

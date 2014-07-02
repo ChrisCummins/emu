@@ -47,6 +47,10 @@ def main(argv, argc):
 
     Libemu.die_if_not_source(options.source_dir)
 
+    if not len(args):
+        print "No stack specified!"
+        return 1
+
     snapshots = Libemu.get_snapshots(args, options.source_dir)
 
     # Setup pagination

@@ -6,10 +6,10 @@ emu init -v
 
 emu stack -v add origin ../test-stack
 
-emu push -v
+emu push
 
-emu log > $EMU_TEST_DIR/log
-emu log -s > $EMU_TEST_DIR/log-summary
+emu log origin > $EMU_TEST_DIR/log
+emu log origin -s > $EMU_TEST_DIR/log-summary
 
 if [[ "$(wc -l $EMU_TEST_DIR/log | awk '{ print $1 }')" -lt "$(wc -l "$EMU_TEST_DIR"/log-summary | awk '{ print $1 }')" ]]
 then
@@ -21,7 +21,7 @@ then
     exit 5
 fi
 
-if [[ "$(wc -l $EMU_TEST_DIR/log-summary | awk '{ print $1 }')" -ne 2 ]]
+if [[ "$(wc -l $EMU_TEST_DIR/log-summary | awk '{ print $1 }')" -ne 1 ]]
 then
     echo "Summary test failed!"
     echo "emu log:"
@@ -31,8 +31,8 @@ fi
 
 sleep 1
 emu push -v
-emu log -s > $EMU_TEST_DIR/log-summary
-if [[ "$(wc -l $EMU_TEST_DIR/log-summary | awk '{ print $1 }')" -ne 3 ]]
+emu log origin -s > $EMU_TEST_DIR/log-summary
+if [[ "$(wc -l $EMU_TEST_DIR/log-summary | awk '{ print $1 }')" -ne 2 ]]
 then
     echo "Summary test failed!"
     echo "emu log:"
