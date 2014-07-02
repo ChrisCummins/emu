@@ -36,14 +36,11 @@ from libemu import Source
 from libemu import SourceCreateError
 
 def main(argv, argc):
-    parser = Libemu.get_option_parser(name="emu init",
-                                      desc="create or reinitialize an existing emu source")
-    parser.add_option("-t", "--template-dir", action="store", type="string",
-                      dest="template_dir", metavar="DIR",
-                      default=Libemu.global_template_dir + "/source-templates",
-                      help="Copy templates from the directory DIR")
-    parser.add_option("-f", "--force", action="store_true", dest="force",
-                      default=False, help="Overwrite existing files")
+    parser = Libemu.get_option_parser(name="emu log",
+                                      desc="show snapshot information")
+    parser.add_option("-n", "--limit", action="store", type="int",
+                      dest="limit", default=0,
+                      help="limits the number of snapshots to show")
     (options, args) = parser.parse_args()
 
     Libemu.die_if_not_source(options.source_dir)
@@ -55,7 +52,11 @@ def main(argv, argc):
     tmp_file = open(tmp_path, 'a')
     sys.stdout = tmp_file
 
-    for snapshot in snapshots:
+    # Zero or negative limit values means show all snapshots
+    if options.limit <= 0:
+        options.limit = len(snapshots)
+
+    for snapshot in snapshots[:options.limit]:
         print snapshot.log()
 
     # Flush pagination
