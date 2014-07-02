@@ -34,7 +34,7 @@ from libemu import Libemu
 
 def main(argv, argc):
     parser = Libemu.get_option_parser(name="emu verify",
-                                      args="<stack>[:snapshot] ...",
+                                      args="[<stack>[:snapshot] ...]",
                                       desc="verify snapshots")
     (options, args) = parser.parse_args()
 

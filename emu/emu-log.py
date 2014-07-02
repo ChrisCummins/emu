@@ -37,6 +37,7 @@ from libemu import SourceCreateError
 
 def main(argv, argc):
     parser = Libemu.get_option_parser(name="emu log",
+                                      args="<stack>[:snapshot] ...",
                                       desc="show snapshot information")
     parser.add_option("-n", "--limit", action="store", type="int",
                       dest="limit", default=0,
