@@ -41,12 +41,13 @@ def main(argv, argc):
 
     source = Source(options.source_dir)
     for stack in Libemu.get_stacks(args, source):
+        snapshots = stack.get_snapshots()
         print stack.stack
         print "Location:        {0}".format(stack.path)
-        print "No of snapshots: {0}".format(len(stack.snapshots))
+        print "No of snapshots: {0}".format(len(snapshots))
         print "Max snapshots:   {0}".format(stack.get_max_snapshots())
-        if len(stack.snapshots):
-            print "Last snapshot:   {0}".format(stack.snapshots[len(stack.snapshots) - 1].id)
+        if len(snapshots):
+            print "Last snapshot:   {0}".format(snapshots[len(snapshots) - 1].id)
         sys.stdout.write("Size:            ")
         sys.stdout.flush()
         os.system("du -sh '" + stack.path + "' | awk '{{print $1}}'")

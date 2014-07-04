@@ -147,7 +147,7 @@ class Stack:
         except:
             raise StackNotFoundError(self.sid)
 
-    def _snapshots(self):
+    def get_snapshots(self):
         if len(self.snapshot):
             ids = [self.snapshot]
         else:
@@ -395,7 +395,7 @@ class Libemu:
     def get_snapshots(args, source_dir):
         def resolve(arg, source_dir):
             try:
-                return Stack(arg, source_dir).snapshots
+                return Stack(arg, source_dir).get_snapshots()
             except (StackNotFoundError, SnapshotNotFoundError) as e:
                 print e
                 sys.exit(1)
