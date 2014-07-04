@@ -347,7 +347,11 @@ class Libemu:
     @staticmethod
     def rm(path, verbose=False):
         Libemu.get_user_write_permissions(path, err=True)
-        if os.path.isdir(path):
+        if os.path.islink(path):
+            os.unlink(path)
+            if verbose:
+                print "Deleted link '{0}'".format(path)
+        elif os.path.isdir(path):
             shutil.rmtree(path)
             if verbose:
                 print "Recursively deleted '{0}'".format(path)
