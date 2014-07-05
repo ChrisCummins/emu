@@ -27,13 +27,14 @@
 import sys
 import os
 sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
+from libemu import Util
 from libemu import Libemu
 
 
 def get_script_path(name):
     script_name = "emu-" + name
     script_path = sys.path[0] + "/" + script_name
-    script_exists = os.path.exists(script_path)
+    script_exists = Util.exists(script_path)
     if not script_exists:
         print "'{0}' is not an emu command. See 'emu help'".format(name)
         sys.exit(1)

@@ -64,7 +64,7 @@ class Snapshot:
         self.node = stack_dir + "/.emu/nodes/" + shash
         self.tree = stack_dir + "/.emu/trees/" + shash
 
-        if not (os.path.exists(self.node) and os.path.isdir(self.tree)):
+        if not (Util.exists(self.node) and os.path.isdir(self.tree)):
             raise SnapshotNotFoundError(shash, stack=stack_name)
 
         self.snapshot = self.get_node().data['Snapshot']
@@ -221,7 +221,7 @@ class Stack:
             pointer = self.source + "/.emu/stacks/" + self.stack
             with open(pointer, 'r') as f:
                 path = f.read().strip()
-                if not os.path.exists(path):
+                if not Util.exists(path):
                     raise
                 return path
         except:
@@ -337,9 +337,9 @@ class SourceLockError(Exception):
 class Source:
     def __init__(self, source_dir):
         self.path = source_dir
-        Libemu.exists(self.path, err=True)
-        Libemu.exists(self.path + "/.emu", err=True)
-        Libemu.exists(self.path + "/.emu/stacks", err=True)
+        Util.exists(self.path, error=True)
+        Util.exists(self.path + "/.emu", error=True)
+        Util.exists(self.path + "/.emu/stacks", error=True)
 
         self.stacks = []
         for stack in Libemu.ls(self.path + "/.emu/stacks"):
@@ -419,18 +419,6 @@ class Libemu:
 
 
     @staticmethod
-    def exists(path, err=False):
-        exists = os.path.exists(path)
-        if err and not exists:
-            if hasattr(err, '__call__'):
-                err() # Error callback
-            else:
-                print "'" + path + "' not found!"
-                exit(1)
-        return exists
-
-
-    @staticmethod
     def mkdir(path, mode=0777, verbose=False):
         try:
             os.makedirs(path, mode)
@@ -463,7 +451,7 @@ class Libemu:
             if verbose:
                 print "Recursively deleted '{0}'".format(path)
             return True
-        elif os.path.exists(path):
+        elif Util.exists(path):
             os.remove(path)
             if verbose:
                 print "Deleted file '{0}'".format(path)
@@ -549,7 +537,7 @@ class Libemu:
     @staticmethod
     def die_if_not_source(path):
         if not (os.path.isdir(path + "/.emu") and
-                os.path.exists(path + "/.emu/config")):
+                Util.exists(path + "/.emu/config")):
             print "No emu source found!"
             sys.exit(1)
 
@@ -565,6 +553,26 @@ class Libemu:
 # Utility static class with helper functions #
 ##############################################
 class Util:
+
+
+    # exists() - Check that a path exists
+    #
+    # If 'error' is True and 'path' does not exist, then exit fatally
+    # with error code. If 'error' is a callback function, then execute
+    # it on no path existing.
+    @staticmethod
+    def exists(path, error=False):
+        exists = os.path.exists(path)
+        if error and not exists:
+            if hasattr(err, '__call__'):
+                # Execute error callback if provided
+                error()
+            else:
+                # Else fatal error
+                print "'" + path + "' not found!"
+                sys.exit(1)
+        return exists
+
 
     # readable() - Check that the user has read permissions for path
     #
