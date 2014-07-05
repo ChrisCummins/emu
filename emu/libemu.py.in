@@ -509,7 +509,7 @@ class Util:
         if error and not exists:
             if hasattr(err, '__call__'):
                 # Execute error callback if provided
-                error()
+                error(e)
             else:
                 # Else fatal error
                 print "'" + path + "' not found!"
@@ -528,7 +528,7 @@ class Util:
         if error and not read_permission:
             if hasattr(error, '__call__'):
                 # Execute error callback if provided
-                error()
+                error(e)
             else:
                 # Else fatal error
                 print "No read permissions for directory '" + path + "'!"
@@ -547,7 +547,7 @@ class Util:
         if error and not write_permission:
             if hasattr(error, '__call__'):
                 # Execute error callback if provided
-                error()
+                error(e)
             else:
                 # Else fatal error
                 print "No read permissions for directory '" + path + "'!"
@@ -587,7 +587,7 @@ class Util:
             except:
                 if hasattr(error, '__call__'):
                     # Execute error callback if provided
-                    error()
+                    error(e)
                 elif error:
                     # Fatal error if required
                     print "Failed to delete '" + path + "'."
@@ -640,7 +640,7 @@ class Util:
                 # Error in file move:
                 if hasattr(error, '__call__'):
                     # Execute error callback if provided
-                    error()
+                    error(e)
                 elif error:
                     # Fatal error if required
                     print "Failed to move '{0}' to '{1}'.".format(src, dst)
@@ -674,7 +674,7 @@ class Util:
                 # Error in operation:
                 if hasattr(error, '__call__'):
                     # Execute error callback if provided
-                    error()
+                    error(e)
                 elif error:
                     # Fatal error if required
                     print "Failed to move '{0}' to '{1}'.".format(src, dst)
@@ -711,7 +711,7 @@ class Util:
                 # Error in operation:
                 if hasattr(error, '__call__'):
                     # Execute error callback if provided
-                    error()
+                    error(e)
                 elif error:
                     # Fatal error if required
                     print "Failed to create directory '{0}'.".format(path)
@@ -748,7 +748,7 @@ class Util:
             # Error in operation:
             if hasattr(error, '__call__'):
                 # Execute error callback if provided
-                error()
+                error(e)
             elif error:
                 # Fatal error if required
                 print "Failed to execute '{0}'.".format(" ".join(args))
