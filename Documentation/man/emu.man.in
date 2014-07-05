@@ -28,7 +28,7 @@ see
           stack         manage stacks
           pop           peek and discard snapshots
           peek          restore source from snapshot
-          push          push snapshot to stacks
+          push          record source snapshots
           status        show status status
           verify        verify the contents of snapshots
 .SH LICENSE
