@@ -436,21 +436,6 @@ class Libemu:
 
 
     @staticmethod
-    def get_option_parser():
-        parser = OptionParser(add_help_option=False)
-
-        parser.add_option("-S", "--source-dir", action="store", type="string",
-                          dest="source_dir", default=os.getcwd())
-        parser.add_option("--version", action="callback",
-                          callback=Libemu.show_version_and_quit)
-        parser.add_option("-v", "--verbose", action="store_true",
-                          dest="verbose", default=False)
-        parser.add_option("-h", "--help", action="callback",
-                          callback=Libemu.show_help_and_quit)
-        return parser
-
-
-    @staticmethod
     def run(*args):
         proc = subprocess.Popen(args, stdout=subprocess.PIPE)
         out = []
@@ -458,44 +443,6 @@ class Libemu:
             out.append(line)
 
         return "\n".join(out)
-
-
-    @staticmethod
-    def get_snapshots(args, source_dir):
-        def resolve(arg, source_dir):
-            try:
-                return Stack(arg, source_dir).get_snapshots()
-            except (StackNotFoundError, SnapshotNotFoundError) as e:
-                print e
-                sys.exit(1)
-
-        if not len(args):
-            args = Util.ls(source_dir + "/.emu/stacks", must_exist=True)
-
-        snapshots = []
-        for arg in args:
-            snapshots += resolve(arg, source_dir)
-
-        return snapshots
-
-
-    @staticmethod
-    def get_stacks(args, source):
-        def resolve(arg, source):
-            try:
-                return Stack(arg, source.path, allow_snapshot_id=False)
-            except StackNotFoundError as e:
-                print e
-                sys.exit(1)
-
-        if not len(args):
-            args = Util.ls(source.path + "/.emu/stacks", must_exist=True)
-
-        stacks = []
-        for arg in args:
-            stacks.append(resolve(arg, source))
-
-        return stacks
 
 
     @staticmethod
@@ -858,6 +805,26 @@ class Util:
                            wait=wait, error=error, verbose=verbose)
 
 
+    # Look up a stack by name, or raise StackNotFoundError():
+    @staticmethod
+    def get_stack_by_name(name, stacks):
+        for stack in stacks:
+            if stack.stack == name:
+                return stack
+
+        raise StackNotFoundError(name)
+
+
+    # Look up a snapshot by id, or raise SnapshotNotFoundError():
+    @staticmethod
+    def get_snapshot_by_id(id, snapshots):
+        for snapshot in snapshots:
+            if snapshot.id == id.id:
+                return snapshot
+
+        raise SnapshotNotFoundError(id)
+
+
     # tilde_to_n_index() - Convert tilde notation into an n-index
     #
     # Converts a tilde notation string into its corresponding n-index,
@@ -930,6 +897,169 @@ class Colours:
 
     SNAPSHOT_DELETE = RED
     SNAPSHOT_NEW    = BLUE
+
+
+##############################
+# Command line option parser #
+##############################
+class EmuParser(OptionParser):
+
+    def __init__(self):
+        # Instantiate superclass
+        OptionParser.__init__(self, add_help_option=False)
+
+        # Set default parser arguments:
+        self.add_option("-S", "--source-dir", action="store", type="string",
+                        dest="source_dir", default=os.getcwd())
+        self.add_option("--version", action="callback",
+                        callback=Libemu.show_version_and_quit)
+        self.add_option("-v", "--verbose", action="store_true",
+                        dest="verbose", default=False)
+        self.add_option("-h", "--help", action="callback",
+                        callback=Libemu.show_help_and_quit)
+
+
+    # options() - Set/Get the parser options
+    def options(self, *options):
+        if options:
+            self._options = options
+
+        try:
+            return self._options
+        except AttributeError:
+            (self._options, self._args) = self.parse_args()
+            return self.options()
+
+
+    # args() - Set/Get the parser arguments
+    #
+    def args(self, *args):
+        if args:
+            self._args = args
+
+        try:
+            return self._args
+        except AttributeError:
+            (self._options, self._args) = self.parse_args()
+            return self.args()
+
+
+    # parse_stacks() - Parse the arguments for stack identifiers
+    #
+    # Parses the command line arguments and searches for stack
+    # identifiers, returning a list of Stack objects for each of the
+    # named stacks. If 'accept_no_stacks' is True, then if no
+    # arguments are provided, all stacks will be returned. If an
+    # argument does not correspond with a stack, then a
+    # StackNotFoundError is raised.
+    def parse_stacks(self, source, accept_no_stacks=True, error=True):
+
+        try:
+            return self._stacks
+        except AttributeError:
+            try:
+
+                # Return all stacks if no args:
+                if accept_no_stacks and not len(self.args()):
+                    return source.stacks()
+                else:
+                    # Else parse arguments:
+                    self._stacks = []
+                    for arg in self.args():
+                        self._stacks.append(Util.get_stack_by_name(arg,
+                                                                   source.stacks()))
+                    return self._stacks
+
+            except StackNotFoundError as e:
+                if error:
+                    if hasattr(error, '__call__'):
+                        # Execute error callback if provided:
+                        error(e)
+                    else:
+                        # Else fatal error:
+                        print e
+                        sys.exit(1)
+                else:
+                    raise e
+
+
+    # parse_snapshots() - Parse the arguments for snapshot identifiers
+    #
+    # Parses the command line arguments and searches for snapshot IDs,
+    # returning a list of Snapshot objects for each of the identified
+    # snapshots. If 'accept_stack_names' is True, then if a stack is
+    # only named, then a list of all of its snapshots will be used,
+    # instead of having to identify a single one. 'If
+    # 'accept_no_stacks' is True, then a list of all stacks will be
+    # used if no arguments are provided.
+    def parse_snapshots(self, source, accept_stack_names=True,
+                        accept_no_stacks=True, error=True):
+
+        try:
+            return self._snapshots
+        except AttributeError:
+            try:
+
+                self._snapshots = []
+                args = self.args()
+
+                # If no args are given, generate a list of all stack names:
+                if accept_no_stacks and not len(args):
+                    for stack in source.stacks():
+                        args.append(stack.stack)
+
+                # Iterate over each arg, resolving to snapshot(s):
+                for arg in args:
+                    regex = r"^(?P<stack>[^:]+)((:?)|(:((?P<id>[a-f0-9]{40})|(?P<head>HEAD))(?P<index>~([0-9]+)?)?))?$"
+                    match = re.match(regex, arg)
+
+                    if not match:
+                        raise InvalidSnapshotIDError(arg)
+
+                    # Regex components:
+                    stack_match = match.group("stack")
+                    id_match = match.group("id")
+                    head_match = match.group("head")
+                    index_match = match.group("index")
+
+                    stack = Util.get_stack_by_name(stack_match, source.stacks())
+
+                    # Resolve tilde index notation:
+                    n_index = 0
+                    if index_match:
+                        n_index = Util.tilde_to_n_index(index_match)
+
+                    if id_match:
+                        # If there's an ID, then match it:
+                        snapshot = Util.get_snapshot_by_id(SnapshotID(stack_match, id_match),
+                                                           stack.get_snapshots())
+                        self._snapshots.append(snapshot.nth_child(n_index, error=True))
+                    elif head_match:
+                        # Calculate the HEAD index and traverse:
+                        head = stack.get_head()
+                        if head:
+                            self._snapshots.append(head.nth_child(n_index, error=True))
+                    elif accept_stack_names:
+                        # If there's no ID then match all snapshots
+                        self._snapshots += stack.get_snapshots()
+                    else:
+                        InvalidSnapshotIDError(arg)
+
+                return self._snapshots
+
+            except (InvalidSnapshotIDError,
+                    StackNotFoundError,
+                    SnapshotNotFoundError) as e:
+                if error:
+                    if hasattr(error, '__call__'):
+                        # Execute error callback if provided:
+                        error(e)
+                    else:
+                        # Else fatal error:
+                        print e
+                        sys.exit(1)
+                else:
+                    raise e
 
 
 ###############

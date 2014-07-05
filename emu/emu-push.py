@@ -29,12 +29,13 @@ import os
 
 # Resolve and import Libemu
 sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
+from libemu import EmuParser
 from libemu import Libemu
 from libemu import Source
 
 
 def main(argv, argc):
-    parser = Libemu.get_option_parser()
+    parser = EmuParser()
     parser.add_option("-d", "--dry-run", action="store_true",
                       dest="dry_run", default=False)
     (options, args) = parser.parse_args()
@@ -46,7 +47,7 @@ def main(argv, argc):
     source.lock()
 
     status = 0
-    for stack in Libemu.get_stacks(args, source):
+    for stack in parser.parse_stacks(source):
         status ^= stack.push(dry_run=options.dry_run,
                              verbose=options.verbose)
 

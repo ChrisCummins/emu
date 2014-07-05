@@ -31,12 +31,13 @@ from sys import exit
 
 # Resolve and import Libemu
 sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
+from libemu import EmuParser
 from libemu import Libemu
 from libemu import Source
 from libemu import SourceCreateError
 
 def main(argv, argc):
-    parser = Libemu.get_option_parser()
+    parser = EmuParser()
     parser.add_option("-n", "--limit", action="store", type="int",
                       dest="limit", default=0)
     parser.add_option("-s", "--short-log", action="store_true", dest="short",
@@ -49,7 +50,7 @@ def main(argv, argc):
         print "No stack specified!"
         return 1
 
-    snapshots = Libemu.get_snapshots(args, options.source_dir)
+    snapshots = parser.parse_snapshots(Source(options.source_dir))
 
     # Setup pagination
     tmp_path = tempfile.mkstemp()[1]

@@ -30,12 +30,13 @@ from sys import exit
 # Resolve and import Libemu
 sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
 from libemu import Util
+from libemu import EmuParser
 from libemu import Libemu
 from libemu import Source
 from libemu import SourceCreateError
 
 def main(argv, argc):
-    parser = Libemu.get_option_parser()
+    parser = EmuParser()
     parser.add_option("-t", "--template-dir", action="store", type="string",
                       dest="template_dir",
                       default=Libemu.global_template_dir + "/source-templates")

@@ -29,18 +29,16 @@ from sys import exit
 
 # Resolve and import Libemu
 sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
+from libemu import EmuParser
 from libemu import Libemu
 from libemu import Source
 from libemu import SourceCreateError
 
 def main(argv, argc):
-    parser = Libemu.get_option_parser()
-    (options, args) = parser.parse_args()
+    parser = EmuParser()
+    source = Source(parser.options().source_dir)
 
-    Libemu.die_if_not_source(options.source_dir)
-
-    source = Source(options.source_dir)
-    for stack in Libemu.get_stacks(args, source):
+    for stack in parser.parse_stacks(source):
         snapshots = stack.get_snapshots()
         print stack.stack
         print "Location:        {0}".format(stack.path)
