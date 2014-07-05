@@ -343,10 +343,6 @@ class Source:
         Util.exists(self.path + "/.emu", error=True)
         Util.exists(self.path + "/.emu/stacks", error=True)
 
-        self.stacks = []
-        for stack in Util.ls(self.path + "/.emu/stacks", must_exist=True):
-            self.stacks.append(Stack(stack, self.path))
-
 
     def checkout(self, snapshot):
         # TODO: checkout snapshot
@@ -359,6 +355,26 @@ class Source:
 
     def unlock(self, verbose=False):
         return 501
+
+
+    # stacks() - Get a source's stacks
+    #
+    # Returns a list of Stack objects.
+    def stacks(self):
+        try:
+            return self._stacks
+        except AttributeError:
+            try:
+
+                # Generate list of stacks:
+                self._stacks = []
+                for name in Util.ls(self.path + "/.emu/stacks", must_exist=True):
+                    self._stacks.append(Stack(name, self.path))
+                return self._stacks
+
+            except StackNotFoundError as e:
+                print e
+                sys.exit(1)
 
 
     @staticmethod
