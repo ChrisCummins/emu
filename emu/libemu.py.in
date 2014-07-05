@@ -22,6 +22,8 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import calendar
+import time
 import os
 import re
 import shutil
@@ -30,7 +32,7 @@ import sys
 from ConfigParser import ConfigParser
 from optparse import OptionParser
 from sys import exit
-
+from datetime import datetime
 
 class SnapshotNotFoundError(Exception):
     def __init__(self, hash, stack=''):
@@ -57,12 +59,16 @@ class Snapshot:
     def __init__(self, shash, stack_name, stack_dir):
         self.id = shash
         self.stack = stack_name
+        self.stack_dir = stack_dir
         self.checksum = self.id[8:]
         self.node = stack_dir + "/.emu/nodes/" + shash
         self.tree = stack_dir + "/.emu/trees/" + shash
 
         if not (os.path.exists(self.node) and os.path.isdir(self.tree)):
             raise SnapshotNotFoundError(shash, stack=stack_name)
+
+        self.snapshot = self.get_node().data['Snapshot']
+
 
     _valid = None
     def verify(self):
@@ -73,6 +79,13 @@ class Snapshot:
 
     def __repr__(self):
         return self.stack + ":" + self.id
+
+    def get_node(self):
+        try:
+            return self._node
+        except AttributeError:
+            self._node = Node(self.node)
+            return self.get_node()
 
     def log(self, short=False):
         def full_log(id, node):
@@ -89,6 +102,74 @@ class Snapshot:
             return short_log(self.id, node)
         else:
             return full_log(self.id, node)
+
+    def destroy(self, verbose=False):
+        print "{0}: destroying snapshot {1}".format(self.stack, self.snapshot)
+        Libemu.rm(self.tree, verbose=verbose)
+        Libemu.rm(self.stack_dir + "/" + self.snapshot, verbose=verbose)
+        Libemu.rm(self.node, verbose=verbose)
+        # TODO: Check HEAD and reallocate if necessary
+
+    @staticmethod
+    def create(stack, dry_run=False):
+        head = stack.get_head()
+        head_id = ""
+
+        rsync_args = ["--archive",
+                      "--delete",
+                      "--delete-excluded",
+                      "--verbose",
+                      "--progress",
+                      "--human-readable",
+                      "--exclude='" + stack.source + "/.emu'",
+                      "--exclude-from='" + stack.source + "/.emu/excludes'"]
+
+        if head:
+            rsync_args.append("--link-dest='" + head.tree + "'")
+            head_id = head.id
+        if dry_run:
+            rsync_args.append("--dry-run")
+
+        rsync_args.append("'" + stack.source + "/'")
+        rsync_args.append("'" + stack.path + "/.emu/trees/new'")
+
+        command = "rsync " + " ".join(rsync_args)
+        os.system(command)
+
+        checksum = Libemu.hash_dir(stack.path + "/.emu/trees/new")
+        date = time.gmtime()
+        sid = "{0:x}".format(calendar.timegm(date)) + checksum
+        name = "{0}-{1}-{2} {3}.{4}.{5}".format(date.tm_year,
+                                                date.tm_mon,
+                                                date.tm_mday,
+                                                date.tm_hour,
+                                                date.tm_min,
+                                                date.tm_sec)
+
+        # Move tree into position
+        os.system("mv '" + stack.path + "/.emu/trees/new" + "' '" +
+                  stack.path + "/" + name + "'")
+
+        # Make trees symlink
+        os.system("ln -s '" + stack.path + "/" + name + "' '" +
+                  stack.path + "/.emu/trees/" + sid + "'")
+
+        # Get size
+        size = Libemu.run("du", "-h", "-s").split()[0]
+
+        # Create node
+        with open(stack.path + "/.emu/nodes/" + sid, 'w') as f:
+            f.write("Snapshot " + name + "\n" +
+                    "Parent   " + head_id + "\n" +
+                    "Date     " + time.strftime("%A %B %d %H:%M:%S %Y", date) + "\n" +
+                    "Source   " + stack.source + "\n" +
+                    "Size     " + size + "\n")
+
+        # Update HEAD
+        with open(stack.path + "/.emu/HEAD", 'w') as f:
+            f.write(sid + "\n")
+
+        return Snapshot(sid, stack.stack, stack.path)
 
 
 class StackNotFoundError(Exception):
@@ -125,7 +206,7 @@ class Stack:
                     index += 1
                     if re.match(r".*\d+", s):
                         index += int(re.sub(r"HEAD~", r"", s)) - 1
-                ids = os.listdir(self.path + "/.emu/nodes")
+                ids = Libemu.ls(self.path + "/.emu/nodes")
                 try:
                     return ids[index]
                 except IndexError:
@@ -150,11 +231,18 @@ class Stack:
         if len(self.snapshot):
             ids = [self.snapshot]
         else:
-            ids = os.listdir(self.path + "/.emu/nodes")
+            ids = Libemu.ls(self.path + "/.emu/nodes")
         snapshots = []
         for id in ids:
             snapshots.append(Snapshot(id, self.stack, self.path))
         return snapshots
+
+
+    def get_head(self):
+        snapshots = self.get_snapshots()
+        if len(snapshots):
+            return snapshots[len(snapshots) - 1]
+
 
     def get_config(self):
         try:
@@ -178,7 +266,7 @@ class Stack:
         try:
             return self._max_snapshots
         except AttributeError:
-            self._max_snapshots = self.get_config_prop('Snapshots', 'Max Number')
+            self._max_snapshots = int(self.get_config_prop('Snapshots', 'Max Number'))
             return self.get_max_snapshots()
 
     def get_disk_usage(self):
@@ -187,6 +275,33 @@ class Stack:
         except AttributeError:
             self._du = Libemu.du(self.path)
             return self.get_disk_usage()
+
+
+    def lock(self, verbose=False):
+        return 501
+
+
+    def unlock(self, verbose=False):
+        return 501
+
+
+    def push(self, dry_run=False, verbose=False):
+        self.lock()
+
+        # Remove old snapshots first
+        while len(self.get_snapshots()) >= int(self.get_max_snapshots()):
+            self.get_snapshots()[0].destroy(verbose)
+
+        print "{0}: pushing snapshot ({1} of {2})".format(self.stack,
+                                                          len(self.get_snapshots()) + 1,
+                                                          self.get_max_snapshots())
+        snapshot = Snapshot.create(self)
+
+        self.unlock()
+        print "{0}: HEAD at {1}".format(self.stack, snapshot.id)
+        print "{0}: new snapshot {1}".format(self.stack, snapshot.snapshot)
+        return 0
+
 
     def __init__(self, snapshot_id, source_dir, allow_snapshot_id=True):
 
@@ -200,7 +315,6 @@ class Stack:
         self.stack = self._stack()
         self.path = self._path()
         self.snapshot = self._snapshot()
-        self.snapshots = self._snapshots()
 
     def __str__(self):
         return self.stack + " " + self.path
@@ -228,8 +342,21 @@ class Source:
         Libemu.exists(self.path + "/.emu/stacks", err=True)
 
         self.stacks = []
-        for stack in os.listdir(self.path + "/.emu/stacks"):
+        for stack in Libemu.ls(self.path + "/.emu/stacks"):
             self.stacks.append(Stack(stack, self.path))
+
+
+    def checkout(self, snapshot):
+        # TODO: checkout snapshot
+        return 501
+
+
+    def lock(self, verbose=False):
+        return 501
+
+
+    def unlock(self, verbose=False):
+        return 501
 
 
     @staticmethod
@@ -344,6 +471,11 @@ class Libemu:
 
 
     @staticmethod
+    def ls(path):
+        return sorted(os.listdir(path))
+
+
+    @staticmethod
     def rm(path, verbose=False):
         Libemu.get_user_write_permissions(path, err=True)
         if os.path.islink(path):
@@ -362,6 +494,16 @@ class Libemu:
             return True
         else:
             return False
+
+
+    @staticmethod
+    def run(*args):
+        proc = subprocess.Popen(args, stdout=subprocess.PIPE)
+        out = []
+        for line in proc.stdout:
+            out.append(line)
+
+        return "\n".join(out)
 
 
     @staticmethod
@@ -400,7 +542,7 @@ class Libemu:
                 sys.exit(1)
 
         if not len(args):
-            args = os.listdir(source_dir + "/.emu/stacks")
+            args = Libemu.ls(source_dir + "/.emu/stacks")
 
         snapshots = []
         for arg in args:
@@ -419,7 +561,7 @@ class Libemu:
                 sys.exit(1)
 
         if not len(args):
-            args = os.listdir(source.path + "/.emu/stacks")
+            args = Libemu.ls(source.path + "/.emu/stacks")
 
         stacks = []
         for arg in args:
