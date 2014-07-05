@@ -10,5 +10,4 @@ emu-stack
 emu-status
 emu-verify
 libemu
-libemu.py
 libemu.sh

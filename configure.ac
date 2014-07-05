@@ -236,7 +236,6 @@ AS_IF([test "x$enable_tests" = xyes],
 AC_CONFIG_FILES([
         Makefile
         emu/Makefile
-        emu/libemu.py
         emu/libemu.sh
         Documentation/Makefile
         Documentation/man/Makefile
