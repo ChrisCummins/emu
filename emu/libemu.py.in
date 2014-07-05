@@ -135,12 +135,12 @@ class Snapshot:
         checksum = Libemu.hash_dir(stack.path + "/.emu/trees/new")
         date = time.gmtime()
         sid = "{0:x}".format(calendar.timegm(date)) + checksum
-        name = "{0}-{1}-{2} {3}.{4}.{5}".format(date.tm_year,
-                                                date.tm_mon,
-                                                date.tm_mday,
-                                                date.tm_hour,
-                                                date.tm_min,
-                                                date.tm_sec)
+        name = "{0}-{1:02d}-{2:02d} {3:02d}.{4:02d}.{5:02d}".format(date.tm_year,
+                                                                    date.tm_mon,
+                                                                    date.tm_mday,
+                                                                    date.tm_hour,
+                                                                    date.tm_min,
+                                                                    date.tm_sec)
 
         # Move tree into position
         Util.mv(stack.path + "/.emu/trees/new", stack.path + "/" + name,
