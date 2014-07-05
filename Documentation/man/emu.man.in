@@ -4,13 +4,6 @@ emu \- Fast incremental snapshot backups
 .SH SYNOPSIS
 .B emu
 <command> [<options>]
-.SH OPTIONS
-.TP
-\-\-version
-Show version information and quit.
-.TP
-\-h \-\-help
-Show this help and quit.
 .SH COMMANDS
 Below is a brief summary of the available commands. For more information on any,
 see
@@ -31,6 +24,13 @@ see
           push          record source snapshots
           status        show status status
           verify        verify the contents of snapshots
+.SH OPTIONS
+.TP
+\-\-version
+Show version information and quit.
+.TP
+\-h \-\-help
+Show this help and quit.
 .SH LICENSE
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
