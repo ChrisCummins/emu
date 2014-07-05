@@ -29,6 +29,7 @@ from sys import exit
 
 # Resolve and import Libemu
 sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
+from libemu import Util
 from libemu import Libemu
 from libemu import Source
 from libemu import SourceCreateError
@@ -43,8 +44,8 @@ def main(argv, argc):
     (options, args) = parser.parse_args()
 
     # Fail if no read/write permissions
-    Libemu.get_user_read_permissions(options.source_dir, err=True)
-    Libemu.get_user_write_permissions(options.source_dir, err=True)
+    Util.readable(options.source_dir, error=True)
+    Util.writable(options.source_dir, error=True)
 
     # Perform initialisation
     try:
