@@ -105,7 +105,9 @@ class Snapshot:
             return full_log(self.id, node)
 
     def destroy(self, verbose=False):
-        print "{0}: destroying snapshot {1}".format(self.stack, self.snapshot)
+        Util.printf("destroying snapshot {0}".format(Util.colourise(self.snapshot,
+                                                                    Colours.SNAPSHOT_DELETE)),
+                    prefix=self.stack, colour=Colours.OK)
         Util.rm(self.tree, must_exist=True, error=True, verbose=verbose)
         Util.rm(self.node, must_exist=True, error=True, verbose=verbose)
         Util.rm(self.stack_dir + "/" + self.snapshot,
@@ -253,8 +255,9 @@ class Stack:
             return self.get_config().get(section, prop)
         except:
             if err:
-                print "Error parsing config file!"
-                print "Could not find property '{0}' in section '{1}'".format(prop, section)
+                Util.printf("Error parsing config file!", Colours.ERROR)
+                Util.printf("Could not find property '{0}' in section '{1}'".format(prop, section),
+                            Colours.ERROR)
                 sys.exit(1)
             return ""
 
@@ -288,14 +291,17 @@ class Stack:
         while len(self.get_snapshots()) >= int(self.get_max_snapshots()):
             self.get_snapshots()[0].destroy(verbose)
 
-        print "{0}: pushing snapshot ({1} of {2})".format(self.stack,
-                                                          len(self.get_snapshots()) + 1,
-                                                          self.get_max_snapshots())
+        Util.printf("pushing snapshot ({0} of {1})".format(len(self.get_snapshots()) + 1,
+                                                           self.get_max_snapshots()),
+                    prefix=self.stack, colour=Colours.OK)
         snapshot = Snapshot.create(self, verbose=verbose)
 
         self.unlock()
-        print "{0}: HEAD at {1}".format(self.stack, snapshot.id)
-        print "{0}: new snapshot {1}".format(self.stack, snapshot.snapshot)
+        Util.printf("HEAD at {0}".format(snapshot.id),
+                    prefix=self.stack, colour=Colours.OK)
+        Util.printf("new snapshot {0}".format(Util.colourise(snapshot.snapshot,
+                                                             Colours.SNAPSHOT_NEW)),
+                    prefix=self.stack, colour=Colours.OK)
         return 0
 
 
@@ -805,3 +811,50 @@ class Util:
 
         return Util.p_exec(rsync_flags, stdout=stdout, stderr=stderr,
                            wait=wait, error=error, verbose=verbose)
+
+
+    # printf() - Format and print a message
+    #
+    # If both 'colour' and 'prefix' are provided, then colourise only
+    # the prefix. If no 'prefix' is provided, colourise the whole
+    # message.
+    @staticmethod
+    def printf(msg, prefix=None, colour=None):
+        string = Colours.RESET
+
+        if colour:
+            string += colour
+
+        if prefix:
+            string += prefix + Colours.RESET + ": "
+
+        string += msg + Colours.RESET
+
+        print string
+
+
+    # colourise() - Colourise a string
+    #
+    # Returns the given string wrapped in colour escape codes.
+    @staticmethod
+    def colourise(string, colour):
+        return colour + string + Colours.RESET
+
+
+#
+# Shell escape colour codes.
+#
+class Colours:
+    RESET   = '\033[0m'
+    GREEN   = '\033[92m'
+    YELLOW  = '\033[93m'
+    BLUE    = '\033[94m'
+    RED     = '\033[91m'
+
+    OK      = GREEN
+    INFO    = BLUE
+    WARNING = YELLOW
+    ERROR   = RED
+
+    SNAPSHOT_DELETE = RED
+    SNAPSHOT_NEW    = BLUE
