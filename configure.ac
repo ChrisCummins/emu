@@ -205,7 +205,6 @@ AS_IF([test "x$enable_tests" = xyes],
               test/pop/pop
               test/push/message
               test/push/no-stack
-              test/push/verify
               test/push/max
               test/push/dry-run
               test/push/force
