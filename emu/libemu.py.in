@@ -138,6 +138,7 @@ class Snapshot:
         Util.rm(self.stack_dir + "/" + self.snapshot,
                 must_exist=True, error=True, verbose=verbose)
         # TODO: Check HEAD and reallocate if necessary
+        # TODO: Remove parent references from all other snapshots
 
     @staticmethod
     def create(stack, dry_run=False, verbose=False):
