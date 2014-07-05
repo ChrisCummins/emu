@@ -105,9 +105,10 @@ class Snapshot:
 
     def destroy(self, verbose=False):
         print "{0}: destroying snapshot {1}".format(self.stack, self.snapshot)
-        Libemu.rm(self.tree, verbose=verbose)
-        Libemu.rm(self.stack_dir + "/" + self.snapshot, verbose=verbose)
-        Libemu.rm(self.node, verbose=verbose)
+        Util.rm(self.tree, must_exist=True, error=True, verbose=verbose)
+        Util.rm(self.node, must_exist=True, error=True, verbose=verbose)
+        Util.rm(self.stack_dir + "/" + self.snapshot,
+                must_exist=True, error=True, verbose=verbose)
         # TODO: Check HEAD and reallocate if necessary
 
     @staticmethod
@@ -362,7 +363,7 @@ class Source:
     @staticmethod
     def create(path, template_dir, verbose=False, force=False):
         def err_cb(*data):
-            Libemu.rm(source_root, verbose=verbose)
+            Util.rm(source_root, verbose=verbose)
             raise SourceCreateError(source_root)
 
         # Create directory structure
@@ -437,27 +438,6 @@ class Libemu:
     @staticmethod
     def ls(path):
         return sorted(os.listdir(path))
-
-
-    @staticmethod
-    def rm(path, verbose=False):
-        Libemu.get_user_write_permissions(path, err=True)
-        if os.path.islink(path):
-            os.unlink(path)
-            if verbose:
-                print "Deleted link '{0}'".format(path)
-        elif os.path.isdir(path):
-            shutil.rmtree(path)
-            if verbose:
-                print "Recursively deleted '{0}'".format(path)
-            return True
-        elif Util.exists(path):
-            os.remove(path)
-            if verbose:
-                print "Deleted file '{0}'".format(path)
-            return True
-        else:
-            return False
 
 
     @staticmethod
@@ -610,3 +590,57 @@ class Util:
                 print "No read permissions for directory '" + path + "'!"
                 sys.exit(1)
         return write_permission
+
+
+    # rm() - Recursively remove files
+    #
+    # Argument 'error' can either by a boolean that dictates whether
+    # to exit fatally on error, or a callback function to execute. If
+    # 'must_exist' is True, then error if the file doesn't exist. This
+    # function returns boolean on whether a file was deleted or not.
+    @staticmethod
+    def rm(path, must_exist=False, error=False, verbose=False):
+        exists = Util.exists(path)
+
+        if exists:
+            Util.writable(path, error=error)
+
+            try:
+                if os.path.islink(path):
+                    os.unlink(path)
+                    type = "link"
+                elif os.path.isdir(path):
+                    shutil.rmtree(path)
+                    type = "directory"
+                else:
+                    os.remove(path)
+                    type = "file"
+
+                if verbose:
+                    print "Deleted {0} '{1}'".format(type, path)
+                return True
+
+            # Failed to remove path:
+            except:
+                if hasattr(error, '__call__'):
+                    # Execute error callback if provided
+                    error()
+                elif error:
+                    # Fatal error if required
+                    print "Failed to delete '" + path + "'."
+                    sys.exit(1)
+                else:
+                    return False
+
+        # Path does not exist:
+        else:
+            if must_exist:
+                if hasattr(error, '__call__'):
+                    # Execute error callback if provided
+                    error()
+                else:
+                    # Else fatal error
+                    print "Cannot delete '" + path + "', file not found."
+                    sys.exit(1)
+            else:
+                return False
