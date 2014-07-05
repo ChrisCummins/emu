@@ -94,6 +94,41 @@ class Snapshot:
         else:
             return full_log(self.id, node)
 
+
+    # nth_child() - Return the nth child of snapshot
+    #
+    # Traverse each snapshot's until we have travelled 'n' nodes from
+    # the starting point.
+    def nth_child(self, n, truncate=False, error=False):
+        parent_id = self.get_node().data["Parent"]
+
+        try:
+
+            if n > 0:
+                if parent_id:
+                    parent = Snapshot(parent_id, self.stack, self.stack_dir)
+                    return parent.nth_child(n - 1, truncate, error)
+                elif not truncate:
+                    raise SnapshotNotFoundError(SnapshotID(self.stack,
+                                                           self.id + Util.n_index_to_tilde(n)))
+                else:
+                    return self
+            else:
+                return self
+
+        except SnapshotNotFoundError as e:
+            if error:
+                if hasattr(error, '__call__'):
+                    # Execute error callback if provided:
+                    error(e)
+                else:
+                    # Else fatal error:
+                    print e
+                    sys.exit(1)
+            else:
+                raise e
+
+
     def destroy(self, verbose=False):
         Util.printf("destroying snapshot {0}".format(Util.colourise(self.snapshot,
                                                                     Colours.SNAPSHOT_DELETE)),
