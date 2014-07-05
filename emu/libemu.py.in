@@ -370,7 +370,7 @@ class Source:
         source_root = path + "/.emu"
         directories = ["/", "/hooks", "/stacks"]
         for d in directories:
-            Libemu.mkdir(source_root + d, mode=0700, verbose=verbose)
+            Util.mkdir(source_root + d, mode=0700, verbose=verbose, error=True)
 
         # Copy template files
         Libemu.rsync(template_dir + "/", source_root + "/", err=err_cb,
@@ -417,22 +417,6 @@ class Libemu:
         parser.add_option("-h", "--help", action="callback",
                           callback=Libemu.show_help_and_quit)
         return parser
-
-
-    @staticmethod
-    def mkdir(path, mode=0777, verbose=False):
-        try:
-            os.makedirs(path, mode)
-            created = True
-        except OSError:
-            # OSError is thrown if the file already exists. Note that
-            # just because it exists, it does not necessarily have the
-            # correct permissions, so let's set the mode just in case.
-            os.chmod(path, mode)
-            created = False
-        if verbose and created:
-            print "Created directory '{0}' with mode 0{1:o}".format(path, mode)
-        return created
 
 
     @staticmethod
@@ -717,3 +701,36 @@ class Util:
         # Source does not exist:
         else:
             return False
+
+
+    # mkdir() - Create a directory and all required parents
+    #
+    # Returns True if directory is created, else False. Argument
+    # 'error' can either by a boolean that dictates whether to exit
+    # fatally on error, or a callback function to execute.
+    @staticmethod
+    def mkdir(path, mode=0777, fail_if_already_exists=False,
+              error=False, verbose=False):
+        exists = Util.exists(path, fail_if_already_exists)
+
+        if exists:
+            return False
+        else:
+            try:
+                os.makedirs(path, mode)
+
+                if verbose:
+                    print "Created directory '{0}' with mode 0{1:o}".format(path, mode)
+
+                return True
+            except:
+                # Error in operation:
+                if hasattr(error, '__call__'):
+                    # Execute error callback if provided
+                    error()
+                elif error:
+                    # Fatal error if required
+                    print "Failed to create directory '{0}'.".format(path)
+                    sys.exit(1)
+                else:
+                    return False
