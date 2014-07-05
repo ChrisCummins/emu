@@ -36,16 +36,13 @@ from sys import exit
 from datetime import datetime
 
 class SnapshotNotFoundError(Exception):
-    def __init__(self, hash, stack=''):
-        self.hash = hash
-        self.stack = stack
+    def __init__(self, id):
+        self.id = id
+
     def __str__(self):
-        if len(self.stack):
-            name = self.stack + ":" + self.hash
-        else:
-            name = self.hash
-        return "Snapshot '{0}' not found!".format(Util.colourise(name,
-                                                                 Colours.ERROR))
+        return "Snapshot '{0}:{1}' not found!".format(self.id.stack_name,
+                                                      Util.colourise(self.id.id,
+                                                                    Colours.ERROR))
 
 class Node:
     def __init__(self, path):
@@ -67,7 +64,7 @@ class Snapshot:
         self.tree = stack_dir + "/.emu/trees/" + shash
 
         if not (Util.exists(self.node) and os.path.isdir(self.tree)):
-            raise SnapshotNotFoundError(shash, stack=stack_name)
+            raise SnapshotNotFoundError(SnapshotID(stack_name, shash))
 
         self.snapshot = self.get_node().data['Snapshot']
 
@@ -210,7 +207,7 @@ class Stack:
                 try:
                     return ids[index]
                 except IndexError:
-                    SnapshotNotFoundError(self.stack, s)
+                    SnapshotNotFoundError(SnapshotID(self.stack, s))
 
             return s
         except:
@@ -500,6 +497,21 @@ class Libemu:
                    "grep -v ' ./.emu/' | md5sum | awk '{{print $1}}'").format(path)
 
         return subprocess.check_output(command, shell=True).rstrip()
+
+
+#####################################
+# Unique global snapshot identifier #
+#####################################
+class SnapshotID:
+    def __init__(self, stack_name, id):
+        self.stack_name = stack_name
+        self.id = id
+        self.timestamp = id[:8]
+        self.checksum = id[8:]
+
+    def __str__(self):
+        return self.stack_name + ":" + self.id
+
 
 ##############################################
 # Utility static class with helper functions #
