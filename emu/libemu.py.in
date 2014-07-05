@@ -117,26 +117,20 @@ class Snapshot:
         head = stack.get_head()
         head_id = ""
 
-        rsync_args = ["--archive",
-                      "--delete",
-                      "--delete-excluded",
-                      "--verbose",
-                      "--progress",
-                      "--human-readable",
-                      "--exclude='" + stack.source + "/.emu'",
-                      "--exclude-from='" + stack.source + "/.emu/excludes'"]
-
         if head:
-            rsync_args.append("--link-dest='" + head.tree + "'")
+            link_dest = head.tree
             head_id = head.id
-        if dry_run:
-            rsync_args.append("--dry-run")
+        else:
+            link_dest = None
 
-        rsync_args.append("'" + stack.source + "/'")
-        rsync_args.append("'" + stack.path + "/.emu/trees/new'")
+        exclude = [stack.source + "/.emu"]
+        exclude_from = [stack.source + "/.emu/excludes"]
 
-        command = "rsync " + " ".join(rsync_args)
-        Util.p_exec(command, verbose=verbose, error=True)
+        Util.rsync(stack.source + "/", stack.path + "/.emu/trees/new",
+                   dry_run=dry_run, link_dest=link_dest,
+                   exclude=exclude, exclude_from=exclude_from,
+                   delete=True, delete_excluded=True,
+                   error=True, verbose=verbose)
 
         checksum = Libemu.hash_dir(stack.path + "/.emu/trees/new")
         date = time.gmtime()
@@ -374,8 +368,8 @@ class Source:
             Util.mkdir(source_root + d, mode=0700, verbose=verbose, error=True)
 
         # Copy template files
-        Libemu.rsync(template_dir + "/", source_root + "/", err=err_cb,
-                     archive=True, verbose=verbose, update=force)
+        Util.rsync(template_dir + "/", source_root + "/", error=err_cb,
+                   archive=True, verbose=verbose, update=force)
 
         return Source(path)
 
@@ -428,32 +422,6 @@ class Libemu:
             out.append(line)
 
         return "\n".join(out)
-
-
-    @staticmethod
-    def rsync(src, dest, verbose=False, err=False,
-              archive=True, update=False, delete=False):
-        cmd = "rsync"
-
-        if verbose:
-            cmd += " --verbose --human-readable"
-        if archive:
-            cmd += " --archive"
-        if update:
-            cmd += " --update"
-        if delete:
-            cmd += " --delete"
-
-        ret = Util.p_exec(cmd + " '" + src + "' '" + dest + "'")
-
-        if err and ret != 0:
-            if hasattr(err, '__call__'):
-                err() # Error callback
-            else:
-                print "Rsync transfer failed!"
-                exit(1)
-
-        return ret
 
 
     @staticmethod
@@ -768,7 +736,72 @@ class Util:
                 error()
             elif error:
                 # Fatal error if required
-                print "Failed to create directory '{0}'.".format(path)
+                print "Failed to execute '{0}'.".format(" ".join(args))
                 sys.exit(1)
 
         return process
+
+
+    # rsync() - Execute rsync file transfer
+    #
+    # The 'archive', 'update', 'dry_run', 'link_dest', 'delete', and
+    # 'delete_excluded' arguments correspond to their respective rsync
+    # flags. 'exclude' and 'exclude_from' arguments accept either a
+    # list of paths and patterns or a single string.
+    @staticmethod
+    def rsync(src, dst, archive=True, update=False,
+              dry_run=False, link_dest=None,
+              exclude=None, exclude_from=None,
+              delete=False, delete_excluded=False, wait=True,
+              stdout=None, stderr=None, args=None,
+              error=False, verbose=False, quiet=False):
+
+        rsync_flags = ["rsync"]
+
+        if archive:
+            rsync_flags.append("--archive")
+
+        if update:
+            rsync_flags.append("--update")
+
+        if dry_run:
+            rsync_flags.append("--dry-run")
+
+        if link_dest:
+            rsync_flags += ["--link-dest", link_dest]
+
+        if isinstance(exclude, basestring):
+            # Single exclude pattern:
+            rsync_flags += ["--exclude", exclude]
+        elif exclude:
+            # List of exclude patterns:
+            for pattern in exclude:
+                rsync_flags += ["--exclude", pattern]
+
+        if isinstance(exclude_from, basestring):
+            # Single exclude path:
+            rsync_flags += ["--exclude-from", exclude_from]
+        elif exclude_from:
+            # List of exclude paths:
+            for path in exclude_from:
+                rsync_flags += ["--exclude-from", path]
+
+        if delete:
+            rsync_flags.append("--delete")
+
+        if delete_excluded:
+            rsync_flags.append("--delete-excluded")
+
+        if args:
+            rsync_flags += args
+
+        if not quiet:
+            rsync_flags += ["--verbose",
+                            "--human-readable",
+                            "--progress"]
+
+        # Add source and destination operands after flags:
+        rsync_flags += [src, dst]
+
+        return Util.p_exec(rsync_flags, stdout=stdout, stderr=stderr,
+                           wait=wait, error=error, verbose=verbose)
