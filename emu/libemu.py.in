@@ -207,7 +207,7 @@ class Stack:
                     index += 1
                     if re.match(r".*\d+", s):
                         index += int(re.sub(r"HEAD~", r"", s)) - 1
-                ids = Libemu.ls(self.path + "/.emu/nodes")
+                ids = Util.ls(self.path + "/.emu/nodes", must_exist=True)
                 try:
                     return ids[index]
                 except IndexError:
@@ -232,7 +232,7 @@ class Stack:
         if len(self.snapshot):
             ids = [self.snapshot]
         else:
-            ids = Libemu.ls(self.path + "/.emu/nodes")
+            ids = Util.ls(self.path + "/.emu/nodes", must_exist=True)
         snapshots = []
         for id in ids:
             snapshots.append(Snapshot(id, self.stack, self.path))
@@ -343,7 +343,7 @@ class Source:
         Util.exists(self.path + "/.emu/stacks", error=True)
 
         self.stacks = []
-        for stack in Libemu.ls(self.path + "/.emu/stacks"):
+        for stack in Util.ls(self.path + "/.emu/stacks", must_exist=True):
             self.stacks.append(Stack(stack, self.path))
 
 
@@ -436,11 +436,6 @@ class Libemu:
 
 
     @staticmethod
-    def ls(path):
-        return sorted(os.listdir(path))
-
-
-    @staticmethod
     def run(*args):
         proc = subprocess.Popen(args, stdout=subprocess.PIPE)
         out = []
@@ -486,7 +481,7 @@ class Libemu:
                 sys.exit(1)
 
         if not len(args):
-            args = Libemu.ls(source_dir + "/.emu/stacks")
+            args = Util.ls(source_dir + "/.emu/stacks", must_exist=True)
 
         snapshots = []
         for arg in args:
@@ -505,7 +500,7 @@ class Libemu:
                 sys.exit(1)
 
         if not len(args):
-            args = Libemu.ls(source.path + "/.emu/stacks")
+            args = Util.ls(source.path + "/.emu/stacks", must_exist=True)
 
         stacks = []
         for arg in args:
@@ -600,7 +595,7 @@ class Util:
     # function returns boolean on whether a file was deleted or not.
     @staticmethod
     def rm(path, must_exist=False, error=False, verbose=False):
-        exists = Util.exists(path)
+        exists = Util.exists(path, error=must_exist)
 
         if exists:
             Util.writable(path, error=error)
@@ -634,13 +629,21 @@ class Util:
 
         # Path does not exist:
         else:
-            if must_exist:
-                if hasattr(error, '__call__'):
-                    # Execute error callback if provided
-                    error()
-                else:
-                    # Else fatal error
-                    print "Cannot delete '" + path + "', file not found."
-                    sys.exit(1)
-            else:
-                return False
+            return False
+
+
+    # ls() - List a directory's contents
+    #
+    # Returns an alphabetically sorted list of a directory's contents.
+    # Argument 'error' can either by a boolean that dictates whether
+    # to exit fatally on error, or a callback function to execute. If
+    # 'must_exist' is True, then error if the file doesn't exist.
+    @staticmethod
+    def ls(path, must_exist=False, error=False):
+        exists = Util.exists(path, error=must_exist)
+        readable = Util.readable(path, error=error)
+
+        if exists and readable:
+            return sorted(os.listdir(path))
+        else:
+            return []
