@@ -822,6 +822,33 @@ class Util:
                            wait=wait, error=error, verbose=verbose)
 
 
+    # tilde_to_n_index() - Convert tilde notation into an n-index
+    #
+    # Converts a tilde notation string into its corresponding n-index,
+    # e.g. "~" returns 1, "~2" returns 2, etc.
+    @staticmethod
+    def tilde_to_n_index(tilde):
+        if re.match(r"~\d+", tilde):
+            return int(re.sub(r"~", "", tilde))
+        else:
+            return 1
+
+
+    # n_index_to_tilde() - Convert an n-index into tilde notation
+    #
+    # Converts an integer n-index into corresponding tilde notation,
+    # e.g. 1 returns "~", 2 returns "~2", etc.
+    @staticmethod
+    def n_index_to_tilde(n_index):
+        tilde = ""
+        if n_index > 0:
+            tilde += "~"
+            n_index -= 1
+            if n_index:
+                tilde += str(n_index)
+        return tilde
+
+
     # printf() - Format and print a message
     #
     # If both 'colour' and 'prefix' are provided, then colourise only
