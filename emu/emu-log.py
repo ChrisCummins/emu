@@ -60,6 +60,9 @@ def main(argv, argc):
     if options.limit <= 0:
         options.limit = len(snapshots)
 
+    # Reverse so that newest is first
+    snapshots.reverse()
+
     for snapshot in snapshots[:options.limit]:
         print snapshot.log(short=options.short)
 
