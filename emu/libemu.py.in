@@ -112,7 +112,7 @@ class Snapshot:
         # TODO: Check HEAD and reallocate if necessary
 
     @staticmethod
-    def create(stack, dry_run=False):
+    def create(stack, dry_run=False, verbose=False):
         head = stack.get_head()
         head_id = ""
 
@@ -148,8 +148,8 @@ class Snapshot:
                                                 date.tm_sec)
 
         # Move tree into position
-        os.system("mv '" + stack.path + "/.emu/trees/new" + "' '" +
-                  stack.path + "/" + name + "'")
+        Util.mv(stack.path + "/.emu/trees/new", stack.path + "/" + name,
+                verbose=verbose, must_exist=True, error=True)
 
         # Make trees symlink
         os.system("ln -s '" + stack.path + "/" + name + "' '" +
@@ -296,7 +296,7 @@ class Stack:
         print "{0}: pushing snapshot ({1} of {2})".format(self.stack,
                                                           len(self.get_snapshots()) + 1,
                                                           self.get_max_snapshots())
-        snapshot = Snapshot.create(self)
+        snapshot = Snapshot.create(self, verbose=verbose)
 
         self.unlock()
         print "{0}: HEAD at {1}".format(self.stack, snapshot.id)
@@ -647,3 +647,39 @@ class Util:
             return sorted(os.listdir(path))
         else:
             return []
+
+
+    # mv() - Move a file
+    #
+    # Returns true if file is moved, else False. Argument 'error' can
+    # either by a boolean that dictates whether to exit fatally on
+    # error, or a callback function to execute. If 'must_exist' is
+    # True, then error if the file doesn't exist.
+    @staticmethod
+    def mv(src, dst, must_exist=False, error=False, verbose=False):
+        exists = Util.exists(src, error=must_exist)
+        readable = Util.readable(src, error=error)
+
+        if exists and readable:
+            try:
+                shutil.move(src, dst)
+
+                if verbose:
+                    print "Moved '{0}' -> '{1}'".format(src, dst)
+
+                return True
+            except:
+                # Error in file move:
+                if hasattr(error, '__call__'):
+                    # Execute error callback if provided
+                    error()
+                elif error:
+                    # Fatal error if required
+                    print "Failed to move '{0}' to '{1}'.".format(src, dst)
+                    sys.exit(1)
+                else:
+                    return False
+
+        # Source does not exist or unreadable:
+        else:
+            return False
