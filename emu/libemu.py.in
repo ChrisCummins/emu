@@ -859,9 +859,9 @@ class Util:
         return colour + string + Colours.RESET
 
 
-#
-# Shell escape colour codes.
-#
+#############################
+# Shell escape colour codes #
+#############################
 class Colours:
     RESET   = '\033[0m'
     GREEN   = '\033[92m'
