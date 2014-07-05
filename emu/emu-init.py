@@ -38,8 +38,7 @@ from libemu import SourceCreateError
 def main(argv, argc):
     parser = EmuParser()
     parser.add_option("-t", "--template-dir", action="store", type="string",
-                      dest="template_dir",
-                      default=Libemu.global_template_dir + "/source-templates")
+                      dest="template_dir", default=Util.source_templates)
     parser.add_option("-f", "--force", action="store_true", dest="force",
                       default=False)
     (options, args) = parser.parse_args()

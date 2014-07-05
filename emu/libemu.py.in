@@ -411,17 +411,6 @@ class Source:
 
 
 class Libemu:
-    prefix = "/usr/local"
-    global_template_dir = prefix + "/share/emu/templates"
-    version = {
-        "major": 0,
-        "minor": 0,
-        "micro": 8
-    }
-    version_string = (str(version["major"]) + "." +
-                      str(version["minor"]) + "." +
-                      str(version["micro"]))
-
 
     @staticmethod
     def run(*args):
@@ -467,6 +456,21 @@ class SnapshotID:
 # Utility static class with helper functions #
 ##############################################
 class Util:
+
+    #
+    # Version information:
+    #
+    version = { "major": 0, "minor": 0, "micro": 8 }
+    version_string = "{0}.{1}.{2}".format(version["major"],
+                                          version["minor"],
+                                          version["micro"])
+
+
+    #
+    # Template paths:
+    #
+    source_templates = os.path.abspath(sys.path[0] + "/../share/emu/templates/source-templates")
+    stack_templates = os.path.abspath(sys.path[0] + "/../share/emu/templates/stack-templates")
 
 
     # exists() - Check that a path exists
