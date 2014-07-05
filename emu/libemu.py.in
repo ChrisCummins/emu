@@ -152,8 +152,8 @@ class Snapshot:
                 verbose=verbose, must_exist=True, error=True)
 
         # Make trees symlink
-        os.system("ln -s '" + stack.path + "/" + name + "' '" +
-                  stack.path + "/.emu/trees/" + sid + "'")
+        Util.ln_s(stack.path + "/" + name, stack.path + "/.emu/trees/" + sid,
+                  verbose=verbose, error=True)
 
         # Get size
         size = Libemu.run("du", "-h", "-s").split()[0]
@@ -681,5 +681,39 @@ class Util:
                     return False
 
         # Source does not exist or unreadable:
+        else:
+            return False
+
+
+    # ln_s() - Create a symbolic link
+    #
+    # Returns True is symbolic link is created, else False. Argument
+    # 'error' can either by a boolean that dictates whether to exit
+    # fatally on error, or a callback function to execute.
+    @staticmethod
+    def ln_s(src, dst, error=False, verbose=False):
+        exists = Util.exists(src, error=error)
+
+        if exists:
+            try:
+                os.symlink(src, dst)
+
+                if verbose:
+                    print "Link '{0}' -> '{1}'".format(src, dst)
+
+                return True
+            except:
+                # Error in operation:
+                if hasattr(error, '__call__'):
+                    # Execute error callback if provided
+                    error()
+                elif error:
+                    # Fatal error if required
+                    print "Failed to move '{0}' to '{1}'.".format(src, dst)
+                    sys.exit(1)
+                else:
+                    return False
+
+        # Source does not exist:
         else:
             return False
