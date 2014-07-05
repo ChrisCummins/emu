@@ -44,7 +44,8 @@ class SnapshotNotFoundError(Exception):
             name = self.stack + ":" + self.hash
         else:
             name = self.hash
-        return "Snapshot '{0}' not found!".format(name)
+        return "Snapshot '{0}' not found!".format(Util.colourise(name,
+                                                                 Colours.ERROR))
 
 class Node:
     def __init__(self, path):
@@ -174,7 +175,8 @@ class StackNotFoundError(Exception):
     def __init__(self, name):
         self.name = name
     def __str__(self):
-        return "Stack '{0}' not found!".format(self.name)
+        return "Stack '{0}' not found!".format(Util.colourise(self.name,
+                                                              Colours.ERROR))
 
 
 class StackLockError(Exception):
