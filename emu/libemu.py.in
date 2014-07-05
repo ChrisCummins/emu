@@ -35,14 +35,6 @@ from optparse import OptionParser
 from sys import exit
 from datetime import datetime
 
-class SnapshotNotFoundError(Exception):
-    def __init__(self, id):
-        self.id = id
-
-    def __str__(self):
-        return "Snapshot '{0}:{1}' not found!".format(self.id.stack_name,
-                                                      Util.colourise(self.id.id,
-                                                                    Colours.ERROR))
 
 class Node:
     def __init__(self, path):
@@ -168,19 +160,6 @@ class Snapshot:
         return Snapshot(sid, stack.stack, stack.path)
 
 
-class StackNotFoundError(Exception):
-    def __init__(self, name):
-        self.name = name
-    def __str__(self):
-        return "Stack '{0}' not found!".format(Util.colourise(self.name,
-                                                              Colours.ERROR))
-
-
-class StackLockError(Exception):
-    def __init__(self, name):
-        self.name = name
-    def __str__(self):
-        return "Failed to lock stack '{0}'!".format(self.name)
 
 
 class Stack:
@@ -888,3 +867,32 @@ class Colours:
 
     SNAPSHOT_DELETE = RED
     SNAPSHOT_NEW    = BLUE
+
+
+###############
+# Error types #
+###############
+class SnapshotNotFoundError(Exception):
+    def __init__(self, id):
+        self.id = id
+
+    def __str__(self):
+        return "Snapshot '{0}:{1}' not found!".format(self.id.stack_name,
+                                                      Util.colourise(self.id.id,
+                                                                    Colours.ERROR))
+
+
+class StackNotFoundError(Exception):
+    def __init__(self, name):
+        self.name = name
+    def __str__(self):
+        return "Stack '{0}' not found!".format(Util.colourise(self.name,
+                                                              Colours.ERROR))
+
+
+class StackLockError(Exception):
+    def __init__(self, name):
+        self.name = name
+    def __str__(self):
+        return "Failed to lock stack '{0}'!".format(Util.colourise(self.name,
+                                                                   Colours.ERROR))
