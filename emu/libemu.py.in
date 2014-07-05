@@ -872,14 +872,13 @@ class Colours:
 ###############
 # Error types #
 ###############
-class SnapshotNotFoundError(Exception):
+class InvalidSnapshotIDError(Exception):
     def __init__(self, id):
         self.id = id
 
     def __str__(self):
-        return "Snapshot '{0}:{1}' not found!".format(self.id.stack_name,
-                                                      Util.colourise(self.id.id,
-                                                                    Colours.ERROR))
+        return "Invalid snapshot identifier '{0}!'".format(Util.colourise(self.id,
+                                                                          Colours.ERROR))
 
 
 class StackNotFoundError(Exception):
@@ -888,6 +887,16 @@ class StackNotFoundError(Exception):
     def __str__(self):
         return "Stack '{0}' not found!".format(Util.colourise(self.name,
                                                               Colours.ERROR))
+
+
+class SnapshotNotFoundError(Exception):
+    def __init__(self, id):
+        self.id = id
+
+    def __str__(self):
+        return "Snapshot '{0}:{1}' not found!".format(self.id.stack_name,
+                                                      Util.colourise(self.id.id,
+                                                                    Colours.ERROR))
 
 
 class StackLockError(Exception):
