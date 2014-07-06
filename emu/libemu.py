@@ -892,7 +892,7 @@ class Util:
               stdout=None, stderr=None, args=None,
               error=False, verbose=False, quiet=False):
 
-        rsync_flags = ["rsync"]
+        rsync_flags = ["rsync", "--human-readable"]
 
         if archive:
             rsync_flags.append("--archive")
