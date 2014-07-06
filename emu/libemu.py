@@ -1148,11 +1148,11 @@ class EmuParser(OptionParser):
     #
     # Parses the command line arguments and searches for stack
     # identifiers, returning a list of Stack objects for each of the
-    # named stacks. If 'accept_no_stacks' is True, then if no
+    # named stacks. If 'accept_no_args' is True, then if no
     # arguments are provided, all stacks will be returned. If an
     # argument does not correspond with a stack, then a
     # StackNotFoundError is raised.
-    def parse_stacks(self, source, accept_no_stacks=True, error=True):
+    def parse_stacks(self, source, accept_no_args=True, error=True):
 
         try:
             return self._stacks
@@ -1160,7 +1160,7 @@ class EmuParser(OptionParser):
             try:
 
                 # Return all stacks if no args:
-                if accept_no_stacks and not len(self.args()):
+                if accept_no_args and not len(self.args()):
                     return source.stacks()
                 else:
                     # Else parse arguments:
@@ -1190,10 +1190,11 @@ class EmuParser(OptionParser):
     # snapshots. If 'accept_stack_names' is True, then if a stack is
     # only named, then a list of all of its snapshots will be used,
     # instead of having to identify a single one. 'If
-    # 'accept_no_stacks' is True, then a list of all stacks will be
+    # 'accept_no_args' is True, then a list of all stacks will be
     # used if no arguments are provided.
     def parse_snapshots(self, source, accept_stack_names=True,
-                        accept_no_stacks=True, error=True):
+                        accept_no_args=True, single_arg=False,
+                        error=True):
 
         try:
             return self._snapshots
@@ -1203,8 +1204,20 @@ class EmuParser(OptionParser):
                 self._snapshots = []
                 args = self.args()
 
+                # Check first if we're only accepting a single arg:
+                if single_arg and not len(args) == 1:
+                    e = "Only a single argument accepted!"
+
+                    if hasattr(error, '__call__'):
+                        # Execute error callback if provided:
+                        error(e)
+                    else:
+                        # Else fatal error:
+                        print e
+                        sys.exit(1)
+
                 # If no args are given, generate a list of all stack names:
-                if accept_no_stacks and not len(args):
+                if accept_no_args and not len(args):
                     for stack in source.stacks():
                         args.append(stack.name)
 
