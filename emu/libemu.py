@@ -115,6 +115,33 @@ class Source:
 class Stack:
     re = r"^([^:]+)?(:(([a-f0-9]+)|(HEAD(~([0-9]+)?)?)))?$"
 
+    def __init__(self, snapshot_id, source_dir, allow_snapshot_id=True):
+
+        def err_cb(e):
+            print "Non-existent or malformed emu stack. Reason:\n\n{0}".format(e)
+            sys.exit(1)
+
+        # Throw an exception if we have get stack:snapshot syntax and
+        # we don't want it:
+        if re.search(r":", snapshot_id) and not allow_snapshot_id:
+            raise StackNotFoundError(snapshot_id)
+
+        self.sid = snapshot_id
+        self.source = source_dir
+        self.stack = self._stack()
+
+        # Sanity checks:
+        Util.readable("{0}/.emu/stacks/{1}".format(self.source, self.stack), error=err_cb)
+
+        self.path = self._path()
+        self.snapshot = self._snapshot()
+
+        Util.readable(self.path + "/.emu/",      error=err_cb)
+        Util.readable(self.path + "/.emu/nodes", error=err_cb)
+        Util.readable(self.path + "/.emu/trees", error=err_cb)
+        Util.readable(self.path + "/.emu/HEAD",  error=err_cb)
+
+
     def _stack(self):
         try:
             return re.sub(self.re, r"\1", self.sid)
@@ -232,19 +259,6 @@ class Stack:
                     prefix=self.stack, colour=Colours.OK)
         return 0
 
-
-    def __init__(self, snapshot_id, source_dir, allow_snapshot_id=True):
-
-        # Throw an exception if we have get stack:snapshot syntax and
-        # we don't want it:
-        if re.search(r":", snapshot_id) and not allow_snapshot_id:
-            raise StackNotFoundError(snapshot_id)
-
-        self.sid = snapshot_id
-        self.source = source_dir
-        self.stack = self._stack()
-        self.path = self._path()
-        self.snapshot = self._snapshot()
 
     def __str__(self):
         return self.stack + " " + self.path
