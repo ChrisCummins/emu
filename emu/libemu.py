@@ -90,21 +90,29 @@ class Source:
                 sys.exit(1)
 
 
+    # create() - Create a new source
+    #
+    # Creates the directory structure and files for an emu source, and
+    # returns an instance.
     @staticmethod
     def create(path, template_dir, verbose=False, force=False):
+
+        # Tidy up in case of error:
         def err_cb(*data):
-            Util.rm(source_root, verbose=verbose)
-            raise SourceCreateError(source_root)
+            Util.rm(source_dir, verbose=verbose)
+            raise SourceCreateError(source_dir)
 
         # Create directory structure
-        source_root = path + "/.emu"
+        source_dir = path + "/.emu"
         directories = ["/", "/hooks", "/stacks"]
         for d in directories:
-            Util.mkdir(source_root + d, mode=0700, verbose=verbose, error=True)
+            Util.mkdir(source_dir + d, mode=0700, verbose=verbose, error=err_cb)
 
         # Copy template files
-        Util.rsync(template_dir + "/", source_root + "/", error=err_cb,
+        Util.rsync(template_dir + "/", source_dir + "/", error=err_cb,
                    archive=True, verbose=verbose, update=force)
+
+        print "Initialised source at '{0}'".format(source.path)
 
         return Source(path)
 

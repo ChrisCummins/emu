@@ -49,9 +49,8 @@ def main(argv, argc):
 
     # Perform initialisation
     try:
-        source = Source.create(options.source_dir, options.template_dir,
-                               verbose=options.verbose, force=options.force)
-        print "Initialised source at '{0}'".format(source.path)
+        Source.create(options.source_dir, options.template_dir,
+                      verbose=options.verbose, force=options.force)
         return 0
     except SourceCreateError as e:
         print e
