@@ -60,12 +60,12 @@ class Snapshot:
         self.snapshot = self.node()['Snapshot']
 
 
-    _valid = None
+    # verify() - Verify the contents of snapshot
+    #
+    # Verify the checksum by computing it again and comparing.
     def verify(self):
-        if self._valid == None:
-            checksum = Libemu.hash_dir(self.tree)
-            self._valid = checksum == self.checksum
-        return self._valid
+        return Util.checksum(self.tree) == self.checksum
+
 
     def __repr__(self):
         return self.stack + ":" + self.id
@@ -187,7 +187,7 @@ class Snapshot:
                    delete=True, delete_excluded=True,
                    error=True, verbose=verbose)
 
-        checksum = Libemu.hash_dir(stack.path + "/.emu/trees/new")
+        checksum = Util.checksum(stack.path + "/.emu/trees/new")
         date = time.gmtime()
         sid = "{0:x}".format(calendar.timegm(date)) + checksum
         name = "{0}-{1:02d}-{2:02d} {3:02d}.{4:02d}.{5:02d}".format(date.tm_year,
@@ -455,14 +455,6 @@ class Libemu:
                 Util.exists(path + "/.emu/config")):
             print "No emu source found!"
             sys.exit(1)
-
-
-    @staticmethod
-    def hash_dir(path):
-        command = ("cd {0} && find . -type f -printf '%T@ %p\n' 2>/dev/null | "
-                   "grep -v ' ./.emu/' | md5sum | awk '{{print $1}}'").format(path)
-
-        return subprocess.check_output(command, shell=True).rstrip()
 
 
 #####################################
@@ -822,6 +814,34 @@ class Util:
 
         return Util.p_exec(rsync_flags, stdout=stdout, stderr=stderr,
                            wait=wait, error=error, verbose=verbose)
+
+
+    # checksum() - Generate a checksum for a path
+    #
+    # Create a checksum for a directory's contents by calculating the
+    # md5sum of a list of the directory contents and file modification
+    # times.
+    @staticmethod
+    def checksum(path, error=True):
+        try:
+            command = ("cd {0} && find . -type f "
+                       "-printf '%T@ %p\n' 2>/dev/null | "
+                       "grep -v ' ./.emu/' | md5sum | "
+                       "awk '{{print $1}}'").format(path)
+            return subprocess.check_output(command, shell=True).rstrip()
+
+        except Exception as e:
+            if error:
+                if hasattr(error, '__call__'):
+                    # Execute error callback if provided:
+                    error(e)
+                else:
+                    # Else fatal error:
+                    print "Failed to create checksum for '{0}'".format(Util.colourise(path,
+                                                                                      Colours.ERROR))
+                    sys.exit(1)
+            else:
+                raise e
 
 
     # Look up a stack by name, or raise StackNotFoundError():
