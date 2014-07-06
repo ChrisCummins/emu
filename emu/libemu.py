@@ -267,7 +267,7 @@ class Snapshot:
 
         # Sanity checks:
         Util.readable("{0}/.emu/nodes/{1}".format(self.stack_dir, shash), error=err_cb)
-        self.snapshot = self.node()['Snapshot']
+        self.snapshot = self.node("name")
         Util.readable("{0}/{1}".format(self.stack_dir, self.snapshot),    error=err_cb)
         Util.readable("{0}/.emu/trees/{1}".format(self.stack_dir, shash), error=err_cb)
 
@@ -285,41 +285,50 @@ class Snapshot:
 
     # node() - Fetch snapshot node data from file
     #
-    def node(self):
+    def node(self, p=None, v=None):
         path = "{0}/.emu/nodes/{1}".format(self.stack_dir, self.id)
-        Util.readable(path, error=True)
+        Util.writable(path, error=True)
 
-        try:
-            node = {}
-            with open(path, "r") as f:
-                f = f.read()
-                for l in f.rstrip().split("\n"):
-                    p = re.split(r"\W+", l, 1)
-                    node[p[0]] = p[1]
+        if p and v: # Set new value for property
 
+            node = self.node()
+            node.set("Node", p, v)
+            with open(path, "wb") as node_file:
+                config.write(node_file)
+
+        elif p:     # Get property value
+
+            node = self.node()
+            return node.get("Node", p)
+
+        else:
+
+            try:
+                node = ConfigParser()
+                node.read(path)
                 return node
-
-        except:
-            print "Failed to read node file '{0}'".format(Util.colourise(path,
-                                                                         Colours.ERROR))
-            sys.exit(1)
+            except:
+                print "Failed to read node file '{0}'".format(Util.colourise(path,
+                                                                             Colours.ERROR))
+                sys.exit(1)
 
 
     def log(self, short=False):
-        def full_log(id, node):
-            s =  "snapshot " + id + "\n"
-            s += "Date:    " + node['Date'] + "\n"
-            s += "Size:    " + node['Size'] + "\n"
+        def full_log():
+            s =  "snapshot " + self.node("name") + "\n"
+            s += "ID:      " + self.id + "\n"
+            s += "Parent:  " + self.node("parent") + "\n"
+            s += "Date:    " + self.node("date") + "\n"
+            s += "Size:    " + self.node("size") + "\n"
             return s
-        def short_log(id, node):
-            s = id + "  " + node['Date']
+        def short_log(id):
+            s = id + "  " + self.node("name")
             return s
 
-        node = self.node()
         if short:
-            return short_log(self.id, node)
+            return short_log()
         else:
-            return full_log(self.id, node)
+            return full_log()
 
 
     # nth_child() - Return the nth child of snapshot
@@ -355,16 +364,18 @@ class Snapshot:
                 raise e
 
 
-    # parent() - Get snapshot's parent
+    # parent() - Get/set snapshot's parent
     #
     def parent(self, *parent):
-        # TODO: Add setter
-        parent_id = self.node()["Parent"]
-
-        if parent_id:
-            return Snapshot(parent_id, self.stack, self.stack_dir)
+        if parent:
+            self.node(p="Parent", v=parent._id.id)
         else:
-            return None
+            parent_id = self.node(p="parent")
+
+            if parent_id:
+                return Snapshot(parent_id, self.stack, self.stack_dir)
+            else:
+                return None
 
 
     def destroy(self, dry_run=False, verbose=False):
@@ -426,13 +437,18 @@ class Snapshot:
         # Get size
         size = Libemu.run("du", "-h", "-s").split()[0]
 
-        # Create node
-        with open(stack.path + "/.emu/nodes/" + sid, 'w') as f:
-            f.write("Snapshot " + name + "\n" +
-                    "Parent   " + head_id + "\n" +
-                    "Date     " + time.strftime("%A %B %d %H:%M:%S %Y", date) + "\n" +
-                    "Source   " + stack.source + "\n" +
-                    "Size     " + size + "\n")
+        # Create node:
+        node_path = "{0}/.emu/nodes/{1}".format(stack.path, sid)
+        node = ConfigParser()
+        node.add_section("Node")
+        node.set("Node", "snapshot", sid)
+        node.set("Node", "name",     name)
+        node.set("Node", "parent",   head_id)
+        node.set("Node", "date",     time.strftime("%A %B %d %H:%M:%S %Y", date))
+        node.set("Node", "source",   stack.source.path)
+        node.set("Node", "size",     size)
+        with open(node_path, "wb") as node_file:
+                node.write(node_file)
 
         # Update HEAD
         with open(stack.path + "/.emu/HEAD", 'w') as f:
