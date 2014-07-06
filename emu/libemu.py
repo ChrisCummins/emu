@@ -802,7 +802,8 @@ class Util:
             rsync_flags.append("--update")
 
         if dry_run:
-            rsync_flags.append("--dry-run")
+            rsync_flags += ["--dry-run",
+                            "--itemize-changes"]
 
         if link_dest:
             rsync_flags += ["--link-dest", link_dest]
@@ -835,8 +836,7 @@ class Util:
         if not quiet:
             rsync_flags += ["--verbose",
                             "--human-readable",
-                            "--progress",
-                            "--itemize-changes"]
+                            "--progress"]
 
         # Add source and destination operands after flags:
         rsync_flags += [src, dst]
