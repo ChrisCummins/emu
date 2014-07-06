@@ -42,12 +42,16 @@ def main(argv, argc):
 
     for stack in parser.parse_stacks(source):
         snapshots = stack.snapshots()
+        if stack.head():
+            head_id = stack.head().id.id
+        else:
+            head_id = ""
+
         print Util.colourise(stack.name, Colours.GREEN)
         print "Location:        {0}".format(stack.path)
         print "No of snapshots: {0}".format(len(snapshots))
         print "Max snapshots:   {0}".format(stack.max_snapshots())
-        if len(snapshots):
-            print "Last snapshot:   {0}".format(snapshots[len(snapshots) - 1].id.id)
+        print "Head:            {0}".format(head_id)
         sys.stdout.write("Size:            ")
         sys.stdout.flush()
         os.system("du -sh '" + stack.path + "' | awk '{{print $1}}'")
