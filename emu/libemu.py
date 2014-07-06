@@ -426,71 +426,76 @@ class Snapshot:
     @staticmethod
     def create(stack, dry_run=False, verbose=False):
         source = stack.source
-        head = stack.head()
-
-        if head:
-            head_id = head.id.id
-        else:
-            head_id = ""
-
+        transfer_dest = stack.path + "/.emu/trees/new"
         exclude = ["/.emu"]
         exclude_from = [source.path + "/.emu/excludes"]
-
-        # Use all snapshots as link destinations
         link_dests = []
+
+        # Use all snapshots as link destinations:
         for snapshot in stack.snapshots():
             link_dests.append(snapshot.tree)
 
-        Util.rsync(source.path + "/", stack.path + "/.emu/trees/new",
+        # Perform file transfer:
+        Util.rsync(source.path + "/", transfer_dest,
                    dry_run=dry_run, link_dest=link_dests,
                    exclude=exclude, exclude_from=exclude_from,
                    delete=True, delete_excluded=True,
                    error=True, verbose=verbose)
 
-        checksum = Util.checksum(stack.path + "/.emu/trees/new")
+        checksum = Util.checksum(transfer_dest)
         date = time.gmtime()
-        sid = "{0:x}".format(calendar.timegm(date)) + checksum
+        id = SnapshotID(stack.name, "{0:x}".format(calendar.timegm(date)) + checksum)
         name = "{0}-{1:02d}-{2:02d} {3:02d}.{4:02d}.{5:02d}".format(date.tm_year,
                                                                     date.tm_mon,
                                                                     date.tm_mday,
                                                                     date.tm_hour,
                                                                     date.tm_min,
                                                                     date.tm_sec)
+        tree = stack.path + "/.emu/trees/" + id.id
+        name_link = stack.path + "/" + name
+        most_recent_link = stack.path + "/Most Recent Backup"
 
         # Move tree into position
-        Util.mv(stack.path + "/.emu/trees/new", stack.path + "/.emu/trees/" + sid,
+        Util.mv(transfer_dest, tree,
                 verbose=verbose, must_exist=True, error=True)
 
-        # Make symlinks
-        Util.ln_s(stack.path + "/.emu/trees/" + sid, stack.path + "/" + name,
-                  verbose=verbose, error=True)
-        most_recent_link = stack.path + "/Most Recent Backup"
+        # Make name symlink:
+        Util.ln_s(tree, name_link, verbose=verbose, error=True)
+
+        # Make "Most Recent Backup" symlink:
         if Util.exists(most_recent_link):
             Util.rm(most_recent_link, verbose=verbose, error=True)
-        Util.ln_s(stack.path + "/" + name, most_recent_link,
+        Util.ln_s(name_link, most_recent_link,
                   verbose=verbose, error=True)
 
-        # Get size
+        # Get parent node ID:
+        if stack.head():
+            head_id = stack.head().id.id
+        else:
+            head_id = ""
+
+        # Get snapshot size:
         size = Libemu.run("du", "-h", "-s").split()[0]
 
         # Create node:
-        node_path = "{0}/.emu/nodes/{1}".format(stack.path, sid)
+        node_path = "{0}/.emu/nodes/{1}".format(stack.path, id.id)
         node = ConfigParser()
         node.add_section("Node")
-        node.set("Node", "snapshot", sid)
+        node.set("Node", "snapshot", id.id)
         node.set("Node", "name",     name)
         node.set("Node", "parent",   head_id)
         node.set("Node", "date",     time.strftime("%A %B %d %H:%M:%S %Y", date))
         node.set("Node", "source",   stack.source.path)
+        node.set("Node", "stack",    id.stack_name)
         node.set("Node", "size",     size)
         with open(node_path, "wb") as node_file:
                 node.write(node_file)
 
-        # Update HEAD
+        # Update HEAD:
         with open(stack.path + "/.emu/HEAD", 'w') as f:
-            f.write(sid + "\n")
+            f.write(id.id + "\n")
 
-        return Snapshot(SnapshotID(stack.name, sid), stack)
+        return Snapshot(SnapshotID(stack.name, id.id), stack)
 
 
 #####################################
