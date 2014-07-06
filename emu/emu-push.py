@@ -39,7 +39,7 @@ def main(argv, argc):
     parser.add_option("-d", "--dry-run", action="store_true",
                       dest="dry_run", default=False)
     parser.add_option("-f", "--force", action="store_true",
-                      dest="dry_run", default=False)
+                      dest="force", default=False)
     (options, args) = parser.parse_args()
 
     Libemu.die_if_not_source(options.source_dir)
