@@ -1,0 +1,41 @@
+.TH emu-checkout @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
+.SH NAME
+emu\-checkout \- restore source from snapshot
+.SH SYNOPSIS
+.B emu checkout [<options>] <stack>:<snapshot>
+.SH DESCRIPTION
+Restores the contents of a snapshot to the source directory, setting a
+new stack HEAD.
+.PP
+It uses the same difference and transfer algorithm as emu push, except
+with the stack and source swapped so that the difference between the
+content of the specified stack snapshot and source is written to the
+source, restoring the state of the source to match that of the
+snapshot.
+.SH OPTIONS
+.TP
+\-d \-\-dry-run
+Perform a trial run with no changes made.
+.TP
+\-f \-\-force
+Force checkout the snapshot, ignoring any concurrency locks on the source
+or stack.
+.TP
+\-v \-\-verbose
+Increase verbosity.
+.TP
+\-\-version
+Show version information and quit.
+.TP
+\-h \-\-help
+Show this help and quit.
+.SH EMU
+Part of the
+.B emu
+(1)
+suite
+.SH AUTHOR
+Chris Cummins <chrisc.101@gmail.com>
+.SH SEE ALSO
+.B emu
+(1)

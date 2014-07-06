@@ -14,6 +14,7 @@ see
 .B \-\-help
 .
 
+          checkout      restore source from snapshot
           clean         remove locks and orphaned data
           hook          manage hooks
           init          create emu sources

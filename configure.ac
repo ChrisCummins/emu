@@ -167,6 +167,7 @@ dnl 6. Generate files
 dnl ================================================================
 AS_IF([test "x$enable_man_pages" = xyes],
       [AC_CONFIG_FILES([
+              Documentation/man/emu-checkout.man
               Documentation/man/emu-status.man
               Documentation/man/emu-log.man
               Documentation/man/emu-pop.man

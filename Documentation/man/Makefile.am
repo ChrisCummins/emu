@@ -1,6 +1,7 @@
 if ENABLE_MAN_PAGES
 man_MANS =	 			\
 	emu.1				\
+	emu-checkout.1			\
 	emu-clean.1			\
 	emu-init.1			\
 	emu-log.1			\

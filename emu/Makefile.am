@@ -1,5 +1,6 @@
 bin_SCRIPTS = 				\
 	emu				\
+	emu-checkout			\
 	emu-clean			\
 	emu-init			\
 	emu-log				\
