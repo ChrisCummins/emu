@@ -318,14 +318,15 @@ class Snapshot:
 
     def log(self, short=False):
         def full_log():
-            s =  "snapshot " + self.node("name") + "\n"
-            s += "ID:      " + self.id + "\n"
+            s =  "snapshot " + Util.colourise(self.id.id, Colours.SNAPSHOT) + "\n"
             s += "Parent:  " + self.node("parent") + "\n"
+            s += "Name:    " + self.node("name") + "\n"
             s += "Date:    " + self.node("date") + "\n"
             s += "Size:    " + self.node("size") + "\n"
             return s
-        def short_log(id):
-            s = id + "  " + self.node("name")
+        def short_log():
+            s = "{0}  {1}".format(Util.colourise(self.id.id, Colours.SNAPSHOT),
+                                  self.node("name"))
             return s
 
         if short:
@@ -1019,6 +1020,7 @@ class Colours:
 
     SNAPSHOT_DELETE = RED
     SNAPSHOT_NEW    = BLUE
+    SNAPSHOT        = GREEN
 
 
 ##############################
