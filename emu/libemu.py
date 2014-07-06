@@ -391,10 +391,15 @@ class Snapshot:
             return None
 
 
-    def destroy(self, verbose=False):
+    def destroy(self, dry_run=False, verbose=False):
         Util.printf("destroying snapshot {0}".format(Util.colourise(self.snapshot,
                                                                     Colours.SNAPSHOT_DELETE)),
                     prefix=self.stack, colour=Colours.OK)
+
+        # We don't actually need to modify anything on a dry run:
+        if dry_run:
+            return
+
         Util.rm(self.tree, must_exist=True, error=True, verbose=verbose)
         Util.rm("{0}/.emu/nodes/{1}".format(self.stack_dir, self.id),
                 must_exist=True, error=True, verbose=verbose)
