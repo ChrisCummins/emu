@@ -30,14 +30,12 @@ import os
 # Resolve and import Libemu
 sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
 from libemu import EmuParser
-from libemu import Libemu
+from libemu import Source
 
 
 def main(argv, argc):
     parser = EmuParser()
     (options, args) = parser.parse_args()
-
-    Libemu.die_if_not_source(options.source_dir)
 
     snapshots = parser.parse_snapshots(Source(options.source_dir))
     status = 0
