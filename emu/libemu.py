@@ -40,11 +40,21 @@ from datetime import datetime
 # Emu source class #
 ####################
 class Source:
-    def __init__(self, source_dir):
-        self.path = source_dir
-        Util.exists(self.path, error=True)
-        Util.exists(self.path + "/.emu", error=True)
-        Util.exists(self.path + "/.emu/stacks", error=True)
+
+    def __init__(self, path):
+        self.path = path
+
+        def err_cb(e):
+            print "Non-existent or malformed emu source. Reason:\n\n{0}".format(e)
+            sys.exit(1)
+
+        # Sanity checks:
+        Util.readable(self.path,                    error=err_cb)
+        Util.readable(self.path + "/.emu/",         error=err_cb)
+        Util.readable(self.path + "/.emu/config",   error=err_cb)
+        Util.readable(self.path + "/.emu/excludes", error=err_cb)
+        Util.readable(self.path + "/.emu/hooks/",   error=err_cb)
+        Util.readable(self.path + "/.emu/stacks/",  error=err_cb)
 
 
     def checkout(self, snapshot):
