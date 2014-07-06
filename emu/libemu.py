@@ -61,8 +61,48 @@ class Source:
         return 501
 
 
-    def checkout(self, snapshot, verbose=False):
-        return 501
+    # checkout() - Restore source to snapshot
+    #
+    # Transfer the contents of snapshot tree to source directory.
+    def checkout(self, snapshot, dry_run=False, verbose=False):
+
+        def err_cb(e):
+            Util.printf("Woops! Something went wrong.",
+                        prefix=stack.name, colour=Colours.ERROR)
+            Util.printf("Failed to checkout snapshot {0}!".format(Util.colourise(snapshot.id.id,
+                                                                                 Colours.GREEN)),
+                        prefix=stack.name, colour=Colours.ERROR)
+            sys.exit(1)
+
+        print "Checking out {0}".format(snapshot.id)
+
+        stack = snapshot.stack
+        exclude = ["/.emu"]
+        exclude_from = [self.path + "/.emu/excludes"]
+
+        self.lock()
+        stack.lock()
+
+        if not dry_run:
+            # Perform file transfer:
+            Util.rsync(snapshot.tree + "/", self.path,
+                       dry_run=dry_run, exclude=exclude,
+                       exclude_from=exclude_from,
+                       delete=True, error=err_cb,
+                       verbose=verbose)
+
+            # Set new HEAD:
+            Util.write(stack.path + "/.emu/HEAD", snapshot.id.id + "\n",
+                       error=err_cb)
+
+        stack.unlock()
+        self.unlock()
+
+        Util.printf("HEAD at {0}".format(snapshot.id),
+                        prefix=stack.name, colour=Colours.OK)
+
+        print "Source restored from {0}".format(Util.colourise(snapshot.name,
+                                                               Colours.SNAPSHOT_NEW))
 
 
     def lock(self, wait=True, verbose=False):
