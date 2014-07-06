@@ -69,7 +69,7 @@ class Source:
         return 501
 
 
-    def unlock(self, verbose=False):
+    def unlock(self, force=False, verbose=False):
         return 501
 
 
@@ -222,7 +222,7 @@ class Stack:
         return 501
 
 
-    def unlock(self, verbose=False):
+    def unlock(self, force=False, verbose=False):
         return 501
 
 
