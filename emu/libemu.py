@@ -100,13 +100,12 @@ class Snapshot:
     # Traverse each snapshot's until we have travelled 'n' nodes from
     # the starting point.
     def nth_child(self, n, truncate=False, error=False):
-        parent_id = self.get_node().data["Parent"]
+        parent = self.parent()
 
         try:
 
             if n > 0:
-                if parent_id:
-                    parent = Snapshot(parent_id, self.stack, self.stack_dir)
+                if parent:
                     return parent.nth_child(n - 1, truncate=truncate, error=error)
                 elif not truncate:
                     id = SnapshotID(self.stack, self.id + Util.n_index_to_tilde(n))
@@ -127,6 +126,18 @@ class Snapshot:
                     sys.exit(1)
             else:
                 raise e
+
+
+    # parent() - Get snapshot's parent
+    #
+    def parent(self, *parent):
+        # TODO: Add setter
+        parent_id = self.get_node().data["Parent"]
+
+        if parent_id:
+            return Snapshot(parent_id, self.stack, self.stack_dir)
+        else:
+            return None
 
 
     def destroy(self, verbose=False):
