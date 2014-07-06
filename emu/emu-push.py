@@ -38,6 +38,8 @@ def main(argv, argc):
     parser = EmuParser()
     parser.add_option("-d", "--dry-run", action="store_true",
                       dest="dry_run", default=False)
+    parser.add_option("-f", "--force", action="store_true",
+                      dest="dry_run", default=False)
     (options, args) = parser.parse_args()
 
     Libemu.die_if_not_source(options.source_dir)
@@ -48,7 +50,8 @@ def main(argv, argc):
 
     status = 0
     for stack in parser.parse_stacks(source):
-        status ^= stack.push(dry_run=options.dry_run,
+        status ^= stack.push(force=options.force,
+                             dry_run=options.dry_run,
                              verbose=options.verbose)
 
     source.unlock()

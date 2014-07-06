@@ -226,7 +226,7 @@ class Stack:
         return 501
 
 
-    def push(self, dry_run=False, verbose=False):
+    def push(self, force=False, dry_run=False, verbose=False):
         self.lock()
 
         # Remove old snapshots first

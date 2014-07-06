@@ -33,6 +33,10 @@ last\-modified time.
 \-d \-\-dry-run
 Perform a trial run with no changes made.
 .TP
+\-f \-\-force
+Force push the snapshot, ignoring any concurrency locks on the source
+or stack.
+.TP
 \-v \-\-verbose
 Increase verbosity.
 .TP
