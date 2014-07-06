@@ -36,16 +36,6 @@ from sys import exit
 from datetime import datetime
 
 
-class Node:
-    def __init__(self, path):
-        with open(path, 'r') as f:
-            node = f.read()
-            self.data = {}
-            for l in node.rstrip().split('\n'):
-                p = re.split(r"\W+", l, 1)
-                self.data[p[0]] = p[1]
-
-
 class Snapshot:
     def __init__(self, shash, stack_name, stack_dir):
         self.id = shash
