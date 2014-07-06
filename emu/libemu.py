@@ -241,7 +241,7 @@ class Stack:
         self.unlock()
         Util.printf("HEAD at {0}".format(snapshot.id),
                     prefix=self.name, colour=Colours.OK)
-        Util.printf("new snapshot {0}".format(Util.colourise(snapshot.snapshot,
+        Util.printf("new snapshot {0}".format(Util.colourise(snapshot.name,
                                                              Colours.SNAPSHOT_NEW)),
                     prefix=self.name, colour=Colours.OK)
         return 0
