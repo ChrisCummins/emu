@@ -180,7 +180,6 @@ AS_IF([test "x$enable_man_pages" = xyes],
 
 AS_IF([test "x$enable_tests" = xyes],
       [AC_CONFIG_FILES([
-              test/peek/peek
               test/clean/in-progress
               test/clean/lock
               test/clean/orphans
@@ -201,7 +200,6 @@ AS_IF([test "x$enable_tests" = xyes],
               test/libemu/panic
               test/libemu/stack
               test/libemu/permissions
-              test/pop/pop
               test/push/message
               test/push/no-stack
               test/push/max
