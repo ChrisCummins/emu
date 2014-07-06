@@ -52,13 +52,12 @@ class Snapshot:
         self.stack = stack_name
         self.stack_dir = stack_dir
         self.checksum = self.id[8:]
-        self.node = stack_dir + "/.emu/nodes/" + shash
         self.tree = stack_dir + "/.emu/trees/" + shash
 
-        if not (Util.exists(self.node) and os.path.isdir(self.tree)):
+        if not os.path.isdir(self.tree):
             raise SnapshotNotFoundError(SnapshotID(stack_name, shash))
 
-        self.snapshot = self.get_node().data['Snapshot']
+        self.snapshot = self.node()['Snapshot']
 
 
     _valid = None
@@ -71,24 +70,40 @@ class Snapshot:
     def __repr__(self):
         return self.stack + ":" + self.id
 
-    def get_node(self):
+
+    # node() - Fetch snapshot node data from file
+    #
+    def node(self):
+        path = "{0}/.emu/nodes/{1}".format(self.stack_dir, self.id)
+        Util.readable(path, error=True)
+
         try:
-            return self._node
-        except AttributeError:
-            self._node = Node(self.node)
-            return self.get_node()
+            node = {}
+            with open(path, "r") as f:
+                f = f.read()
+                for l in f.rstrip().split("\n"):
+                    p = re.split(r"\W+", l, 1)
+                    node[p[0]] = p[1]
+
+                return node
+
+        except:
+            print "Failed to read node file '{0}'".format(Util.colourise(path,
+                                                                         Colours.ERROR))
+            sys.exit(1)
+
 
     def log(self, short=False):
         def full_log(id, node):
             s =  "snapshot " + id + "\n"
-            s += "Date:    " + node.data['Date'] + "\n"
-            s += "Size:    " + node.data['Size'] + "\n"
+            s += "Date:    " + node['Date'] + "\n"
+            s += "Size:    " + node['Size'] + "\n"
             return s
         def short_log(id, node):
-            s = id + "  " + node.data['Date']
+            s = id + "  " + node['Date']
             return s
 
-        node = Node(self.node)
+        node = self.node()
         if short:
             return short_log(self.id, node)
         else:
@@ -132,7 +147,7 @@ class Snapshot:
     #
     def parent(self, *parent):
         # TODO: Add setter
-        parent_id = self.get_node().data["Parent"]
+        parent_id = self.node()["Parent"]
 
         if parent_id:
             return Snapshot(parent_id, self.stack, self.stack_dir)
@@ -145,7 +160,8 @@ class Snapshot:
                                                                     Colours.SNAPSHOT_DELETE)),
                     prefix=self.stack, colour=Colours.OK)
         Util.rm(self.tree, must_exist=True, error=True, verbose=verbose)
-        Util.rm(self.node, must_exist=True, error=True, verbose=verbose)
+        Util.rm("{0}/.emu/nodes/{1}".format(self.stack_dir, self.id),
+                must_exist=True, error=True, verbose=verbose)
         Util.rm(self.stack_dir + "/" + self.snapshot,
                 must_exist=True, error=True, verbose=verbose)
         # TODO: Check HEAD and reallocate if necessary
