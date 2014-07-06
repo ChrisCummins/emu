@@ -807,7 +807,7 @@ class Util:
     # list of paths and patterns or a single string.
     @staticmethod
     def rsync(src, dst, archive=True, update=False,
-              dry_run=False, link_dest=None,
+              hard_links=True, dry_run=False, link_dest=None,
               exclude=None, exclude_from=None,
               delete=False, delete_excluded=False, wait=True,
               stdout=None, stderr=None, args=None,
@@ -820,6 +820,9 @@ class Util:
 
         if update:
             rsync_flags.append("--update")
+
+        if hard_links:
+            rsync_flags.append("--hard-links")
 
         if dry_run:
             rsync_flags += ["--dry-run",
