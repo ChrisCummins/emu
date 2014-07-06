@@ -107,10 +107,10 @@ class Snapshot:
             if n > 0:
                 if parent_id:
                     parent = Snapshot(parent_id, self.stack, self.stack_dir)
-                    return parent.nth_child(n - 1, truncate, error)
+                    return parent.nth_child(n - 1, truncate=truncate, error=error)
                 elif not truncate:
-                    raise SnapshotNotFoundError(SnapshotID(self.stack,
-                                                           self.id + Util.n_index_to_tilde(n)))
+                    id = SnapshotID(self.stack, self.id + Util.n_index_to_tilde(n))
+                    raise SnapshotNotFoundError(id)
                 else:
                     return self
             else:
