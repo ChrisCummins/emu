@@ -854,9 +854,7 @@ class Util:
             rsync_flags += args
 
         if not quiet:
-            rsync_flags += ["--verbose",
-                            "--human-readable",
-                            "--progress"]
+            rsync_flags.append("--verbose")
 
         # Add source and destination operands after flags:
         rsync_flags += [src, dst]
