@@ -382,13 +382,29 @@ class Snapshot:
         if dry_run:
             return
 
-        # If current snapshot is HEAD, then remove:
+        # If current snapshot is HEAD, then set parent HEAD:
         head = self.stack.head()
         if head and head.id == self.id:
-            Util.write(self.stack.path + "/.emu/HEAD", "")
-            if verbose:
-                Util.printf("unset HEAD {0}".format(Util.coilourise(self.name,
-                                                                    Colours.SNAPSHOT_DELETE)))
+            # Remove old "Most Recent Backup" link:
+            Util.rm(self.stack.path + "/Most Recent Backup",
+                    must_exist=True, verbose=verbose)
+            new_head = head.parent()
+            if new_head:
+                Util.write(self.stack.path + "/.emu/HEAD", new_head.id.id)
+                # Create new "Most Recent Backup" link:
+                most_recent_link = self.stack.path + "/Most Recent Backup"
+                if Util.exists(most_recent_link):
+                    Util.rm(most_recent_link)
+                Util.ln_s(self.stack.path + "/" + new_head.tree,
+                          most_recent_link, verbose=verbose)
+                if verbose:
+                    Util.printf("HEAD at {0}".format(Util.coilourise(new_head.id,
+                                                                     Colours.SNAPSHOT)))
+            else:
+                Util.write(self.stack.path + "/.emu/HEAD", "")
+                if verbose:
+                    Util.printf("unset HEAD {0}".format(Util.coilourise(self.id,
+                                                                        Colours.SNAPSHOT_DELETE)))
 
         # Remove parent references from all other snapshots
         for snapshot in self.stack.snapshots():
@@ -397,12 +413,11 @@ class Snapshot:
                 snapshot.parent(delete=True)
 
         # Delete snapshot files:
+        Util.rm(self.stack.path + "/" + self.name,
+                must_exist=True, error=True, verbose=verbose)
         Util.rm(self.tree, must_exist=True, error=True, verbose=verbose)
         Util.rm("{0}/.emu/nodes/{1}".format(self.stack.path, self.id.id),
                 must_exist=True, error=True, verbose=verbose)
-        Util.rm(self.stack.path + "/" + self.name,
-                must_exist=True, error=True, verbose=verbose)
-
 
     def __str__(self):
         return str(self.id)
@@ -440,11 +455,16 @@ class Snapshot:
                                                                     date.tm_sec)
 
         # Move tree into position
-        Util.mv(stack.path + "/.emu/trees/new", stack.path + "/" + name,
+        Util.mv(stack.path + "/.emu/trees/new", stack.path + "/.emu/trees/" + sid,
                 verbose=verbose, must_exist=True, error=True)
 
-        # Make trees symlink
-        Util.ln_s(stack.path + "/" + name, stack.path + "/.emu/trees/" + sid,
+        # Make symlinks
+        Util.ln_s(stack.path + "/.emu/trees/" + sid, stack.path + "/" + name,
+                  verbose=verbose, error=True)
+        most_recent_link = stack.path + "/Most Recent Backup"
+        if Util.exists(most_recent_link):
+            Util.rm(most_recent_link, verbose=verbose, error=True)
+        Util.ln_s(stack.path + "/" + name, most_recent_link,
                   verbose=verbose, error=True)
 
         # Get size
