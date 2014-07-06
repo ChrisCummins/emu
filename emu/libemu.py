@@ -82,7 +82,7 @@ class Source:
                 # Generate list of stacks:
                 self._stacks = []
                 for name in Util.ls(self.path + "/.emu/stacks", must_exist=True):
-                    self._stacks.append(Stack(name, self.path))
+                    self._stacks.append(Stack(name, self))
                 return self._stacks
 
             except StackNotFoundError as e:
@@ -112,7 +112,7 @@ class Source:
         Util.rsync(template_dir + "/", source_dir + "/", error=err_cb,
                    archive=True, verbose=verbose, update=force)
 
-        print "Initialised source at '{0}'".format(source.path)
+        print "Initialised source at '{0}'".format(path)
 
         return Source(path)
 
@@ -121,122 +121,98 @@ class Source:
 # Emu snapshot stack #
 ######################
 class Stack:
-    re = r"^([^:]+)?(:(([a-f0-9]+)|(HEAD(~([0-9]+)?)?)))?$"
 
-    def __init__(self, snapshot_id, source_dir, allow_snapshot_id=True):
+    def __init__(self, name, source):
 
         def err_cb(e):
             print "Non-existent or malformed emu stack. Reason:\n\n{0}".format(e)
             sys.exit(1)
 
-        # Throw an exception if we have get stack:snapshot syntax and
-        # we don't want it:
-        if re.search(r":", snapshot_id) and not allow_snapshot_id:
-            raise StackNotFoundError(snapshot_id)
-
-        self.sid = snapshot_id
-        self.source = source_dir
-        self.stack = self._stack()
+        self.name = name
+        self.source = source
+        self.path = Util.read("{0}/.emu/stacks/{1}".format(self.source.path, self.name),
+                              error=err_cb)
 
         # Sanity checks:
-        Util.readable("{0}/.emu/stacks/{1}".format(self.source, self.stack), error=err_cb)
-
-        self.path = self._path()
-        self.snapshot = self._snapshot()
-
-        Util.readable(self.path + "/.emu/",      error=err_cb)
-        Util.readable(self.path + "/.emu/nodes", error=err_cb)
-        Util.readable(self.path + "/.emu/trees", error=err_cb)
-        Util.readable(self.path + "/.emu/HEAD",  error=err_cb)
+        Util.readable(self.path + "/.emu/",       error=err_cb)
+        Util.readable(self.path + "/.emu/nodes/", error=err_cb)
+        Util.readable(self.path + "/.emu/trees/", error=err_cb)
+        Util.readable(self.path + "/.emu/HEAD",   error=err_cb)
+        Util.readable(self.path + "/.emu/config", error=err_cb)
 
 
-    def _stack(self):
-        try:
-            return re.sub(self.re, r"\1", self.sid)
-        except:
-            return ""
-
-    def _snapshot(self):
-        try:
-            s = re.sub(self.re, r"\3", self.sid)
-
-            # HEAD~ syntax
-            if re.match(r"^HEAD.*", s):
-                index = 0
-                if re.match(r"HEAD~.*", s):
-                    index += 1
-                    if re.match(r".*\d+", s):
-                        index += int(re.sub(r"HEAD~", r"", s)) - 1
-                ids = Util.ls(self.path + "/.emu/nodes", must_exist=True)
-                try:
-                    return ids[index]
-                except IndexError:
-                    SnapshotNotFoundError(SnapshotID(self.stack, s))
-
-            return s
-        except:
-            return ""
-
-    def _path(self):
-        try:
-            pointer = self.source + "/.emu/stacks/" + self.stack
-            with open(pointer, 'r') as f:
-                path = f.read().strip()
-                if not Util.exists(path):
-                    raise
-                return path
-        except:
-            raise StackNotFoundError(self.sid)
-
-    def get_snapshots(self):
-        if len(self.snapshot):
-            ids = [self.snapshot]
-        else:
-            ids = Util.ls(self.path + "/.emu/nodes", must_exist=True)
+    # snapshots() - Return a list of all snapshots
+    #
+    def snapshots(self):
+        ids = Util.ls(self.path + "/.emu/nodes", must_exist=True)
         snapshots = []
         for id in ids:
-            snapshots.append(Snapshot(id, self.stack, self.path))
+            snapshots.append(Snapshot(id, self.name, self.path))
         return snapshots
 
 
-    def get_head(self):
-        snapshots = self.get_snapshots()
-        if len(snapshots):
-            return snapshots[len(snapshots) - 1]
-
-
-    def get_config(self):
+    # head() - Return the current stack head
+    #
+    # Returns the snapshot pointed to by the HEAD file, or None if
+    # headless.
+    def head(self):
         try:
-            return self._config
+            return self._head
         except AttributeError:
-            self._config = ConfigParser()
-            self._config.read(self.path + "/.emu/config")
-            return self.get_config()
+            id = SnapshotID(self.name, Util.read(self.path + "/.emu/HEAD"))
+            if id.id:
+                self._head = Util.get_snapshot_by_id(id, self.snapshots())
+            else:
+                self._head = None
+            return self._head
 
-    def get_config_prop(self, section, prop, err=True):
-        try:
-            return self.get_config().get(section, prop)
-        except:
-            if err:
-                Util.printf("Error parsing config file!", Colours.ERROR)
-                Util.printf("Could not find property '{0}' in section '{1}'".format(prop, section),
-                            Colours.ERROR)
+
+    # config() - Return the stack's configuration, or individual properties
+    #
+    # If a 'section' and 'prop' are provided, then return that
+    # specific value. Else return the entire configuration.
+    def config(self, s=None, p=None):
+        if s and p:
+            try:
+                return self.config().get(s, p)
+            except:
+                print "Error retrieving config property '{0}' in section '{1}'".format(Util.colourise(p,
+                                                                                                      Colours.ERROR),
+                                                                                       Util.colourise(s,
+                                                                                                      Colours.ERROR))
                 sys.exit(1)
-            return ""
+        else:
+            try:
+                return self._config
+            except AttributeError:
+                config = self.path + "/.emu/config"
+                Util.readable(config, error=True)
+                self._config = ConfigParser()
+                self._config.read(config)
+                return self._config
 
-    def get_max_snapshots(self):
+
+    # max_snapshots() - Return the max number of snapshots for a stack
+    #
+    def max_snapshots(self):
         try:
             return self._max_snapshots
         except AttributeError:
-            self._max_snapshots = int(self.get_config_prop('Snapshots', 'Max Number'))
-            return self.get_max_snapshots()
+            try:
+                self._max_snapshots = int(self.config(s="Snapshots", p="Max Number"))
+                return self.max_snapshots()
+            except:
+                print "Couldn't interpret max number of snapshots '{0}'!".format(Util.colourise(self.config("Snapshots", "Max Number"),
+                                                                                                Colours.ERROR))
+                sys.exit(1)
 
-    def get_disk_usage(self):
+
+    def size(self):
         try:
             return self._du
         except AttributeError:
             self._du = Libemu.du(self.path)
-            return self.get_disk_usage()
+            return self.size()
 
 
     def lock(self, verbose=False):
@@ -251,25 +227,25 @@ class Stack:
         self.lock()
 
         # Remove old snapshots first
-        while len(self.get_snapshots()) >= int(self.get_max_snapshots()):
-            self.get_snapshots()[0].destroy(verbose)
+        while len(self.snapshots()) >= self.max_snapshots():
+            self.snapshots()[0].destroy(dry_run=dry_run, verbose=verbose)
 
-        Util.printf("pushing snapshot ({0} of {1})".format(len(self.get_snapshots()) + 1,
-                                                           self.get_max_snapshots()),
-                    prefix=self.stack, colour=Colours.OK)
+        Util.printf("pushing snapshot ({0} of {1})".format(len(self.snapshots()) + 1,
+                                                           self.max_snapshots()),
+                    prefix=self.name, colour=Colours.OK)
         snapshot = Snapshot.create(self, verbose=verbose)
 
         self.unlock()
         Util.printf("HEAD at {0}".format(snapshot.id),
-                    prefix=self.stack, colour=Colours.OK)
+                    prefix=self.name, colour=Colours.OK)
         Util.printf("new snapshot {0}".format(Util.colourise(snapshot.snapshot,
                                                              Colours.SNAPSHOT_NEW)),
-                    prefix=self.stack, colour=Colours.OK)
+                    prefix=self.name, colour=Colours.OK)
         return 0
 
 
     def __str__(self):
-        return self.stack + " " + self.path
+        return self.name + " " + self.path
 
 
 #########################
@@ -410,7 +386,8 @@ class Snapshot:
 
     @staticmethod
     def create(stack, dry_run=False, verbose=False):
-        head = stack.get_head()
+        source = stack.source
+        head = stack.head()
         head_id = ""
 
         if head:
@@ -420,9 +397,9 @@ class Snapshot:
             link_dest = None
 
         exclude = ["/.emu"]
-        exclude_from = [stack.source + "/.emu/excludes"]
+        exclude_from = [source.path + "/.emu/excludes"]
 
-        Util.rsync(stack.source + "/", stack.path + "/.emu/trees/new",
+        Util.rsync(source.path + "/", stack.path + "/.emu/trees/new",
                    dry_run=dry_run, link_dest=link_dest,
                    exclude=exclude, exclude_from=exclude_from,
                    delete=True, delete_excluded=True,
@@ -461,7 +438,7 @@ class Snapshot:
         with open(stack.path + "/.emu/HEAD", 'w') as f:
             f.write(sid + "\n")
 
-        return Snapshot(sid, stack.stack, stack.path)
+        return Snapshot(sid, stack.name, stack.path)
 
 
 #####################################
@@ -921,7 +898,7 @@ class Util:
     @staticmethod
     def get_stack_by_name(name, stacks):
         for stack in stacks:
-            if stack.stack == name:
+            if stack.name == name:
                 return stack
 
         raise StackNotFoundError(name)
@@ -1130,7 +1107,7 @@ class EmuParser(OptionParser):
                 # If no args are given, generate a list of all stack names:
                 if accept_no_stacks and not len(args):
                     for stack in source.stacks():
-                        args.append(stack.stack)
+                        args.append(stack.name)
 
                 # Iterate over each arg, resolving to snapshot(s):
                 for arg in args:
@@ -1156,16 +1133,16 @@ class EmuParser(OptionParser):
                     if id_match:
                         # If there's an ID, then match it:
                         snapshot = Util.get_snapshot_by_id(SnapshotID(stack_match, id_match),
-                                                           stack.get_snapshots())
+                                                           stack.snapshots())
                         self._snapshots.append(snapshot.nth_child(n_index, error=True))
                     elif head_match:
                         # Calculate the HEAD index and traverse:
-                        head = stack.get_head()
+                        head = stack.head()
                         if head:
                             self._snapshots.append(head.nth_child(n_index, error=True))
                     elif accept_stack_names:
                         # If there's no ID then match all snapshots
-                        self._snapshots += stack.get_snapshots()
+                        self._snapshots += stack.snapshots()
                     else:
                         InvalidSnapshotIDError(arg)
 
