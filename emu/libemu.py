@@ -425,6 +425,38 @@ class Snapshot:
 
     @staticmethod
     def create(stack, dry_run=False, verbose=False):
+
+        def err_cb(e):
+            Util.printf("Woops! Something went wrong.",
+                        prefix=stack.name, colour=Colours.ERROR)
+
+            # Tidy up any intermediate files which may have been created:
+            try:
+                Util.rm(name_link, verbose=True)
+            except Exception:
+                pass
+            try:
+                Util.rm(most_recent_link, verbose=True)
+            except Exception:
+                pass
+            try:
+                Util.rm(tree, verbose=True)
+            except Exception:
+                pass
+            try:
+                Util.rm(node_path, verbose=True)
+            except Exception:
+                pass
+            try:
+                if Util.read(stack.path + "/.emu/HEAD") == id.id:
+                    Util.write(stack.path + "/.emu/HEAD", "")
+            except Exception:
+                pass
+
+            Util.printf("Failed to create new snapshot!",
+                        prefix=stack.name, colour=Colours.ERROR)
+            sys.exit(1)
+
         source = stack.source
         transfer_dest = stack.path + "/.emu/trees/new"
         exclude = ["/.emu"]
@@ -440,7 +472,7 @@ class Snapshot:
                    dry_run=dry_run, link_dest=link_dests,
                    exclude=exclude, exclude_from=exclude_from,
                    delete=True, delete_excluded=True,
-                   error=True, verbose=verbose)
+                   error=err_cb, verbose=verbose)
 
         checksum = Util.checksum(transfer_dest)
         date = time.gmtime()
@@ -457,16 +489,16 @@ class Snapshot:
 
         # Move tree into position
         Util.mv(transfer_dest, tree,
-                verbose=verbose, must_exist=True, error=True)
+                verbose=verbose, must_exist=True, error=err_cb)
 
         # Make name symlink:
-        Util.ln_s(tree, name_link, verbose=verbose, error=True)
+        Util.ln_s(tree, name_link, verbose=verbose, error=err_cb)
 
         # Make "Most Recent Backup" symlink:
         if Util.exists(most_recent_link):
-            Util.rm(most_recent_link, verbose=verbose, error=True)
+            Util.rm(most_recent_link, verbose=verbose, error=err_cb)
         Util.ln_s(name_link, most_recent_link,
-                  verbose=verbose, error=True)
+                  verbose=verbose, error=err_cb)
 
         # Get parent node ID:
         if stack.head():
@@ -492,8 +524,7 @@ class Snapshot:
                 node.write(node_file)
 
         # Update HEAD:
-        with open(stack.path + "/.emu/HEAD", 'w') as f:
-            f.write(id.id + "\n")
+        Util.write(stack.path + "/.emu/HEAD", id.id + "\n", error=err_cb)
 
         return Snapshot(SnapshotID(stack.name, id.id), stack)
 
@@ -1033,7 +1064,7 @@ class Util:
     # Returns the given string wrapped in colour escape codes.
     @staticmethod
     def colourise(string, colour):
-        return colour + string + Colours.RESET
+        return colour + str(string) + Colours.RESET
 
 
     @staticmethod
