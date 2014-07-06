@@ -1243,7 +1243,7 @@ class EmuParser(OptionParser):
                         # If there's no ID then match all snapshots
                         self._snapshots += stack.snapshots()
                     else:
-                        InvalidSnapshotIDError(arg)
+                        raise InvalidSnapshotIDError(arg)
 
                 return self._snapshots
 
