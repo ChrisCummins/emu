@@ -159,15 +159,12 @@ class Stack:
     # Returns the snapshot pointed to by the HEAD file, or None if
     # headless.
     def head(self):
-        try:
-            return self._head
-        except AttributeError:
-            id = SnapshotID(self.name, Util.read(self.path + "/.emu/HEAD"))
-            if id.id:
-                self._head = Util.get_snapshot_by_id(id, self.snapshots())
-            else:
-                self._head = None
-            return self._head
+        head = Util.read(self.path + "/.emu/HEAD")
+        if head:
+            id = SnapshotID(self.name, head)
+            return Util.get_snapshot_by_id(id, self.snapshots())
+        else:
+            return None
 
 
     # config() - Return the stack's configuration, or individual properties
