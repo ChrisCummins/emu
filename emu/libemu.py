@@ -830,6 +830,60 @@ class Util:
                            wait=wait, error=error, verbose=verbose)
 
 
+    # read() - Return the contents of a file
+    #
+    # If 'strip' is True, then strip leading and trailing whitespace
+    # from the returned contents.
+    @staticmethod
+    def read(path, strip=True, error=True):
+        Util.readable(path, error=error)
+        try:
+            with open(path, "r") as f:
+                contents = f.read()
+                if strip:
+                    contents = contents.strip()
+                return contents
+        except Exception as e:
+            if error:
+                if hasattr(error, '__call__'):
+                    # Execute error callback if provided:
+                    error(e)
+                else:
+                    # Else fatal error:
+                    print "Failed to read '{0}'".format(Util.colourise(path,
+                                                                       Colours.ERROR))
+                    sys.exit(1)
+            else:
+                raise e
+
+
+    # write() - Write string to a file, overwriting any existing contents
+    #
+    # If 'strip' is True, then strip leading and trailing whitespace
+    # from the returned contents.
+    @staticmethod
+    def write(path, data, error=True):
+        exists = Util.exists(path)
+        if exists:
+            Util.writable(path, error=error)
+
+        try:
+            with open(path, "w") as f:
+                f.write(data)
+        except Exception as e:
+            if error:
+                if hasattr(error, '__call__'):
+                    # Execute error callback if provided:
+                    error(e)
+                else:
+                    # Else fatal error:
+                    print "Failed to write '{0}'".format(Util.colourise(path,
+                                                                        Colours.ERROR))
+                    sys.exit(1)
+            else:
+                raise e
+
+
     # checksum() - Generate a checksum for a path
     #
     # Create a checksum for a directory's contents by calculating the
