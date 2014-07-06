@@ -464,12 +464,14 @@ class Util:
     def exists(path, error=False):
         exists = os.path.exists(path)
         if error and not exists:
+            e = "'{0}' not found!".format(Util.colourise(path, Colours.ERROR))
+
             if hasattr(err, '__call__'):
                 # Execute error callback if provided
                 error(e)
             else:
                 # Else fatal error
-                print "'" + path + "' not found!"
+                print e
                 sys.exit(1)
         return exists
 
@@ -483,12 +485,14 @@ class Util:
     def readable(path, error=False):
         read_permission = os.access(path, os.R_OK)
         if error and not read_permission:
+            e = "No read permissions for '{0}'!".format(Util.colourise(path, Colours.ERROR))
+
             if hasattr(error, '__call__'):
                 # Execute error callback if provided
                 error(e)
             else:
                 # Else fatal error
-                print "No read permissions for directory '" + path + "'!"
+                print e
                 sys.exit(1)
         return read_permission
 
@@ -502,12 +506,14 @@ class Util:
     def writable(path, error=False):
         write_permission = os.access(path, os.W_OK)
         if error and not write_permission:
+            e = "No write permissions for '{0}'!".format(Util.colourise(path, Colours.ERROR))
+
             if hasattr(error, '__call__'):
                 # Execute error callback if provided
                 error(e)
             else:
                 # Else fatal error
-                print "No read permissions for directory '" + path + "'!"
+                print e
                 sys.exit(1)
         return write_permission
 
@@ -541,13 +547,13 @@ class Util:
                 return True
 
             # Failed to remove path:
-            except:
+            except Exception as e:
                 if hasattr(error, '__call__'):
                     # Execute error callback if provided
                     error(e)
                 elif error:
                     # Fatal error if required
-                    print "Failed to delete '" + path + "'."
+                    print "Failed to delete '{0}'.".format(Util.colourise(path, Colours.ERROR))
                     sys.exit(1)
                 else:
                     return False
@@ -593,7 +599,7 @@ class Util:
                     print "Moved '{0}' -> '{1}'".format(src, dst)
 
                 return True
-            except:
+            except Exception as e:
                 # Error in file move:
                 if hasattr(error, '__call__'):
                     # Execute error callback if provided
@@ -627,7 +633,7 @@ class Util:
                     print "Link '{0}' -> '{1}'".format(src, dst)
 
                 return True
-            except:
+            except Exception as e:
                 # Error in operation:
                 if hasattr(error, '__call__'):
                     # Execute error callback if provided
@@ -664,7 +670,7 @@ class Util:
                     print "Created directory '{0}' with mode 0{1:o}".format(path, mode)
 
                 return True
-            except:
+            except Exception as e:
                 # Error in operation:
                 if hasattr(error, '__call__'):
                     # Execute error callback if provided
@@ -702,13 +708,17 @@ class Util:
             process.wait()
 
         if error and process.returncode:
+            e = "Process '{0}' exited with return value {1}.".format(Util.colourise(" ".join(args),
+                                                                                    Colours.ERROR),
+                                                                     Util.colourise(process.returncode,
+                                                                                    Colours.ERROR))
             # Error in operation:
             if hasattr(error, '__call__'):
                 # Execute error callback if provided
                 error(e)
             elif error:
                 # Fatal error if required
-                print "Failed to execute '{0}'.".format(" ".join(args))
+                print e
                 sys.exit(1)
 
         return process
