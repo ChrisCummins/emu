@@ -828,8 +828,13 @@ class Util:
             rsync_flags += ["--dry-run",
                             "--itemize-changes"]
 
-        if link_dest:
+        if isinstance(link_dest, basestring):
+            # Single link dest:
             rsync_flags += ["--link-dest", link_dest]
+        elif link_dest:
+            # List of link dests:
+            for dest in link_dest:
+                rsync_flags += ["--link-dest", dest]
 
         if isinstance(exclude, basestring):
             # Single exclude pattern:
