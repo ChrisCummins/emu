@@ -257,10 +257,9 @@ class Stack:
 class Snapshot:
 
     def __init__(self, id, stack):
-        self.id = id.id
+        self.id = id
         self.stack = id.stack_name
         self.stack_dir = stack.path
-        self.checksum = self.id[8:]
         self.tree = stack.path + "/.emu/trees/" + id.id
         self.stack_obj = stack
 
@@ -269,27 +268,27 @@ class Snapshot:
             sys.exit(1)
 
         # Sanity checks:
-        Util.readable("{0}/.emu/nodes/{1}".format(self.stack_dir, id.id), error=err_cb)
+        Util.readable("{0}/.emu/nodes/{1}".format(self.stack_dir, self.id.id), error=err_cb)
         self.snapshot = self.node("name")
-        Util.readable("{0}/{1}".format(self.stack_dir, self.snapshot),    error=err_cb)
-        Util.readable("{0}/.emu/trees/{1}".format(self.stack_dir, id.id), error=err_cb)
+        Util.readable("{0}/{1}".format(self.stack_dir, self.snapshot),         error=err_cb)
+        Util.readable("{0}/.emu/trees/{1}".format(self.stack_dir, self.id.id), error=err_cb)
 
 
     # verify() - Verify the contents of snapshot
     #
     # Verify the checksum by computing it again and comparing.
     def verify(self):
-        return Util.checksum(self.tree) == self.checksum
+        return Util.checksum(self.tree) == self.id.checksum
 
 
-    def __repr__(self):
-        return self.stack + ":" + self.id
+    def __str__(self):
+        return self.id
 
 
     # node() - Fetch snapshot node data from file
     #
     def node(self, p=None, v=None):
-        path = "{0}/.emu/nodes/{1}".format(self.stack_dir, self.id)
+        path = "{0}/.emu/nodes/{1}".format(self.stack_dir, self.id.id)
         Util.writable(path, error=True)
 
         if p and v: # Set new value for property
@@ -348,7 +347,7 @@ class Snapshot:
                 if parent:
                     return parent.nth_child(n - 1, truncate=truncate, error=error)
                 elif not truncate:
-                    id = SnapshotID(self.stack, self.id + Util.n_index_to_tilde(n))
+                    id = SnapshotID(self.stack, self.id.id + Util.n_index_to_tilde(n))
                     raise SnapshotNotFoundError(id)
                 else:
                     return self
@@ -395,7 +394,7 @@ class Snapshot:
         # TODO: Remove parent references from all other snapshots
 
         Util.rm(self.tree, must_exist=True, error=True, verbose=verbose)
-        Util.rm("{0}/.emu/nodes/{1}".format(self.stack_dir, self.id),
+        Util.rm("{0}/.emu/nodes/{1}".format(self.stack_dir, self.id.id),
                 must_exist=True, error=True, verbose=verbose)
         Util.rm(self.stack_dir + "/" + self.snapshot,
                 must_exist=True, error=True, verbose=verbose)
@@ -409,7 +408,7 @@ class Snapshot:
 
         if head:
             link_dest = head.tree
-            head_id = head.id
+            head_id = head.id.id
         else:
             link_dest = None
 
@@ -930,7 +929,7 @@ class Util:
     @staticmethod
     def get_snapshot_by_id(id, snapshots):
         for snapshot in snapshots:
-            if snapshot.id == id.id:
+            if snapshot.id.id == id.id:
                 return snapshot
 
         raise SnapshotNotFoundError(id)
