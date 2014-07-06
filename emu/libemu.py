@@ -281,12 +281,12 @@ class Snapshot:
         path = "{0}/.emu/nodes/{1}".format(self.stack.path, self.id.id)
         Util.writable(path, error=True)
 
-        if p and v: # Set new value for property
+        if p and v != None: # Set new value for property
 
             node = self.node()
             node.set("Node", p, v)
             with open(path, "wb") as node_file:
-                config.write(node_file)
+                node.write(node_file)
 
         elif p:     # Get property value
 
@@ -359,14 +359,16 @@ class Snapshot:
 
     # parent() - Get/set snapshot's parent
     #
-    def parent(self, *parent):
+    def parent(self, parent=None, delete=False):
         if parent:
-            self.node(p="Parent", v=parent.id.id)
+            self.node(p="parent", v=parent.id.id)
+        elif delete:
+            self.node(p="parent", v="")
         else:
-            parent_id = SnapshotID(self.stack.name, self.node(p="parent"))
+            parent_id = self.node(p="parent")
 
             if parent_id:
-                return Snapshot(parent_id, self.stack)
+                return Snapshot(SnapshotID(self.stack.name, parent_id), self.stack)
             else:
                 return None
 
@@ -380,9 +382,21 @@ class Snapshot:
         if dry_run:
             return
 
-        # TODO: Check HEAD and reallocate if necessary
-        # TODO: Remove parent references from all other snapshots
+        # If current snapshot is HEAD, then remove:
+        head = self.stack.head()
+        if head and head.id == self.id:
+            Util.write(self.stack.path + "/.emu/HEAD", "")
+            if verbose:
+                Util.printf("unset HEAD {0}".format(Util.coilourise(self.name,
+                                                                    Colours.SNAPSHOT_DELETE)))
 
+        # Remove parent references from all other snapshots
+        for snapshot in self.stack.snapshots():
+            parent = snapshot.parent()
+            if parent and parent.id == self.id:
+                snapshot.parent(delete=True)
+
+        # Delete snapshot files:
         Util.rm(self.tree, must_exist=True, error=True, verbose=verbose)
         Util.rm("{0}/.emu/nodes/{1}".format(self.stack.path, self.id.id),
                 must_exist=True, error=True, verbose=verbose)
@@ -468,6 +482,9 @@ class SnapshotID:
 
     def __str__(self):
         return self.stack_name + ":" + self.id
+
+    def __eq__(self, other):
+        return self.id == other.id and self.stack_name == other.stack_name
 
 
 ##############################################
@@ -924,7 +941,7 @@ class Util:
     @staticmethod
     def get_snapshot_by_id(id, snapshots):
         for snapshot in snapshots:
-            if snapshot.id.id == id.id:
+            if snapshot.id == id:
                 return snapshot
 
         raise SnapshotNotFoundError(id)
