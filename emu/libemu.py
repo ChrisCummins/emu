@@ -248,7 +248,7 @@ class Stack:
 
 
     def __str__(self):
-        return self.name + " " + self.path
+        return "{0}  {1}".format(self.name, self.path)
 
 
 #########################
