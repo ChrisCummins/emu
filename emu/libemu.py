@@ -821,7 +821,8 @@ class Util:
         if not quiet:
             rsync_flags += ["--verbose",
                             "--human-readable",
-                            "--progress"]
+                            "--progress",
+                            "--itemize-changes"]
 
         # Add source and destination operands after flags:
         rsync_flags += [src, dst]
