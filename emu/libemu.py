@@ -36,6 +36,213 @@ from sys import exit
 from datetime import datetime
 
 
+####################
+# Emu source class #
+####################
+class Source:
+    def __init__(self, source_dir):
+        self.path = source_dir
+        Util.exists(self.path, error=True)
+        Util.exists(self.path + "/.emu", error=True)
+        Util.exists(self.path + "/.emu/stacks", error=True)
+
+
+    def checkout(self, snapshot):
+        # TODO: checkout snapshot
+        return 501
+
+
+    def lock(self, verbose=False):
+        return 501
+
+
+    def unlock(self, verbose=False):
+        return 501
+
+
+    # stacks() - Get a source's stacks
+    #
+    # Returns a list of Stack objects.
+    def stacks(self):
+        try:
+            return self._stacks
+        except AttributeError:
+            try:
+
+                # Generate list of stacks:
+                self._stacks = []
+                for name in Util.ls(self.path + "/.emu/stacks", must_exist=True):
+                    self._stacks.append(Stack(name, self.path))
+                return self._stacks
+
+            except StackNotFoundError as e:
+                print e
+                sys.exit(1)
+
+
+    @staticmethod
+    def create(path, template_dir, verbose=False, force=False):
+        def err_cb(*data):
+            Util.rm(source_root, verbose=verbose)
+            raise SourceCreateError(source_root)
+
+        # Create directory structure
+        source_root = path + "/.emu"
+        directories = ["/", "/hooks", "/stacks"]
+        for d in directories:
+            Util.mkdir(source_root + d, mode=0700, verbose=verbose, error=True)
+
+        # Copy template files
+        Util.rsync(template_dir + "/", source_root + "/", error=err_cb,
+                   archive=True, verbose=verbose, update=force)
+
+        return Source(path)
+
+
+######################
+# Emu snapshot stack #
+######################
+class Stack:
+    re = r"^([^:]+)?(:(([a-f0-9]+)|(HEAD(~([0-9]+)?)?)))?$"
+
+    def _stack(self):
+        try:
+            return re.sub(self.re, r"\1", self.sid)
+        except:
+            return ""
+
+    def _snapshot(self):
+        try:
+            s = re.sub(self.re, r"\3", self.sid)
+
+            # HEAD~ syntax
+            if re.match(r"^HEAD.*", s):
+                index = 0
+                if re.match(r"HEAD~.*", s):
+                    index += 1
+                    if re.match(r".*\d+", s):
+                        index += int(re.sub(r"HEAD~", r"", s)) - 1
+                ids = Util.ls(self.path + "/.emu/nodes", must_exist=True)
+                try:
+                    return ids[index]
+                except IndexError:
+                    SnapshotNotFoundError(SnapshotID(self.stack, s))
+
+            return s
+        except:
+            return ""
+
+    def _path(self):
+        try:
+            pointer = self.source + "/.emu/stacks/" + self.stack
+            with open(pointer, 'r') as f:
+                path = f.read().strip()
+                if not Util.exists(path):
+                    raise
+                return path
+        except:
+            raise StackNotFoundError(self.sid)
+
+    def get_snapshots(self):
+        if len(self.snapshot):
+            ids = [self.snapshot]
+        else:
+            ids = Util.ls(self.path + "/.emu/nodes", must_exist=True)
+        snapshots = []
+        for id in ids:
+            snapshots.append(Snapshot(id, self.stack, self.path))
+        return snapshots
+
+
+    def get_head(self):
+        snapshots = self.get_snapshots()
+        if len(snapshots):
+            return snapshots[len(snapshots) - 1]
+
+
+    def get_config(self):
+        try:
+            return self._config
+        except AttributeError:
+            self._config = ConfigParser()
+            self._config.read(self.path + "/.emu/config")
+            return self.get_config()
+
+    def get_config_prop(self, section, prop, err=True):
+        try:
+            return self.get_config().get(section, prop)
+        except:
+            if err:
+                Util.printf("Error parsing config file!", Colours.ERROR)
+                Util.printf("Could not find property '{0}' in section '{1}'".format(prop, section),
+                            Colours.ERROR)
+                sys.exit(1)
+            return ""
+
+    def get_max_snapshots(self):
+        try:
+            return self._max_snapshots
+        except AttributeError:
+            self._max_snapshots = int(self.get_config_prop('Snapshots', 'Max Number'))
+            return self.get_max_snapshots()
+
+    def get_disk_usage(self):
+        try:
+            return self._du
+        except AttributeError:
+            self._du = Libemu.du(self.path)
+            return self.get_disk_usage()
+
+
+    def lock(self, verbose=False):
+        return 501
+
+
+    def unlock(self, verbose=False):
+        return 501
+
+
+    def push(self, dry_run=False, verbose=False):
+        self.lock()
+
+        # Remove old snapshots first
+        while len(self.get_snapshots()) >= int(self.get_max_snapshots()):
+            self.get_snapshots()[0].destroy(verbose)
+
+        Util.printf("pushing snapshot ({0} of {1})".format(len(self.get_snapshots()) + 1,
+                                                           self.get_max_snapshots()),
+                    prefix=self.stack, colour=Colours.OK)
+        snapshot = Snapshot.create(self, verbose=verbose)
+
+        self.unlock()
+        Util.printf("HEAD at {0}".format(snapshot.id),
+                    prefix=self.stack, colour=Colours.OK)
+        Util.printf("new snapshot {0}".format(Util.colourise(snapshot.snapshot,
+                                                             Colours.SNAPSHOT_NEW)),
+                    prefix=self.stack, colour=Colours.OK)
+        return 0
+
+
+    def __init__(self, snapshot_id, source_dir, allow_snapshot_id=True):
+
+        # Throw an exception if we have get stack:snapshot syntax and
+        # we don't want it:
+        if re.search(r":", snapshot_id) and not allow_snapshot_id:
+            raise StackNotFoundError(snapshot_id)
+
+        self.sid = snapshot_id
+        self.source = source_dir
+        self.stack = self._stack()
+        self.path = self._path()
+        self.snapshot = self._snapshot()
+
+    def __str__(self):
+        return self.stack + " " + self.path
+
+
+#########################
+# Source snapshot class #
+#########################
 class Snapshot:
     def __init__(self, shash, stack_name, stack_dir):
         self.id = shash
@@ -211,240 +418,6 @@ class Snapshot:
             f.write(sid + "\n")
 
         return Snapshot(sid, stack.stack, stack.path)
-
-
-
-
-class Stack:
-    re = r"^([^:]+)?(:(([a-f0-9]+)|(HEAD(~([0-9]+)?)?)))?$"
-
-    def _stack(self):
-        try:
-            return re.sub(self.re, r"\1", self.sid)
-        except:
-            return ""
-
-    def _snapshot(self):
-        try:
-            s = re.sub(self.re, r"\3", self.sid)
-
-            # HEAD~ syntax
-            if re.match(r"^HEAD.*", s):
-                index = 0
-                if re.match(r"HEAD~.*", s):
-                    index += 1
-                    if re.match(r".*\d+", s):
-                        index += int(re.sub(r"HEAD~", r"", s)) - 1
-                ids = Util.ls(self.path + "/.emu/nodes", must_exist=True)
-                try:
-                    return ids[index]
-                except IndexError:
-                    SnapshotNotFoundError(SnapshotID(self.stack, s))
-
-            return s
-        except:
-            return ""
-
-    def _path(self):
-        try:
-            pointer = self.source + "/.emu/stacks/" + self.stack
-            with open(pointer, 'r') as f:
-                path = f.read().strip()
-                if not Util.exists(path):
-                    raise
-                return path
-        except:
-            raise StackNotFoundError(self.sid)
-
-    def get_snapshots(self):
-        if len(self.snapshot):
-            ids = [self.snapshot]
-        else:
-            ids = Util.ls(self.path + "/.emu/nodes", must_exist=True)
-        snapshots = []
-        for id in ids:
-            snapshots.append(Snapshot(id, self.stack, self.path))
-        return snapshots
-
-
-    def get_head(self):
-        snapshots = self.get_snapshots()
-        if len(snapshots):
-            return snapshots[len(snapshots) - 1]
-
-
-    def get_config(self):
-        try:
-            return self._config
-        except AttributeError:
-            self._config = ConfigParser()
-            self._config.read(self.path + "/.emu/config")
-            return self.get_config()
-
-    def get_config_prop(self, section, prop, err=True):
-        try:
-            return self.get_config().get(section, prop)
-        except:
-            if err:
-                Util.printf("Error parsing config file!", Colours.ERROR)
-                Util.printf("Could not find property '{0}' in section '{1}'".format(prop, section),
-                            Colours.ERROR)
-                sys.exit(1)
-            return ""
-
-    def get_max_snapshots(self):
-        try:
-            return self._max_snapshots
-        except AttributeError:
-            self._max_snapshots = int(self.get_config_prop('Snapshots', 'Max Number'))
-            return self.get_max_snapshots()
-
-    def get_disk_usage(self):
-        try:
-            return self._du
-        except AttributeError:
-            self._du = Libemu.du(self.path)
-            return self.get_disk_usage()
-
-
-    def lock(self, verbose=False):
-        return 501
-
-
-    def unlock(self, verbose=False):
-        return 501
-
-
-    def push(self, dry_run=False, verbose=False):
-        self.lock()
-
-        # Remove old snapshots first
-        while len(self.get_snapshots()) >= int(self.get_max_snapshots()):
-            self.get_snapshots()[0].destroy(verbose)
-
-        Util.printf("pushing snapshot ({0} of {1})".format(len(self.get_snapshots()) + 1,
-                                                           self.get_max_snapshots()),
-                    prefix=self.stack, colour=Colours.OK)
-        snapshot = Snapshot.create(self, verbose=verbose)
-
-        self.unlock()
-        Util.printf("HEAD at {0}".format(snapshot.id),
-                    prefix=self.stack, colour=Colours.OK)
-        Util.printf("new snapshot {0}".format(Util.colourise(snapshot.snapshot,
-                                                             Colours.SNAPSHOT_NEW)),
-                    prefix=self.stack, colour=Colours.OK)
-        return 0
-
-
-    def __init__(self, snapshot_id, source_dir, allow_snapshot_id=True):
-
-        # Throw an exception if we have get stack:snapshot syntax and
-        # we don't want it:
-        if re.search(r":", snapshot_id) and not allow_snapshot_id:
-            raise StackNotFoundError(snapshot_id)
-
-        self.sid = snapshot_id
-        self.source = source_dir
-        self.stack = self._stack()
-        self.path = self._path()
-        self.snapshot = self._snapshot()
-
-    def __str__(self):
-        return self.stack + " " + self.path
-
-
-class SourceCreateError(Exception):
-    def __init__(self, source_dir):
-        self.source_dir = source_dir
-    def __str__(self):
-        return "Failed to create source at '{0}'!".format(self.source_dir)
-
-
-class SourceLockError(Exception):
-    def __init__(self, source_dir):
-        self.source_dir = source_dir
-    def __str__(self):
-        return "Failed to lock source '{0}'!".format(self.source_dir)
-
-
-class Source:
-    def __init__(self, source_dir):
-        self.path = source_dir
-        Util.exists(self.path, error=True)
-        Util.exists(self.path + "/.emu", error=True)
-        Util.exists(self.path + "/.emu/stacks", error=True)
-
-
-    def checkout(self, snapshot):
-        # TODO: checkout snapshot
-        return 501
-
-
-    def lock(self, verbose=False):
-        return 501
-
-
-    def unlock(self, verbose=False):
-        return 501
-
-
-    # stacks() - Get a source's stacks
-    #
-    # Returns a list of Stack objects.
-    def stacks(self):
-        try:
-            return self._stacks
-        except AttributeError:
-            try:
-
-                # Generate list of stacks:
-                self._stacks = []
-                for name in Util.ls(self.path + "/.emu/stacks", must_exist=True):
-                    self._stacks.append(Stack(name, self.path))
-                return self._stacks
-
-            except StackNotFoundError as e:
-                print e
-                sys.exit(1)
-
-
-    @staticmethod
-    def create(path, template_dir, verbose=False, force=False):
-        def err_cb(*data):
-            Util.rm(source_root, verbose=verbose)
-            raise SourceCreateError(source_root)
-
-        # Create directory structure
-        source_root = path + "/.emu"
-        directories = ["/", "/hooks", "/stacks"]
-        for d in directories:
-            Util.mkdir(source_root + d, mode=0700, verbose=verbose, error=True)
-
-        # Copy template files
-        Util.rsync(template_dir + "/", source_root + "/", error=err_cb,
-                   archive=True, verbose=verbose, update=force)
-
-        return Source(path)
-
-
-class Libemu:
-
-    @staticmethod
-    def run(*args):
-        proc = subprocess.Popen(args, stdout=subprocess.PIPE)
-        out = []
-        for line in proc.stdout:
-            out.append(line)
-
-        return "\n".join(out)
-
-
-    @staticmethod
-    def die_if_not_source(path):
-        if not (os.path.isdir(path + "/.emu") and
-                Util.exists(path + "/.emu/config")):
-            print "No emu source found!"
-            sys.exit(1)
 
 
 #####################################
@@ -1139,3 +1112,39 @@ class StackLockError(Exception):
     def __str__(self):
         return "Failed to lock stack '{0}'!".format(Util.colourise(self.name,
                                                                    Colours.ERROR))
+
+
+class SourceCreateError(Exception):
+    def __init__(self, source_dir):
+        self.source_dir = source_dir
+    def __str__(self):
+        return "Failed to create source at '{0}'!".format(self.source_dir)
+
+
+class SourceLockError(Exception):
+    def __init__(self, source_dir):
+        self.source_dir = source_dir
+    def __str__(self):
+        return "Failed to lock source '{0}'!".format(self.source_dir)
+
+
+###############
+# Legacy code #
+###############
+class Libemu:
+    @staticmethod
+    def run(*args):
+        proc = subprocess.Popen(args, stdout=subprocess.PIPE)
+        out = []
+        for line in proc.stdout:
+            out.append(line)
+
+        return "\n".join(out)
+
+
+    @staticmethod
+    def die_if_not_source(path):
+        if not (os.path.isdir(path + "/.emu") and
+                Util.exists(path + "/.emu/config")):
+            print "No emu source found!"
+            sys.exit(1)
