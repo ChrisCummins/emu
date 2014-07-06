@@ -150,7 +150,7 @@ class Stack:
         ids = Util.ls(self.path + "/.emu/nodes", must_exist=True)
         snapshots = []
         for id in ids:
-            snapshots.append(Snapshot(id, self.name, self.path))
+            snapshots.append(Snapshot(SnapshotID(self.name, id), self))
         return snapshots
 
 
@@ -256,24 +256,23 @@ class Stack:
 #########################
 class Snapshot:
 
-    def __init__(self, shash, stack_name, stack_dir):
-        self.id = shash
-        self.stack = stack_name
-        self.stack_dir = stack_dir
+    def __init__(self, id, stack):
+        self.id = id.id
+        self.stack = id.stack_name
+        self.stack_dir = stack.path
         self.checksum = self.id[8:]
-        self.tree = stack_dir + "/.emu/trees/" + shash
-
-        self._id = SnapshotID(stack_name, shash)
+        self.tree = stack.path + "/.emu/trees/" + id.id
+        self.stack_obj = stack
 
         def err_cb(e):
-            print "Non-existent or malformed snapshot '{0}'. Reason:\n\n{1}".format(self._id, e)
+            print "Non-existent or malformed snapshot '{0}'. Reason:\n\n{1}".format(self.id, e)
             sys.exit(1)
 
         # Sanity checks:
-        Util.readable("{0}/.emu/nodes/{1}".format(self.stack_dir, shash), error=err_cb)
+        Util.readable("{0}/.emu/nodes/{1}".format(self.stack_dir, id.id), error=err_cb)
         self.snapshot = self.node("name")
         Util.readable("{0}/{1}".format(self.stack_dir, self.snapshot),    error=err_cb)
-        Util.readable("{0}/.emu/trees/{1}".format(self.stack_dir, shash), error=err_cb)
+        Util.readable("{0}/.emu/trees/{1}".format(self.stack_dir, id.id), error=err_cb)
 
 
     # verify() - Verify the contents of snapshot
@@ -372,12 +371,12 @@ class Snapshot:
     #
     def parent(self, *parent):
         if parent:
-            self.node(p="Parent", v=parent._id.id)
+            self.node(p="Parent", v=parent.id.id)
         else:
-            parent_id = self.node(p="parent")
+            parent_id = SnapshotID(self.stack, self.node(p="parent"))
 
             if parent_id:
-                return Snapshot(parent_id, self.stack, self.stack_dir)
+                return Snapshot(parent_id, self.stack_obj)
             else:
                 return None
 
@@ -391,13 +390,15 @@ class Snapshot:
         if dry_run:
             return
 
+        # TODO: Check HEAD and reallocate if necessary
+        # TODO: Remove parent references from all other snapshots
+
         Util.rm(self.tree, must_exist=True, error=True, verbose=verbose)
         Util.rm("{0}/.emu/nodes/{1}".format(self.stack_dir, self.id),
                 must_exist=True, error=True, verbose=verbose)
         Util.rm(self.stack_dir + "/" + self.snapshot,
                 must_exist=True, error=True, verbose=verbose)
-        # TODO: Check HEAD and reallocate if necessary
-        # TODO: Remove parent references from all other snapshots
+
 
     @staticmethod
     def create(stack, dry_run=False, verbose=False):
@@ -458,7 +459,7 @@ class Snapshot:
         with open(stack.path + "/.emu/HEAD", 'w') as f:
             f.write(sid + "\n")
 
-        return Snapshot(sid, stack.name, stack.path)
+        return Snapshot(SnapshotID(stack.name, sid), stack)
 
 
 #####################################
