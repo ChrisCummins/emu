@@ -405,7 +405,7 @@ class Snapshot:
 
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
     @staticmethod
