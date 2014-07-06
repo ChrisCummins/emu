@@ -20,8 +20,6 @@ see
           init          create emu sources
           log           show stack snapshot logs
           stack         manage stacks
-          pop           peek and discard snapshots
-          peek          restore source from snapshot
           push          record source snapshots
           status        show status status
           verify        verify the contents of snapshots

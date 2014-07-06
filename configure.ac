@@ -170,14 +170,12 @@ AS_IF([test "x$enable_man_pages" = xyes],
               Documentation/man/emu-checkout.man
               Documentation/man/emu-status.man
               Documentation/man/emu-log.man
-              Documentation/man/emu-pop.man
               Documentation/man/emu.man
               Documentation/man/emu-init.man
               Documentation/man/emu-push.man
               Documentation/man/emu-stack.man
               Documentation/man/emu-clean.man
-              Documentation/man/emu-verify.man
-              Documentation/man/emu-peek.man])],)
+              Documentation/man/emu-verify.man])],)
 
 
 AS_IF([test "x$enable_tests" = xyes],
