@@ -261,10 +261,17 @@ class Snapshot:
         self.checksum = self.id[8:]
         self.tree = stack_dir + "/.emu/trees/" + shash
 
-        if not os.path.isdir(self.tree):
-            raise SnapshotNotFoundError(SnapshotID(stack_name, shash))
+        self._id = SnapshotID(stack_name, shash)
 
+        def err_cb(e):
+            print "Non-existent or malformed snapshot '{0}'. Reason:\n\n{1}".format(self._id, e)
+            sys.exit(1)
+
+        # Sanity checks:
+        Util.readable("{0}/.emu/nodes/{1}".format(self.stack_dir, shash), error=err_cb)
         self.snapshot = self.node()['Snapshot']
+        Util.readable("{0}/{1}".format(self.stack_dir, self.snapshot),    error=err_cb)
+        Util.readable("{0}/.emu/trees/{1}".format(self.stack_dir, shash), error=err_cb)
 
 
     # verify() - Verify the contents of snapshot
@@ -476,7 +483,7 @@ class Util:
         if error and not exists:
             e = "'{0}' not found!".format(Util.colourise(path, Colours.ERROR))
 
-            if hasattr(err, '__call__'):
+            if hasattr(error, '__call__'):
                 # Execute error callback if provided
                 error(e)
             else:
@@ -493,6 +500,7 @@ class Util:
     # it on no read permissions.
     @staticmethod
     def readable(path, error=False):
+        Util.exists(path, error=error)
         read_permission = os.access(path, os.R_OK)
         if error and not read_permission:
             e = "No read permissions for '{0}'!".format(Util.colourise(path, Colours.ERROR))
@@ -514,6 +522,7 @@ class Util:
     # it on no write permissions.
     @staticmethod
     def writable(path, error=False):
+        Util.exists(path, error=error)
         write_permission = os.access(path, os.W_OK)
         if error and not write_permission:
             e = "No write permissions for '{0}'!".format(Util.colourise(path, Colours.ERROR))
