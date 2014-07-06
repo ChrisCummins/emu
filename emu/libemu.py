@@ -427,19 +427,22 @@ class Snapshot:
     def create(stack, dry_run=False, verbose=False):
         source = stack.source
         head = stack.head()
-        head_id = ""
 
         if head:
-            link_dest = head.tree
             head_id = head.id.id
         else:
-            link_dest = None
+            head_id = ""
 
         exclude = ["/.emu"]
         exclude_from = [source.path + "/.emu/excludes"]
 
+        # Use all snapshots as link destinations
+        link_dests = []
+        for snapshot in stack.snapshots():
+            link_dests.append(snapshot.tree)
+
         Util.rsync(source.path + "/", stack.path + "/.emu/trees/new",
-                   dry_run=dry_run, link_dest=link_dest,
+                   dry_run=dry_run, link_dest=link_dests,
                    exclude=exclude, exclude_from=exclude_from,
                    delete=True, delete_excluded=True,
                    error=True, verbose=verbose)
