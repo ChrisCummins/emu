@@ -57,12 +57,15 @@ class Source:
         Util.readable(self.path + "/.emu/stacks/",  error=err_cb)
 
 
-    def checkout(self, snapshot):
-        # TODO: checkout snapshot
+    def verify(self, error=True, verbose=False):
         return 501
 
 
-    def lock(self, verbose=False):
+    def checkout(self, snapshot, verbose=False):
+        return 501
+
+
+    def lock(self, wait=True, verbose=False):
         return 501
 
 
@@ -252,6 +255,7 @@ class Stack:
 # Source snapshot class #
 #########################
 class Snapshot:
+
     def __init__(self, shash, stack_name, stack_dir):
         self.id = shash
         self.stack = stack_name
@@ -1185,7 +1189,6 @@ class EmuParser(OptionParser):
 class InvalidSnapshotIDError(Exception):
     def __init__(self, id):
         self.id = id
-
     def __str__(self):
         return "Invalid snapshot identifier '{0}!'".format(Util.colourise(self.id,
                                                                           Colours.ERROR))
@@ -1202,7 +1205,6 @@ class StackNotFoundError(Exception):
 class SnapshotNotFoundError(Exception):
     def __init__(self, id):
         self.id = id
-
     def __str__(self):
         return "Snapshot '{0}:{1}' not found!".format(self.id.stack_name,
                                                       Util.colourise(self.id.id,
