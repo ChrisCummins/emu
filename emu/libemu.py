@@ -113,7 +113,7 @@ class Source:
 
         # Copy template files
         Util.rsync(template_dir + "/", source_dir + "/", error=err_cb,
-                   archive=True, verbose=verbose, update=force)
+                   archive=True, verbose=verbose, quiet=not verbose, update=force)
 
         print "Initialised source at '{0}'".format(path)
 
