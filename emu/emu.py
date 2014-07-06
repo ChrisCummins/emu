@@ -55,8 +55,8 @@ def main(argv, argc):
             return os.system("man emu-" + argv[1])
         return os.system("man emu")
 
-    if argv[0] == "-V" or argv[0] == "--version":
-        Libemu.show_version_and_quit()
+    if argv[0] == "--version":
+        Util.version_and_quit()
 
     # Assemble script path and arguments
     script_path = get_script_path(argv[0])

@@ -989,7 +989,7 @@ class Util:
 
     @staticmethod
     def version_and_quit(*data):
-        print "emu version", Libemu.version_string
+        print "emu version", Util.version_string
         exit(0)
 
 
