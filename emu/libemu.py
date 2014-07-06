@@ -375,7 +375,7 @@ class Snapshot:
         else:
             link_dest = None
 
-        exclude = [stack.source + "/.emu"]
+        exclude = ["/.emu"]
         exclude_from = [stack.source + "/.emu/excludes"]
 
         Util.rsync(stack.source + "/", stack.path + "/.emu/trees/new",
