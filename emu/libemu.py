@@ -466,6 +466,23 @@ class Snapshot:
     @staticmethod
     def create(stack, dry_run=False, verbose=False):
 
+        # If two snapshots are created in the same second and with the
+        # same checksum, then their IDs will be identical. To prevent
+        # this, we need to wait until the timestamp will be different.
+        def _get_unique_id(checksum):
+            # Generate an ID from date and checksum:
+            date = time.localtime()
+            id = SnapshotID(stack.name, "{0:x}".format(calendar.timegm(date)) + checksum)
+            try:
+                # See if a snapshot with that ID already exists:
+                Util.get_snapshot_by_id(id, stack.snapshots())
+                # If id does, wait for a bit and try again:
+                time.sleep(0.05)
+                return _get_unique_id(checksum)
+            except SnapshotNotFoundError:
+                # If the ID is unique, return it:
+                return (id, date)
+
         def err_cb(e):
             Util.printf("Woops! Something went wrong.",
                         prefix=stack.name, colour=Colours.ERROR)
@@ -515,8 +532,7 @@ class Snapshot:
                    error=err_cb, verbose=verbose)
 
         checksum = Util.checksum(transfer_dest)
-        date = time.localtime()
-        id = SnapshotID(stack.name, "{0:x}".format(calendar.timegm(date)) + checksum)
+        (id, date) = _get_unique_id(checksum)
         name = "{0}-{1:02d}-{2:02d} {3:02d}.{4:02d}.{5:02d}".format(date.tm_year,
                                                                     date.tm_mon,
                                                                     date.tm_mday,
