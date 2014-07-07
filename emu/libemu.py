@@ -32,7 +32,6 @@ import subprocess
 import sys
 from ConfigParser import ConfigParser
 from optparse import OptionParser
-from sys import exit
 from datetime import datetime
 
 
@@ -1155,13 +1154,13 @@ class Util:
     @staticmethod
     def version_and_quit(*data):
         print "emu version", Util.version_string
-        exit(0)
+        sys.exit(0)
 
 
     @staticmethod
     def help_and_quit(*data):
         Util.p_exec("man " + os.path.basename(sys.argv[0]), error=True)
-        exit(0)
+        sys.exit(0)
 
 
 ##################
