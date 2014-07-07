@@ -218,7 +218,7 @@ class Stack:
                 # Create new "Most Recent Backup" link
                 if Util.exists(most_recent_link):
                     Util.rm(most_recent_link, error=error)
-                Util.ln_s(head.name, most_recent_link, error=error)
+                Util.ln_s(head.name, most_recent_link)
 
             Util.printf("HEAD at {0}".format(head.id.id),
                         prefix=self.name, colour=Colours.OK)
@@ -541,8 +541,13 @@ class Snapshot:
             except Exception:
                 pass
             try:
-                source.lock.unlock(force=force, verbose=verbose)
-                stack.lock.unlock(force=force, verbose=verbose)
+                source.lock.unlock(force=force, verbose=True)
+                stack.lock.unlock(force=force, verbose=True)
+            except Exception:
+                pass
+            try:
+                if source.head().id == id:
+                    source.head(delete=True)
             except Exception:
                 pass
 
@@ -618,7 +623,9 @@ class Snapshot:
                 node.write(node_file)
 
         # Update HEAD:
-        stack.head(head=id, dry_run=dry_run, error=err_cb)
+        if not dry_run:
+            snapshot = Snapshot(SnapshotID(stack.name, id.id), stack)
+            stack.head(head=snapshot, dry_run=dry_run, error=err_cb)
 
         source.lock.unlock(force=force, verbose=verbose)
         stack.lock.unlock(force=force, verbose=verbose)
@@ -628,7 +635,7 @@ class Snapshot:
                     prefix=stack.name, colour=Colours.OK)
 
         if not dry_run:
-            return Snapshot(SnapshotID(stack.name, id.id), stack)
+            return snapshot
 
 
 #####################################
