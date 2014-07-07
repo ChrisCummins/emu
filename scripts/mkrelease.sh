@@ -100,6 +100,12 @@ make_version_bump_commit() {
     git add README
     git add emu/libemu.py
     git commit --allow-empty -m "Bump release version for '$new_version'" >/dev/null
+    git tag $new_version -a -m "Release $new_version"
+
+    echo "Pushing master"
+    git push origin master
+    echo "Pushing release tag"
+    git push origin $new_version
 }
 
 # Perform the new release.
