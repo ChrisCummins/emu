@@ -98,9 +98,9 @@ class Source:
                        delete=True, error=err_cb,
                        verbose=verbose)
 
-            # Set new HEAD:
-            Util.write(stack.path + "/.emu/HEAD", snapshot.id.id + "\n",
-                       error=err_cb)
+        # Set new HEAD:
+        stack.head(head=snapshot, dry_run=dry_run,
+                   error=err_cb, verbose=verbose)
 
         stack.lock.unlock(force=force, verbose=verbose)
         self.lock.unlock(force=force, verbose=verbose)
@@ -199,13 +199,29 @@ class Stack:
     # Returns the snapshot pointed to by the HEAD file, or None if
     # headless. If 'head' is provided, set this snapshot to be the new
     # head.
-    def head(self, head=None, dry_run=False, error=True):
+    def head(self, head=None, dry_run=False, delete=False, error=True):
+        head_pointer = self.path + "/.emu/HEAD"
+        most_recent_link = self.path + "/Most Recent Backup"
+
         if head:
-            # Set new value of head:
             if not dry_run:
-                Util.write(self.path + "/.emu/HEAD", head.id.id + "\n",
+                # Write new pointer to HEAD:
+                Util.write(head_pointer, head.id.id + "\n",
                            error=error)
+                # Create new "Most Recent Backup" link
+                if Util.exists(most_recent_link):
+                    Util.rm(most_recent_link, error=error)
+                Util.ln_s(head.name, most_recent_link, error=error)
+
             Util.printf("HEAD at {0}".format(head.id.id),
+                        prefix=self.name, colour=Colours.OK)
+        elif delete:
+            if not dry_run:
+                # Remove HEAD and most "Most Recent Backup" link
+                Util.rm(most_recent_link, error=error)
+                Util.write(head_pointer, "", error=error)
+
+            Util.printf("now in headless state",
                         prefix=self.name, colour=Colours.OK)
         else:
             # Get current head:
@@ -438,17 +454,11 @@ class Snapshot:
                     verbose=verbose)
 
             if new_head:
-                # Create new HEAD and "Most Recent Backup" link:
-                Util.write(stack.path + "/.emu/HEAD",
-                           new_head.id.id + "\n")
-                Util.ln_s(new_head.tree, most_recent_link,
-                          error=True, verbose=verbose)
-                Util.printf("HEAD at {0}".format(new_head.id),
-                            prefix=stack.name, colour=Colours.OK)
+                # Update head:
+                stack.head(head=new_head, dry_run=dry_run, verbose=verbose)
             else:
-                Util.write(stack.path + "/.emu/HEAD", "")
-                Util.printf("now in headless state",
-                            prefix=stack.name, colour=Colours.OK)
+                # Remove head:
+                stack.head(delete=true, dry_run=dry_run, verbose=verbose)
 
         # Re-allocate parent references from all other snapshots:
         new_parent = self.parent()
@@ -515,8 +525,8 @@ class Snapshot:
             except Exception:
                 pass
             try:
-                if Util.read(stack.path + "/.emu/HEAD") == id.id:
-                    Util.write(stack.path + "/.emu/HEAD", "")
+                if stack.head().id == id:
+                    stack.head(delete=true, verbose=True)
             except Exception:
                 pass
             try:
@@ -559,7 +569,6 @@ class Snapshot:
                                                                     date.tm_sec)
         tree = stack.path + "/.emu/trees/" + id.id
         name_link = stack.path + "/" + name
-        most_recent_link = stack.path + "/Most Recent Backup"
 
         # Move tree into position
         Util.mv(transfer_dest, tree,
@@ -567,12 +576,6 @@ class Snapshot:
 
         # Make name symlink:
         Util.ln_s(tree, name_link, verbose=verbose, error=err_cb)
-
-        # Make "Most Recent Backup" symlink:
-        if Util.exists(most_recent_link):
-            Util.rm(most_recent_link, verbose=verbose, error=err_cb)
-        Util.ln_s(name_link, most_recent_link,
-                  verbose=verbose, error=err_cb)
 
         # Get parent node ID:
         if stack.head():
@@ -598,7 +601,7 @@ class Snapshot:
                 node.write(node_file)
 
         # Update HEAD:
-        Util.write(stack.path + "/.emu/HEAD", id.id + "\n", error=err_cb)
+        stack.head(head=id, dry_run=dry_run, verbose=verbose, error=err_cb)
 
         source.lock.unlock(force=force, verbose=verbose)
         stack.lock.unlock(force=force, verbose=verbose)
