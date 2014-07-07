@@ -45,7 +45,9 @@ class Source:
         self.lock = Lockfile(self.path + "/.emu/LOCK")
 
         def err_cb(e):
-            print "Non-existent or malformed emu source. Reason:\n\n{0}".format(e)
+            print "Non-existent or malformed emu source."
+            if e:
+                print e
             sys.exit(1)
 
         # Sanity checks:
@@ -69,15 +71,18 @@ class Source:
         def err_cb(e):
             Util.printf("Woops! Something went wrong.",
                         prefix=stack.name, colour=Colours.ERROR)
+            if e:
+                print e
+
+            try:
+                stack.lock.unlock(force=force, verbose=True)
+                self.lock.unlock(force=force, verbose=True)
+            except Exception:
+                pass
+
             Util.printf("Failed to checkout snapshot {0}!".format(Util.colourise(snapshot.id.id,
                                                                                  Colours.GREEN)),
                         prefix=stack.name, colour=Colours.ERROR)
-
-            try:
-                stack.lock.unlock(force=force, verbose=verbose)
-                self.lock.unlock(force=force, verbose=verbose)
-            except Exception:
-                pass
 
             sys.exit(1)
 
@@ -167,7 +172,9 @@ class Stack:
     def __init__(self, name, source):
 
         def err_cb(e):
-            print "Non-existent or malformed emu stack. Reason:\n\n{0}".format(e)
+            print "Non-existent or malformed emu stack."
+            if e:
+                print e
             sys.exit(1)
 
         self.name = name
@@ -317,7 +324,9 @@ class Snapshot:
         self.name = self.node("name")
 
         def err_cb(e):
-            print "Non-existent or malformed snapshot '{0}'. Reason:\n\n{1}".format(self.id, e)
+            print "Non-existent or malformed snapshot '{0}'".format(self.id)
+            if e:
+                print e
             sys.exit(1)
 
         # Sanity checks:
@@ -506,6 +515,8 @@ class Snapshot:
         def err_cb(e):
             Util.printf("Woops! Something went wrong.",
                         prefix=stack.name, colour=Colours.ERROR)
+            if e:
+                print e
 
             # Tidy up any intermediate files which may have been created:
             try:
