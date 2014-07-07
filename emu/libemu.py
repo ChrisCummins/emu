@@ -284,20 +284,20 @@ class Stack:
     def push(self, force=False, dry_run=False, verbose=False):
 
         # Remove old snapshots first:
-        while len(self.snapshots()) >= self.max_snapshots():
-            self.snapshots()[0].destroy(dry_run=dry_run, verbose=verbose)
+        i = len(self.snapshots())
+        while i >= self.max_snapshots():
+            self.snapshots()[0].destroy(dry_run=dry_run, force=force, verbose=verbose)
+            if dry_run:
+                i -= 1
+            else:
+                i = len(self.snapshots())
 
         Util.printf("pushing snapshot ({0} of {1})".format(len(self.snapshots()) + 1,
                                                            self.max_snapshots()),
                     prefix=self.name, colour=Colours.OK)
-        snapshot = Snapshot.create(self, force=force, dry_run=dry_run,
-                                   verbose=verbose)
+        Snapshot.create(self, force=force, dry_run=dry_run,
+                        verbose=verbose)
 
-        Util.printf("HEAD at {0}".format(snapshot.id),
-                    prefix=self.name, colour=Colours.OK)
-        Util.printf("new snapshot {0}".format(Util.colourise(snapshot.name,
-                                                             Colours.SNAPSHOT_NEW)),
-                    prefix=self.name, colour=Colours.OK)
         return 0
 
 
@@ -559,7 +559,11 @@ class Snapshot:
                    delete=True, delete_excluded=True,
                    error=err_cb, verbose=verbose)
 
-        checksum = Util.checksum(transfer_dest)
+        if dry_run:
+            checksum = "0" * 32
+        else:
+            checksum = Util.checksum(transfer_dest)
+
         (id, date) = _get_unique_id(checksum)
         name = "{0}-{1:02d}-{2:02d} {3:02d}.{4:02d}.{5:02d}".format(date.tm_year,
                                                                     date.tm_mon,
@@ -570,12 +574,13 @@ class Snapshot:
         tree = stack.path + "/.emu/trees/" + id.id
         name_link = stack.path + "/" + name
 
-        # Move tree into position
-        Util.mv(transfer_dest, tree,
-                verbose=verbose, must_exist=True, error=err_cb)
+        if not dry_run:
+            # Move tree into position
+            Util.mv(transfer_dest, tree,
+                    verbose=verbose, must_exist=True, error=err_cb)
 
-        # Make name symlink:
-        Util.ln_s(tree, name_link, verbose=verbose, error=err_cb)
+            # Make name symlink:
+            Util.ln_s(tree, name_link, verbose=verbose, error=err_cb)
 
         # Get parent node ID:
         if stack.head():
@@ -583,30 +588,36 @@ class Snapshot:
         else:
             head_id = ""
 
-        # Get snapshot size:
-        size = Libemu.run("du", "-h", "-s").split()[0]
+        if not dry_run:
+            # Get snapshot size:
+            size = Libemu.run("du", "-h", "-s", tree).split()[0]
 
-        # Create node:
-        node_path = "{0}/.emu/nodes/{1}".format(stack.path, id.id)
-        node = ConfigParser()
-        node.add_section("Node")
-        node.set("Node", "snapshot", id.id)
-        node.set("Node", "name",     name)
-        node.set("Node", "parent",   head_id)
-        node.set("Node", "date",     time.strftime("%A %B %d %H:%M:%S %Y", date))
-        node.set("Node", "source",   stack.source.path)
-        node.set("Node", "stack",    id.stack_name)
-        node.set("Node", "size",     size)
-        with open(node_path, "wb") as node_file:
+            # Create node:
+            node_path = "{0}/.emu/nodes/{1}".format(stack.path, id.id)
+            node = ConfigParser()
+            node.add_section("Node")
+            node.set("Node", "snapshot", id.id)
+            node.set("Node", "name",     name)
+            node.set("Node", "parent",   head_id)
+            node.set("Node", "date",     time.strftime("%A %B %d %H:%M:%S %Y", date))
+            node.set("Node", "source",   stack.source.path)
+            node.set("Node", "stack",    id.stack_name)
+            node.set("Node", "size",     size)
+            with open(node_path, "wb") as node_file:
                 node.write(node_file)
 
         # Update HEAD:
-        stack.head(head=id, dry_run=dry_run, verbose=verbose, error=err_cb)
+        stack.head(head=id, dry_run=dry_run, error=err_cb)
 
         source.lock.unlock(force=force, verbose=verbose)
         stack.lock.unlock(force=force, verbose=verbose)
 
-        return Snapshot(SnapshotID(stack.name, id.id), stack)
+        Util.printf("new snapshot {0}".format(Util.colourise(name,
+                                                             Colours.SNAPSHOT_NEW)),
+                    prefix=stack.name, colour=Colours.OK)
+
+        if not dry_run:
+            return Snapshot(SnapshotID(stack.name, id.id), stack)
 
 
 #####################################
