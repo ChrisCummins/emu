@@ -409,6 +409,8 @@ class Snapshot:
                                                                     Colours.SNAPSHOT_DELETE)),
                     prefix=self.stack.name, colour=Colours.OK)
 
+        most_recent_link = self.stack.path + "/Most Recent Backup"
+
         # We don't actually need to modify anything on a dry run:
         if dry_run:
             return
@@ -416,21 +418,21 @@ class Snapshot:
         # If current snapshot is HEAD, then set parent HEAD:
         head = self.stack.head()
         if head and head.id == self.id:
+            new_head = head.parent()
+
             # Remove old "Most Recent Backup" link:
             Util.rm(self.stack.path + "/Most Recent Backup",
-                    must_exist=True, verbose=verbose)
-            new_head = head.parent()
+                    verbose=verbose)
+
             if new_head:
-                Util.write(self.stack.path + "/.emu/HEAD", new_head.id.id)
-                # Create new "Most Recent Backup" link:
-                most_recent_link = self.stack.path + "/Most Recent Backup"
-                if Util.exists(most_recent_link):
-                    Util.rm(most_recent_link)
+                # Create new HEAD and "Most Recent Backup" link:
+                Util.write(self.stack.path + "/.emu/HEAD",
+                           new_head.id.id + "\n")
                 Util.ln_s(self.stack.path + "/" + new_head.tree,
                           most_recent_link, verbose=verbose)
                 if verbose:
-                    Util.printf("HEAD at {0}".format(Util.coilourise(new_head.id,
-                                                                     Colours.SNAPSHOT)))
+                    Util.printf("HEAD at {0}".format(Util.colourise(new_head.id,
+                                                                    Colours.SNAPSHOT)))
             else:
                 Util.write(self.stack.path + "/.emu/HEAD", "")
                 if verbose:
