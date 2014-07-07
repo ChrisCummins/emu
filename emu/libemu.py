@@ -1360,7 +1360,7 @@ class EmuParser(OptionParser):
     # used if no arguments are provided.
     def parse_snapshots(self, source, accept_stack_names=True,
                         accept_no_args=True, single_arg=False,
-                        error=True):
+                        require=False, error=True):
 
         try:
             return self._snapshots
@@ -1424,9 +1424,14 @@ class EmuParser(OptionParser):
                     else:
                         raise InvalidSnapshotIDError(arg)
 
+                if require and not len(self._snapshots):
+                    raise InvalidArgsError("One or more snapshots must be "
+                                           "specified using "
+                                           "<stack>:<snapshot>")
+
                 return self._snapshots
 
-            except (InvalidSnapshotIDError,
+            except (InvalidArgsError,
                     StackNotFoundError,
                     SnapshotNotFoundError) as e:
                 if error:
@@ -1444,7 +1449,14 @@ class EmuParser(OptionParser):
 ###############
 # Error types #
 ###############
-class InvalidSnapshotIDError(Exception):
+class InvalidArgsError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+    def __str__(self):
+        return self.msg
+
+
+class InvalidSnapshotIDError(InvalidArgsError):
     def __init__(self, id):
         self.id = id
     def __str__(self):
