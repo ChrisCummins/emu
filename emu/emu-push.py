@@ -46,15 +46,11 @@ def main(argv, argc):
 
     source = Source(options.source_dir)
 
-    source.lock()
-
     status = 0
     for stack in parser.parse_stacks(source):
         status ^= stack.push(force=options.force,
                              dry_run=options.dry_run,
                              verbose=options.verbose)
-
-    source.unlock()
 
     return status
 

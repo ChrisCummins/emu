@@ -43,6 +43,7 @@ class Source:
 
     def __init__(self, path):
         self.path = path
+        self.lock = Lockfile(self.path + "/.emu/LOCK")
 
         def err_cb(e):
             print "Non-existent or malformed emu source. Reason:\n\n{0}".format(e)
@@ -64,7 +65,7 @@ class Source:
     # checkout() - Restore source to snapshot
     #
     # Transfer the contents of snapshot tree to source directory.
-    def checkout(self, snapshot, dry_run=False, verbose=False):
+    def checkout(self, snapshot, dry_run=False, force=False, verbose=False):
 
         def err_cb(e):
             Util.printf("Woops! Something went wrong.",
@@ -72,6 +73,13 @@ class Source:
             Util.printf("Failed to checkout snapshot {0}!".format(Util.colourise(snapshot.id.id,
                                                                                  Colours.GREEN)),
                         prefix=stack.name, colour=Colours.ERROR)
+
+            try:
+                stack.lock.unlock(force=force, verbose=verbose)
+                self.lock.unlock(force=force, verbose=verbose)
+            except Exception:
+                pass
+
             sys.exit(1)
 
         print "Checking out {0}".format(snapshot.id)
@@ -80,8 +88,8 @@ class Source:
         exclude = ["/.emu"]
         exclude_from = [self.path + "/.emu/excludes"]
 
-        self.lock()
-        stack.lock()
+        self.lock.lock(force=force, verbose=verbose)
+        stack.lock.lock(force=force, verbose=verbose)
 
         if not dry_run:
             # Perform file transfer:
@@ -95,22 +103,14 @@ class Source:
             Util.write(stack.path + "/.emu/HEAD", snapshot.id.id + "\n",
                        error=err_cb)
 
-        stack.unlock()
-        self.unlock()
+        stack.lock.unlock(force=force, verbose=verbose)
+        self.lock.unlock(force=force, verbose=verbose)
 
         Util.printf("HEAD at {0}".format(snapshot.id),
                         prefix=stack.name, colour=Colours.OK)
 
         print "Source restored from {0}".format(Util.colourise(snapshot.name,
                                                                Colours.SNAPSHOT_NEW))
-
-
-    def lock(self, wait=True, verbose=False):
-        return 501
-
-
-    def unlock(self, force=False, verbose=False):
-        return 501
 
 
     # stacks() - Get a source's stacks
@@ -175,6 +175,7 @@ class Stack:
         self.source = source
         self.path = Util.read("{0}/.emu/stacks/{1}".format(self.source.path, self.name),
                               error=err_cb)
+        self.lock = Lockfile(self.path + "/.emu/LOCK")
 
         # Sanity checks:
         Util.readable(self.path + "/.emu/",       error=err_cb)
@@ -255,27 +256,18 @@ class Stack:
             return self.size()
 
 
-    def lock(self, verbose=False):
-        return 501
-
-
-    def unlock(self, force=False, verbose=False):
-        return 501
-
-
     def push(self, force=False, dry_run=False, verbose=False):
-        self.lock()
 
-        # Remove old snapshots first
+        # Remove old snapshots first:
         while len(self.snapshots()) >= self.max_snapshots():
             self.snapshots()[0].destroy(dry_run=dry_run, verbose=verbose)
 
         Util.printf("pushing snapshot ({0} of {1})".format(len(self.snapshots()) + 1,
                                                            self.max_snapshots()),
                     prefix=self.name, colour=Colours.OK)
-        snapshot = Snapshot.create(self, verbose=verbose)
+        snapshot = Snapshot.create(self, force=force, dry_run=dry_run,
+                                   verbose=verbose)
 
-        self.unlock()
         Util.printf("HEAD at {0}".format(snapshot.id),
                     prefix=self.name, colour=Colours.OK)
         Util.printf("new snapshot {0}".format(Util.colourise(snapshot.name,
@@ -464,7 +456,7 @@ class Snapshot:
 
 
     @staticmethod
-    def create(stack, dry_run=False, verbose=False):
+    def create(stack, force=False, dry_run=False, verbose=False):
 
         # If two snapshots are created in the same second and with the
         # same checksum, then their IDs will be identical. To prevent
@@ -509,6 +501,11 @@ class Snapshot:
                     Util.write(stack.path + "/.emu/HEAD", "")
             except Exception:
                 pass
+            try:
+                source.lock.unlock(force=force, verbose=verbose)
+                stack.lock.unlock(force=force, verbose=verbose)
+            except Exception:
+                pass
 
             Util.printf("Failed to create new snapshot!",
                         prefix=stack.name, colour=Colours.ERROR)
@@ -519,6 +516,9 @@ class Snapshot:
         exclude = ["/.emu"]
         exclude_from = [source.path + "/.emu/excludes"]
         link_dests = []
+
+        source.lock.lock(force=force, verbose=verbose)
+        stack.lock.lock(force=force, verbose=verbose)
 
         # Use all snapshots as link destinations:
         for snapshot in stack.snapshots():
@@ -582,6 +582,9 @@ class Snapshot:
         # Update HEAD:
         Util.write(stack.path + "/.emu/HEAD", id.id + "\n", error=err_cb)
 
+        source.lock.unlock(force=force, verbose=verbose)
+        stack.lock.unlock(force=force, verbose=verbose)
+
         return Snapshot(SnapshotID(stack.name, id.id), stack)
 
 
@@ -621,6 +624,32 @@ class Util:
     #
     source_templates = os.path.abspath(sys.path[0] + "/../share/emu/templates/source-templates")
     stack_templates = os.path.abspath(sys.path[0] + "/../share/emu/templates/stack-templates")
+
+
+    # process_exists() - Check that a process is running
+    #
+    # If 'error' is True and 'pid' is not running, then exit fatally
+    # with error code. If 'error' is a callback function, then execute
+    # it on no process existing.
+    @staticmethod
+    def process_exists(pid, error=False):
+        try:
+            os.kill(pid, 0)
+            return True
+        except Exception:
+            if error and not exists:
+                e = "Process '{0}' not running!".format(Util.colourise(pid,
+                                                                       Colours.ERROR))
+                if error:
+                    if hasattr(error, '__call__'):
+                        # Execute error callback if provided
+                        error(e)
+                    else:
+                        # Else fatal error
+                        print e
+                        sys.exit(1)
+                else:
+                    return False
 
 
     # exists() - Check that a path exists
@@ -1135,6 +1164,84 @@ class Util:
         exit(0)
 
 
+##################
+# Lockfile class #
+##################
+class Lockfile:
+
+    def __init__(self, path):
+        self.path = path
+
+
+    # read() - Return lockfile PID and timestamp
+    #
+    def read(self):
+        contents = Util.read(self.path).split()
+        pid = int(contents[0])
+        timestamp = datetime.fromtimestamp(int(contents[1]))
+        return (pid, timestamp)
+
+
+    # lock() - Assign lockfile to current process
+    #
+    def lock(self, force=False, error=True, verbose=False):
+        if verbose:
+            print "Writing lockfile '{0}'".format(self.path)
+
+        if Util.exists(self.path) and not force:
+            # Error state, lock exists:
+            e = LockfileError(self)
+
+            if error:
+                if hasattr(error, '__call__'):
+                    # Execute error callback if provided:
+                    error(e)
+                else:
+                    # Else fatal error:
+                    print e
+                    sys.exit(1)
+            else:
+                raise e
+        else:
+            # No lockfile, create new:
+            Util.write(self.path, "{0} {1}\n".format(os.getpid(),
+                                                     int(time.time())),
+                       error=error)
+
+
+    # unlock() - Free lockfile from current process
+    #
+    def unlock(self, force=False, error=True, verbose=False):
+        if verbose:
+            print "Removing lockfile '{0}'".format(self.path)
+
+        exists = Util.exists(self.path)
+        if exists:
+            (pid, timestamp) = self.read()
+            owned_by_self = pid == os.getpid()
+        else:
+            owned_by_self = False
+
+        if owned_by_self or force:
+            # Destory lockfile:
+            Util.rm(self.path, must_exist=True)
+        else:
+            # Error state, lock either is owned by different process
+            # or does not exist:
+            e = LockfileError(self)
+
+            if error:
+                if hasattr(error, '__call__'):
+                    # Execute error callback if provided:
+                    error(e)
+                else:
+                    # Else fatal error:
+                    print e
+                    sys.exit(1)
+            else:
+                raise e
+
+
 #############################
 # Shell escape colour codes #
 #############################
@@ -1359,14 +1466,6 @@ class SnapshotNotFoundError(Exception):
                                                                     Colours.ERROR))
 
 
-class StackLockError(Exception):
-    def __init__(self, name):
-        self.name = name
-    def __str__(self):
-        return "Failed to lock stack '{0}'!".format(Util.colourise(self.name,
-                                                                   Colours.ERROR))
-
-
 class SourceCreateError(Exception):
     def __init__(self, source_dir):
         self.source_dir = source_dir
@@ -1374,11 +1473,21 @@ class SourceCreateError(Exception):
         return "Failed to create source at '{0}'!".format(self.source_dir)
 
 
-class SourceLockError(Exception):
-    def __init__(self, source_dir):
-        self.source_dir = source_dir
+class LockfileError(Exception):
+    def __init__(self, lock):
+        self.lock = lock
     def __str__(self):
-        return "Failed to lock source '{0}'!".format(self.source_dir)
+        (pid, timestamp) = self.lock.read()
+        string = "Failed to modify lock '{0}'!\n".format(Util.colourise(self.lock.path,
+                                                                        Colours.ERROR))
+        string += "Lock was claimed by process {0} at {1}.\n".format(Util.colourise(pid, Colours.INFO),
+                                                                     Util.colourise(timestamp, Colours.INFO))
+        if Util.process_exists(pid):
+            string += "It looks like the process is still running."
+        else:
+            string += "It looks like the process is no longer running.\n"
+        string += "\nTo ignore this lock and overwrite, use option '--force'."
+        return string
 
 
 ###############
