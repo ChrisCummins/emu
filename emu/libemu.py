@@ -613,7 +613,7 @@ class Util:
     #
     # Version information:
     #
-    version = { "major": 0, "minor": 0, "micro": 8 }
+    version = { "major": 0, "minor": 1, "micro": 2 }
     version_string = "{0}.{1}.{2}".format(version["major"],
                                           version["minor"],
                                           version["micro"])
