@@ -428,16 +428,14 @@ class Snapshot:
                 # Create new HEAD and "Most Recent Backup" link:
                 Util.write(self.stack.path + "/.emu/HEAD",
                            new_head.id.id + "\n")
-                Util.ln_s(self.stack.path + "/" + new_head.tree,
-                          most_recent_link, verbose=verbose)
-                if verbose:
-                    Util.printf("HEAD at {0}".format(Util.colourise(new_head.id,
-                                                                    Colours.SNAPSHOT)))
+                Util.ln_s(new_head.tree, most_recent_link,
+                          error=True, verbose=verbose)
+                Util.printf("HEAD at {0}".format(new_head.id),
+                            prefix=self.stack.name, colour=Colours.OK)
             else:
                 Util.write(self.stack.path + "/.emu/HEAD", "")
-                if verbose:
-                    Util.printf("unset HEAD {0}".format(Util.coilourise(self.id,
-                                                                        Colours.SNAPSHOT_DELETE)))
+                Util.printf("now in headless state",
+                            prefix=self.stack.name, colour=Colours.OK)
 
         # Re-allocate parent references from all other snapshots:
         new_parent = self.parent()
