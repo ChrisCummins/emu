@@ -607,6 +607,9 @@ class SnapshotID:
     def __eq__(self, other):
         return self.id == other.id and self.stack_name == other.stack_name
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 ##############################################
 # Utility static class with helper functions #
