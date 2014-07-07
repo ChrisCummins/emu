@@ -194,17 +194,27 @@ class Stack:
         return snapshots
 
 
-    # head() - Return the current stack head
+    # head() - Get/Set the current stack head
     #
     # Returns the snapshot pointed to by the HEAD file, or None if
-    # headless.
-    def head(self):
-        head = Util.read(self.path + "/.emu/HEAD")
+    # headless. If 'head' is provided, set this snapshot to be the new
+    # head.
+    def head(self, head=None, dry_run=False, error=True):
         if head:
-            id = SnapshotID(self.name, head)
-            return Util.get_snapshot_by_id(id, self.snapshots())
+            # Set new value of head:
+            if not dry_run:
+                Util.write(self.path + "/.emu/HEAD", head.id.id + "\n",
+                           error=error)
+            Util.printf("HEAD at {0}".format(head.id.id),
+                        prefix=self.name, colour=Colours.OK)
         else:
-            return None
+            # Get current head:
+            pointer = Util.read(self.path + "/.emu/HEAD", error=error)
+            if pointer:
+                id = SnapshotID(self.name, pointer)
+                return Util.get_snapshot_by_id(id, self.snapshots())
+            else:
+                return None
 
 
     # config() - Return the stack's configuration, or individual properties
