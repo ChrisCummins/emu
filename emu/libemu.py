@@ -419,30 +419,30 @@ class Snapshot:
         stack.lock.lock(force=force, verbose=verbose)
 
         # If current snapshot is HEAD, then set parent HEAD:
-        head = self.stack.head()
+        head = stack.head()
         if head and head.id == self.id:
             new_head = head.parent()
 
             # Remove old "Most Recent Backup" link:
-            Util.rm(self.stack.path + "/Most Recent Backup",
+            Util.rm(stack.path + "/Most Recent Backup",
                     verbose=verbose)
 
             if new_head:
                 # Create new HEAD and "Most Recent Backup" link:
-                Util.write(self.stack.path + "/.emu/HEAD",
+                Util.write(stack.path + "/.emu/HEAD",
                            new_head.id.id + "\n")
                 Util.ln_s(new_head.tree, most_recent_link,
                           error=True, verbose=verbose)
                 Util.printf("HEAD at {0}".format(new_head.id),
-                            prefix=self.stack.name, colour=Colours.OK)
+                            prefix=stack.name, colour=Colours.OK)
             else:
-                Util.write(self.stack.path + "/.emu/HEAD", "")
+                Util.write(stack.path + "/.emu/HEAD", "")
                 Util.printf("now in headless state",
-                            prefix=self.stack.name, colour=Colours.OK)
+                            prefix=stack.name, colour=Colours.OK)
 
         # Re-allocate parent references from all other snapshots:
         new_parent = self.parent()
-        for snapshot in self.stack.snapshots():
+        for snapshot in stack.snapshots():
             parent = snapshot.parent()
             if parent and parent.id == self.id:
                 if new_parent:
@@ -451,10 +451,10 @@ class Snapshot:
                     snapshot.parent(delete=True)
 
         # Delete snapshot files:
-        Util.rm(self.stack.path + "/" + self.name,
+        Util.rm(stack.path + "/" + self.name,
                 must_exist=True, error=True, verbose=verbose)
         Util.rm(self.tree, must_exist=True, error=True, verbose=verbose)
-        Util.rm("{0}/.emu/nodes/{1}".format(self.stack.path, self.id.id),
+        Util.rm("{0}/.emu/nodes/{1}".format(stack.path, self.id.id),
                 must_exist=True, error=True, verbose=verbose)
 
         stack.lock.unlock(force=force, verbose=verbose)
