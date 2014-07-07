@@ -405,8 +405,8 @@ class Snapshot:
 
 
     def destroy(self, dry_run=False, force=False, verbose=False):
-        Util.printf("destroying snapshot {0}".format(Util.colourise(self.name,
-                                                                    Colours.SNAPSHOT_DELETE)),
+        Util.printf("removing snapshot {0}".format(Util.colourise(self.name,
+                                                                  Colours.SNAPSHOT_DELETE)),
                     prefix=self.stack.name, colour=Colours.OK)
 
         most_recent_link = self.stack.path + "/Most Recent Backup"
