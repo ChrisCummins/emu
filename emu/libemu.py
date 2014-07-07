@@ -404,16 +404,19 @@ class Snapshot:
                 return None
 
 
-    def destroy(self, dry_run=False, verbose=False):
+    def destroy(self, dry_run=False, force=False, verbose=False):
         Util.printf("destroying snapshot {0}".format(Util.colourise(self.name,
                                                                     Colours.SNAPSHOT_DELETE)),
                     prefix=self.stack.name, colour=Colours.OK)
 
         most_recent_link = self.stack.path + "/Most Recent Backup"
+        stack = self.stack
 
         # We don't actually need to modify anything on a dry run:
         if dry_run:
             return
+
+        stack.lock.lock(force=force, verbose=verbose)
 
         # If current snapshot is HEAD, then set parent HEAD:
         head = self.stack.head()
@@ -453,6 +456,8 @@ class Snapshot:
         Util.rm(self.tree, must_exist=True, error=True, verbose=verbose)
         Util.rm("{0}/.emu/nodes/{1}".format(self.stack.path, self.id.id),
                 must_exist=True, error=True, verbose=verbose)
+
+        stack.lock.unlock(force=force, verbose=verbose)
 
     def __str__(self):
         return str(self.id)
