@@ -4,6 +4,7 @@ bin_SCRIPTS = 				\
 	emu-clean			\
 	emu-init			\
 	emu-log				\
+	emu-prune			\
 	emu-push			\
 	emu-stack			\
 	emu-status			\

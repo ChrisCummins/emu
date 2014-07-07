@@ -1,0 +1,47 @@
+.TH emu-prune @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
+.SH NAME
+emu\-prune \- Remove snapshots from stacks
+.SH SYNOPSIS
+.B emu prune [<options>] <stack>:<snapshot> ...
+.SH DESCRIPTION
+Deletes one or more snapshots from their stacks, permanently erasing
+any files contained within them. If a snapshot is the head of the
+stack, then the head is reallocated to the snapshot's parent, if there
+is one.
+.PP
+The format for specifying snapshots is in the form
+<stack>:<snapshot>. The <snapshot> value is the 40 digit snapshot ID,
+and can be obtained from 'emu log'.
+.SH OPTIONS
+.TP
+\-S <dir> \-\-source-dir <dir>
+Specify the directory to use as the source. Defaults to `.'.
+.TP
+\-v \-\-verbose
+Increase verbosity.
+.TP
+\-\-version
+Show version information and quit.
+.TP
+\-h \-\-help
+Show this help and quit.
+.SH EXAMPLES
+.TP
+Delete the head of stack `origin':
+emu prune origin:HEAD
+.TP
+Delete a specific snapshot by ID:
+emu prune origin:53b1e624ccedee864cbba76563522be43360ded5
+.TP
+Delete the three most recent snapshots:
+emu prune origin:HEAD origin:HEAD~ origin:HEAD~2
+.SH EMU
+Part of the
+.B emu
+(1)
+suite
+.SH AUTHOR
+Chris Cummins <chrisc.101@gmail.com>
+.SH SEE ALSO
+.B emu
+(1)

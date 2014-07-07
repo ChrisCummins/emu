@@ -20,6 +20,7 @@ see
           init          create emu sources
           log           show stack snapshot logs
           stack         manage stacks
+          prune         remove snapshots from stacks
           push          record source snapshots
           status        show status status
           verify        verify the contents of snapshots

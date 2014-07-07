@@ -172,6 +172,7 @@ AS_IF([test "x$enable_man_pages" = xyes],
               Documentation/man/emu-log.man
               Documentation/man/emu.man
               Documentation/man/emu-init.man
+              Documentation/man/emu-prune.man
               Documentation/man/emu-push.man
               Documentation/man/emu-stack.man
               Documentation/man/emu-clean.man

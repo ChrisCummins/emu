@@ -5,6 +5,7 @@ emu-init
 emu-log
 emu-peek
 emu-pop
+emu-prune
 emu-push
 emu
 emu-stack
