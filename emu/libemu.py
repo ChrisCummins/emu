@@ -515,7 +515,7 @@ class Snapshot:
                    error=err_cb, verbose=verbose)
 
         checksum = Util.checksum(transfer_dest)
-        date = time.gmtime()
+        date = time.localtime()
         id = SnapshotID(stack.name, "{0:x}".format(calendar.timegm(date)) + checksum)
         name = "{0}-{1:02d}-{2:02d} {3:02d}.{4:02d}.{5:02d}".format(date.tm_year,
                                                                     date.tm_mon,
