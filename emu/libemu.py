@@ -437,11 +437,15 @@ class Snapshot:
                     Util.printf("unset HEAD {0}".format(Util.coilourise(self.id,
                                                                         Colours.SNAPSHOT_DELETE)))
 
-        # Remove parent references from all other snapshots
+        # Re-allocate parent references from all other snapshots:
+        new_parent = self.parent()
         for snapshot in self.stack.snapshots():
             parent = snapshot.parent()
             if parent and parent.id == self.id:
-                snapshot.parent(delete=True)
+                if new_parent:
+                    snapshot.parent(parent=new_parent)
+                else:
+                    snapshot.parent(delete=True)
 
         # Delete snapshot files:
         Util.rm(self.stack.path + "/" + self.name,
