@@ -1,0 +1,48 @@
+.TH emu-squash @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
+.SH NAME
+emu\-squash \- Squash stack into single snapshot
+.SH SYNOPSIS
+.B emu squash [<options>] <stack>:<snapshot>
+.SH DESCRIPTION
+Deletes every snapshot from a stack except the given argument,
+reducing the stack to a single snapshot.
+.PP
+The format for specifying the snapshot to preserve is in the form
+<stack>:<snapshot>. The <snapshot> value is the 40 digit snapshot ID,
+and can be obtained from 'emu log'.
+.SH OPTIONS
+.TP
+\-d \-\-dry-run
+Perform a trial run with no changes made.
+.TP
+\-f \-\-force
+Force squash the stack, ignoring any concurrency locks on the stack.
+.TP
+\-S <dir> \-\-source-dir <dir>
+Specify the directory to use as the source. Defaults to `.'.
+.TP
+\-v \-\-verbose
+Increase verbosity.
+.TP
+\-\-version
+Show version information and quit.
+.TP
+\-h \-\-help
+Show this help and quit.
+.SH EXAMPLES
+.TP
+Squash the stack `origin', leaving only the most recent snapshot:
+emu squash origin:HEAD
+.TP
+Squash the stack into a specific snapshot:
+emu squash origin:53b1e624ccedee864cbba76563522be43360ded5
+.SH EMU
+Part of the
+.B emu
+(1)
+suite
+.SH AUTHOR
+Chris Cummins <chrisc.101@gmail.com>
+.SH SEE ALSO
+.B emu
+(1)

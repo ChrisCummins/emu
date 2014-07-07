@@ -6,6 +6,7 @@ bin_SCRIPTS = 				\
 	emu-log				\
 	emu-prune			\
 	emu-push			\
+	emu-squash			\
 	emu-stack			\
 	emu-status			\
 	emu-verify			\

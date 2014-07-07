@@ -8,6 +8,7 @@ emu-pop
 emu-prune
 emu-push
 emu
+emu-squash
 emu-stack
 emu-status
 emu-verify

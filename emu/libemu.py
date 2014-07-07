@@ -464,10 +464,10 @@ class Snapshot:
 
             if new_head:
                 # Update head:
-                stack.head(head=new_head, dry_run=dry_run, verbose=verbose)
+                stack.head(head=new_head, dry_run=dry_run)
             else:
                 # Remove head:
-                stack.head(delete=true, dry_run=dry_run, verbose=verbose)
+                stack.head(delete=true, dry_run=dry_run)
 
         # Re-allocate parent references from all other snapshots:
         new_parent = self.parent()
