@@ -308,8 +308,97 @@ class Stack:
         return 0
 
 
+    # destroy() - Remove a stack from source
+    #
+    # Note that this only removes the stack pointer from the source,
+    # it does not modify the stack.
+    def destroy(self, force=False, verbose=False):
+        source = self.source
+
+        source.lock.lock(force=force, verbose=verbose)
+        self.lock.lock(force=force, verbose=verbose)
+
+        # Delete stack pointer:
+        Util.rm("{0}/.emu/stacks/{1}".format(source.path, self.name),
+                must_exist=True, error=True, verbose=verbose)
+
+        print "Removed stack {0}".format(Util.colourise(self.name,
+                                                        Colours.RED))
+
+        self.lock.unlock(force=force, verbose=verbose)
+        source.lock.unlock(force=force, verbose=verbose)
+
+
     def __str__(self):
         return "{0}  {1}".format(self.name, self.path)
+
+
+    # create() - Create a new stack
+    #
+    # Creates the directory structure and files for an emu stack, and
+    # returns an instance.
+    @staticmethod
+    def create(source, name, path, template_dir, verbose=False, force=False):
+
+        # Tidy up in case of error:
+        def err_cb(e):
+            if e:
+                print e
+            try:
+                Util.rm(emu_dir, verbose=False)
+            except Exception:
+                pass
+            try:
+                source.lock.unlock(force=force, verbose=False)
+            except Exception:
+                pass
+            sys.exit(1)
+
+        # Check that stack directory exists:
+        Util.exists(path, error=err_cb)
+        Util.writable(path, error=err_cb)
+
+        # Resolve relative paths:
+        path = os.path.abspath(path)
+
+        # Check that there isn't already an identical stack:
+        for stack in source.stacks():
+            if stack.name == name:
+                err_cb("A stack named {0} "
+                       "already exists!".format(Util.colourise(name,
+                                                               Colours.ERROR)))
+            if stack.path == path:
+                err_cb("Stack {0} is "
+                       "already at '{1}'!".format(Util.colourise(stack.name,
+                                                                 Colours.ERROR),
+                                                  path))
+
+        source.lock.lock(force=force, verbose=verbose)
+
+        # Create directory structure:
+        emu_dir = path + "/.emu"
+        directories = ["/", "/trees", "/nodes"]
+        for d in directories:
+            Util.mkdir(emu_dir + d, mode=0700, verbose=verbose, error=err_cb)
+
+        # Copy template files:
+        Util.rsync(template_dir + "/", emu_dir + "/", error=err_cb,
+                   archive=True, verbose=verbose, quiet=not verbose,
+                   update=force)
+
+        # Create HEAD:
+        Util.write(emu_dir + "/HEAD", "", error=err_cb)
+
+        # Create pointer:
+        Util.write("{0}/.emu/stacks/{1}".format(source.path, name),
+                   path + "\n", error=err_cb)
+
+        source.lock.unlock(force=force, verbose=verbose)
+
+        print ("Initialised stack {0} "
+               "at '{1}'").format(Util.colourise(name, Colours.INFO), path)
+
+        return Stack(name, source)
 
 
 #########################
