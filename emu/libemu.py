@@ -207,7 +207,14 @@ class Stack:
         most_recent_link = self.path + "/Most Recent Backup"
 
         if head:
-            if not dry_run:
+            old_head = self.head()
+            change_head = not old_head or old_head.id != head.id
+
+            # Only change HEAD if it is different from current head:
+            if not change_head:
+                return
+
+            if not dry_run and change_head:
                 # Write new pointer to HEAD:
                 Util.write(head_pointer, head.id.id + "\n",
                            error=error)
@@ -229,7 +236,7 @@ class Stack:
                         prefix=self.name, colour=Colours.OK)
         else:
             # Get current head:
-            pointer = Util.read(self.path + "/.emu/HEAD", error=error)
+            pointer = Util.read(head_pointer, error=error)
             if pointer:
                 id = SnapshotID(self.name, pointer)
                 return Util.get_snapshot_by_id(id, self.snapshots())
