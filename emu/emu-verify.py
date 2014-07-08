@@ -39,6 +39,9 @@ def main(argv, argc):
     snapshots = parser.parse_snapshots(Source(options.source_dir))
     status = 0
 
+    # Reverse so that newest is first
+    snapshots.reverse()
+
     for snapshot in snapshots:
         if snapshot.verify():
             print snapshot, Util.colourise("ok", Colours.OK)
