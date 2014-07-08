@@ -34,6 +34,8 @@ from libemu import Source
 
 def main(argv, argc):
     parser = EmuParser()
+    parser.add_option("-m", "--merge", action="store_true",
+                      dest="merge", default=False)
     parser.add_option("-d", "--dry-run", action="store_true",
                       dest="dry_run", default=False)
     parser.add_option("-f", "--force", action="store_true",
@@ -47,8 +49,12 @@ def main(argv, argc):
                                       require=True)[0]
     stack = snapshot.stack
 
-    stack.squash(snapshot, dry_run=options.dry_run,
-                 force=options.force, verbose=options.verbose)
+    if options.merge:
+        stack.merge(dry_run=options.dry_run, force=options.force,
+                    verbose=options.verbose)
+    else:
+        stack.squash(snapshot, dry_run=options.dry_run,
+                     force=options.force, verbose=options.verbose)
 
     return 0
 

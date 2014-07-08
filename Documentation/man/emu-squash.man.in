@@ -13,6 +13,9 @@ The format for specifying the snapshot to preserve is in the form
 and can be obtained from 'emu log'.
 .SH OPTIONS
 .TP
+\-m \-\-merge
+Merge every snapshot in the stack together into a new snapshot.
+.TP
 \-d \-\-dry-run
 Perform a trial run with no changes made.
 .TP

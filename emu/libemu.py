@@ -321,6 +321,13 @@ class Stack:
     # squash() - Delete every snapshot except 'snapshot'
     #
     def squash(self, snapshot, dry_run=False, force=False, verbose=False):
+        no_of_snapshots = len(self.snapshots())
+
+        # Return if we have nothing to do:
+        if no_of_snapshots < 2:
+            Util.printf("nothing to squash",
+                        prefix=self.name, colour=Colours.OK)
+            return
 
         for other in self.snapshots():
             if other.id != snapshot.id:
@@ -329,6 +336,46 @@ class Stack:
         # Set new HEAD:
         if not dry_run:
             self.head(head=snapshot, dry_run=dry_run)
+
+
+    # merge() - Merge every snapshot into a single new snapshot
+    #
+    def merge(self, dry_run=False, force=False, verbose=False):
+        no_of_snapshots = len(self.snapshots())
+
+        # Return if we have nothing to do:
+        if no_of_snapshots < 2:
+            Util.printf("nothing to merge",
+                        prefix=self.name, colour=Colours.OK)
+            return
+
+        # Merge all snapshots into staging area:
+        for snapshot in self.snapshots():
+            link_dests = []
+            for other in self.snapshots():
+                if other.id != snapshot.id:
+                    link_dests.append(other.tree)
+
+            Util.printf("merging snapshot {0}"
+                        .format(Util.colourise(snapshot.name,
+                                               Colours.SNAPSHOT_NEW)),
+                        prefix=self.name, colour=Colours.OK)
+            Util.rsync(snapshot.tree + "/", self.path + "/.emu/trees/new",
+                       dry_run=dry_run, link_dest=link_dests,
+                       error=True, verbose=verbose, quiet=not verbose)
+
+        # Check that merge was successful:
+        Util.exists(self.path + "/.emu/trees/new", error=True)
+        Util.printf("merged {0} snapshots".format(no_of_snapshots),
+                    prefix=self.name, colour=Colours.OK)
+
+        # Then destroy all of the merged snapshots:
+        for snapshot in self.snapshots():
+            snapshot.destroy(dry_run=dry_run, force=force, verbose=verbose)
+
+        # Now create a snapshot from merging tree:
+        Snapshot.create(self, resume=True, force=force,
+                        dry_run=dry_run, verbose=verbose)
 
 
     # destroy() - Remove a stack from source
@@ -572,7 +619,7 @@ class Snapshot:
                 stack.head(head=new_head, dry_run=dry_run)
             else:
                 # Remove head:
-                stack.head(delete=true, dry_run=dry_run)
+                stack.head(delete=True, dry_run=dry_run)
 
         # Re-allocate parent references from all other snapshots:
         new_parent = self.parent()
@@ -601,9 +648,11 @@ class Snapshot:
     # create() - Create a new snapshot
     #
     # If 'force' is True, ignore locks. If 'dry_run' is True, don't
-    # make any actual changes.
+    # make any actual changes. If 'resume' is True then don't perform
+    # the file transfer from source to staging area.
     @staticmethod
-    def create(stack, force=False, dry_run=False, verbose=False):
+    def create(stack, resume=False, transfer_from_source=True, force=False,
+               dry_run=False, verbose=False):
 
         # If two snapshots are created in the same second and with the
         # same checksum, then their IDs will be identical. To prevent
@@ -667,7 +716,7 @@ class Snapshot:
             sys.exit(1)
 
         source = stack.source
-        transfer_dest = stack.path + "/.emu/trees/new"
+        staging_area = stack.path + "/.emu/trees/new"
         exclude = ["/.emu"]
         exclude_from = [source.path + "/.emu/excludes"]
         link_dests = []
@@ -675,21 +724,26 @@ class Snapshot:
         source.lock.lock(force=force, verbose=verbose)
         stack.lock.lock(force=force, verbose=verbose)
 
-        # Use all snapshots as link destinations:
-        for snapshot in stack.snapshots():
-            link_dests.append(snapshot.tree)
+        if not resume:
+            # Use all snapshots as link destinations:
+            for snapshot in stack.snapshots():
+                link_dests.append(snapshot.tree)
 
-        # Perform file transfer:
-        Util.rsync(source.path + "/", transfer_dest,
-                   dry_run=dry_run, link_dest=link_dests,
-                   exclude=exclude, exclude_from=exclude_from,
-                   delete=True, delete_excluded=True,
-                   error=err_cb, verbose=verbose)
+            # Perform file transfer:
+            Util.rsync(source.path + "/", staging_area,
+                       dry_run=dry_run, link_dest=link_dests,
+                       exclude=exclude, exclude_from=exclude_from,
+                       delete=True, delete_excluded=True,
+                       error=err_cb, verbose=verbose)
+
+        # Assert that we have a staging area to work with:
+        if not dry_run:
+            Util.readable(staging_area, error=err_cb)
 
         if dry_run:
             checksum = "0" * 32
         else:
-            checksum = Util.checksum(transfer_dest)
+            checksum = Util.checksum(staging_area)
 
         (id, date) = _get_unique_id(checksum)
         name = ("{0}-{1:02d}-{2:02d} {3:02d}.{4:02d}.{5:02d}"
@@ -700,7 +754,7 @@ class Snapshot:
 
         if not dry_run:
             # Move tree into position
-            Util.mv(transfer_dest, tree,
+            Util.mv(staging_area, tree,
                     verbose=verbose, must_exist=True, error=err_cb)
 
             # Make name symlink:
