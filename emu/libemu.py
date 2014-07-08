@@ -297,16 +297,6 @@ class Stack:
                 sys.exit(1)
 
 
-    # size() - Get the stack's size
-    #
-    def size(self):
-        try:
-            return self._du
-        except AttributeError:
-            self._du = Libemu.du(self.path)
-            return self.size()
-
-
     def push(self, force=False, dry_run=False, verbose=False):
 
         # Remove old snapshots first:
