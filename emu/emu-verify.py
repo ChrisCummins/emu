@@ -29,8 +29,7 @@ import os
 
 # Resolve and import Libemu
 sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
-from libemu import EmuParser
-from libemu import Source
+from libemu import EmuParser, Source, Colours, Util
 
 
 def main(argv, argc):
@@ -42,10 +41,10 @@ def main(argv, argc):
 
     for snapshot in snapshots:
         if snapshot.verify():
-            print snapshot, "ok"
+            print snapshot, Util.colourise("ok", Colours.OK)
         else:
             status = 2
-            print snapshot, "bad"
+            print snapshot, Util.colourise("bad", Colours.ERROR)
 
     return status
 
