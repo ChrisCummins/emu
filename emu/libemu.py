@@ -149,6 +149,8 @@ class Source:
             Util.rm(source_dir, verbose=verbose)
             raise SourceCreateError(source_dir)
 
+        Util.exists(path, error=err_cb)
+
         # Create directory structure
         source_dir = path + "/.emu"
         directories = ["/", "/hooks", "/stacks"]
@@ -755,7 +757,7 @@ class Util:
     #
     # Version information:
     #
-    version = { "major": 0, "minor": 1, "micro": 4 }
+    version = { "major": 0, "minor": 1, "micro": 5 }
     version_string = "{0}.{1}.{2}".format(version["major"],
                                           version["minor"],
                                           version["micro"])
