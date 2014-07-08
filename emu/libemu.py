@@ -100,14 +100,10 @@ class Source:
                        verbose=verbose)
 
         # Set new HEAD:
-        stack.head(head=snapshot, dry_run=dry_run,
-                   error=err_cb, verbose=verbose)
+        stack.head(head=snapshot, dry_run=dry_run, error=err_cb)
 
         stack.lock.unlock(force=force, verbose=verbose)
         self.lock.unlock(force=force, verbose=verbose)
-
-        Util.printf("HEAD at {0}".format(snapshot.id),
-                    prefix=stack.name, colour=Colours.OK)
 
         print ("Source restored from {0}"
                .format(Util.colourise(snapshot.name, Colours.SNAPSHOT_NEW)))
@@ -576,6 +572,7 @@ class Snapshot:
                 must_exist=True, error=True, verbose=verbose)
 
         stack.lock.unlock(force=force, verbose=verbose)
+
 
     def __str__(self):
         return str(self.id)
