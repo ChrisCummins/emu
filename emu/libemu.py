@@ -704,7 +704,8 @@ class Snapshot:
 
         if not dry_run:
             # Get snapshot size:
-            size = Libemu.run("du", "-h", "-s", tree).split()[0]
+            command = "du --summarize --human-readable '{0}'".format(tree)
+            size = subprocess.check_output(command, shell=True).split()[0]
 
             # Create node:
             node_path = "{0}/.emu/nodes/{1}".format(stack.path, id.id)
