@@ -214,7 +214,8 @@ class Stack:
                 # Create new "Most Recent Backup" link
                 if Util.exists(most_recent_link):
                     Util.rm(most_recent_link, error=error)
-                Util.ln_s(head.name, most_recent_link)
+                Util.ln_s("{0}/{1}".format(self.path, head.name),
+                          most_recent_link, error=error)
 
             Util.printf("HEAD at {0}".format(head.id.id),
                         prefix=self.name, colour=Colours.OK)
