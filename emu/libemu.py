@@ -318,6 +318,18 @@ class Stack:
 
         return 0
 
+    # squash() - Delete every snapshot except 'snapshot'
+    #
+    def squash(self, snapshot, dry_run=False, force=False, verbose=False):
+
+        for other in self.snapshots():
+            if other.id != snapshot.id:
+                other.destroy(dry_run=dry_run, force=force, verbose=verbose)
+
+        # Set new HEAD:
+        if not dry_run:
+            self.head(head=snapshot, dry_run=dry_run)
+
 
     # destroy() - Remove a stack from source
     #

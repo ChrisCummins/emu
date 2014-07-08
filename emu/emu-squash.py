@@ -40,22 +40,15 @@ def main(argv, argc):
                       dest="force", default=False)
     (options, args) = parser.parse_args()
     source = Source(options.source_dir)
-    target = parser.parse_snapshots(source,
-                                    accept_stack_names=False,
-                                    accept_no_args=False,
-                                    single_arg=True,
-                                    require=True)[0]
-    stack = target.stack
+    snapshot = parser.parse_snapshots(source,
+                                      accept_stack_names=False,
+                                      accept_no_args=False,
+                                      single_arg=True,
+                                      require=True)[0]
+    stack = snapshot.stack
 
-    # Delete all other snapshots:
-    for snapshot in stack.snapshots():
-        if snapshot.id != target.id:
-            snapshot.destroy(dry_run=options.dry_run,
-                             force=options.force,
-                             verbose=options.verbose)
-
-    # Set new HEAD:
-    stack.head(head=target, dry_run=options.dry_run)
+    stack.squash(snapshot, dry_run=options.dry_run,
+                 force=options.force, verbose=options.verbose)
 
     return 0
 
