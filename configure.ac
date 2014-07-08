@@ -167,17 +167,17 @@ dnl 6. Generate files
 dnl ================================================================
 AS_IF([test "x$enable_man_pages" = xyes],
       [AC_CONFIG_FILES([
-              Documentation/man/emu-checkout.man
-              Documentation/man/emu-status.man
-              Documentation/man/emu-log.man
-              Documentation/man/emu.man
-              Documentation/man/emu-init.man
-              Documentation/man/emu-prune.man
-              Documentation/man/emu-push.man
-              Documentation/man/emu-squash.man
-              Documentation/man/emu-stack.man
-              Documentation/man/emu-clean.man
-              Documentation/man/emu-verify.man])],)
+              man/emu-checkout.man
+              man/emu-status.man
+              man/emu-log.man
+              man/emu.man
+              man/emu-init.man
+              man/emu-prune.man
+              man/emu-push.man
+              man/emu-squash.man
+              man/emu-stack.man
+              man/emu-clean.man
+              man/emu-verify.man])],)
 
 
 AS_IF([test "x$enable_tests" = xyes],
@@ -236,8 +236,7 @@ AC_CONFIG_FILES([
         Makefile
         emu/Makefile
         emu/libemu.sh
-        Documentation/Makefile
-        Documentation/man/Makefile
+        man/Makefile
         templates/Makefile])
 
 
