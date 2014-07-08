@@ -31,11 +31,7 @@ from sys import exit
 
 # Resolve and import Libemu
 sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
-from libemu import EmuParser
-from libemu import Libemu
-from libemu import Util, Colours
-from libemu import Source
-from libemu import SourceCreateError
+from libemu import EmuParser, Util, Colours, Source
 
 def main(argv, argc):
     parser = EmuParser()
@@ -44,8 +40,6 @@ def main(argv, argc):
     parser.add_option("-s", "--short-log", action="store_true", dest="short",
                       default=False)
     (options, args) = parser.parse_args()
-
-    Libemu.die_if_not_source(options.source_dir)
 
     snapshots = parser.parse_snapshots(Source(options.source_dir))
 

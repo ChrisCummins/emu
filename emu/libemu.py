@@ -1643,25 +1643,3 @@ class LockfileError(Exception):
             string += "It looks like the process is no longer running.\n"
         string += "\nTo ignore this lock and overwrite, use option '--force'."
         return string
-
-
-###############
-# Legacy code #
-###############
-class Libemu:
-    @staticmethod
-    def run(*args):
-        proc = subprocess.Popen(args, stdout=subprocess.PIPE)
-        out = []
-        for line in proc.stdout:
-            out.append(line)
-
-        return "\n".join(out)
-
-
-    @staticmethod
-    def die_if_not_source(path):
-        if not (os.path.isdir(path + "/.emu") and
-                Util.exists(path + "/.emu/config")):
-            print "No emu source found!"
-            sys.exit(1)
