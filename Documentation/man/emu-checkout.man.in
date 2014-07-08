@@ -2,7 +2,8 @@
 .SH NAME
 emu\-checkout \- restore source from snapshot
 .SH SYNOPSIS
-.B emu checkout [<options>] <stack>:<snapshot>
+.B emu checkout
+[<options>] <stack>:<snapshot>
 .SH DESCRIPTION
 Restores the contents of a snapshot to the source directory, setting a
 new stack HEAD.

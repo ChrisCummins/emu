@@ -2,7 +2,8 @@
 .SH NAME
 emu\-squash \- Squash stack into single snapshot
 .SH SYNOPSIS
-.B emu squash [<options>] <stack>:<snapshot>
+.B emu squash
+[<options>] <stack>:<snapshot>
 .SH DESCRIPTION
 Deletes every snapshot from a stack except the given argument,
 reducing the stack to a single snapshot.

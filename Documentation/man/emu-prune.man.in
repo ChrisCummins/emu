@@ -2,7 +2,8 @@
 .SH NAME
 emu\-prune \- Remove snapshots from stacks
 .SH SYNOPSIS
-.B emu prune [<options>] <stack>:<snapshot> ...
+.B emu prune
+[<options>] <stack>:<snapshot> ...
 .SH DESCRIPTION
 Deletes one or more snapshots from their stacks, permanently erasing
 any files contained within them. If a snapshot is the head of the

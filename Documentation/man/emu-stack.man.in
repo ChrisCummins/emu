@@ -2,11 +2,14 @@
 .SH NAME
 emu\-stack \- manage set of emu stacks
 .SH SYNOPSIS
+.B emu stack
+[<options>]
 .sp
-.nf
-.B emu stack [<options>]
-.B emu stack [<options>] add <stack> <path>
-.B emu stack [<options>] rm <stack>
+.B emu stack
+[<options>] add <stack> <path>
+.sp
+.B emu stack
+[<options>] rm <stack>
 .SH DESCRIPTION
 With no arguments, show a list of existing stacks.
 .SH COMMANDS

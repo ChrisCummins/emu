@@ -2,7 +2,8 @@
 .SH NAME
 emu\-push \- record source snapshots
 .SH SYNOPSIS
-.B emu push [<options>] [<stack> ...]
+.B emu push
+[<options>] [<stack> ...]
 .SH DESCRIPTION
 Push a new snapshot of the source directory onto one or more
 stacks. If none are specified, push to all stacks.

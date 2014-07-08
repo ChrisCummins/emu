@@ -2,7 +2,8 @@
 .SH NAME
 emu\-init \- Create emu sources
 .SH SYNOPSIS
-.B emu init [<options>]
+.B emu init
+[<options>]
 .SH DESCRIPTION
 Creates an empty emu source, with a .emu directory with subdirectories
 for hooks, stack refs and the configuration file. The directories are

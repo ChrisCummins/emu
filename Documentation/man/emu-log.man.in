@@ -2,7 +2,8 @@
 .SH NAME
 emu\-log \- Show stack snapshot logs
 .SH SYNOPSIS
-.B emu log [<options>] [<stack>[:<snapshot>] ...]
+.B emu log
+[<options>] [<stack>[:<snapshot>] ...]
 .SH DESCRIPTION
 Show snapshot logs for one or more snapshots. If no arguments are
 given, show logs for snapshots across every stack.
