@@ -80,8 +80,8 @@ class Source:
             except Exception:
                 pass
 
-            Util.printf("Failed to checkout snapshot {0}!".format(Util.colourise(snapshot.id.id,
-                                                                                 Colours.GREEN)),
+            Util.printf("Failed to checkout snapshot {0}!"
+                        .format(Util.colourise(snapshot.id.id, Colours.GREEN)),
                         prefix=stack.name, colour=Colours.ERROR)
 
             sys.exit(1)
@@ -111,10 +111,10 @@ class Source:
         self.lock.unlock(force=force, verbose=verbose)
 
         Util.printf("HEAD at {0}".format(snapshot.id),
-                        prefix=stack.name, colour=Colours.OK)
+                    prefix=stack.name, colour=Colours.OK)
 
-        print "Source restored from {0}".format(Util.colourise(snapshot.name,
-                                                               Colours.SNAPSHOT_NEW))
+        print ("Source restored from {0}"
+               .format(Util.colourise(snapshot.name, Colours.SNAPSHOT_NEW)))
 
 
     # stacks() - Get a source's stacks
@@ -159,7 +159,8 @@ class Source:
 
         # Copy template files
         Util.rsync(template_dir + "/", source_dir + "/", error=err_cb,
-                   archive=True, verbose=verbose, quiet=not verbose, update=force)
+                   archive=True, verbose=verbose, quiet=not verbose,
+                   update=force)
 
         print "Initialised source at '{0}'".format(path)
 
@@ -302,14 +303,15 @@ class Stack:
         # Remove old snapshots first:
         i = len(self.snapshots())
         while i >= self.max_snapshots():
-            self.snapshots()[0].destroy(dry_run=dry_run, force=force, verbose=verbose)
+            self.snapshots()[0].destroy(dry_run=dry_run, force=force,
+                                        verbose=verbose)
             if dry_run:
                 i -= 1
             else:
                 i = len(self.snapshots())
 
-        Util.printf("pushing snapshot ({0} of {1})".format(len(self.snapshots()) + 1,
-                                                           self.max_snapshots()),
+        Util.printf("pushing snapshot ({0} of {1})"
+                    .format(len(self.snapshots()) + 1, self.max_snapshots()),
                     prefix=self.name, colour=Colours.OK)
         Snapshot.create(self, force=force, dry_run=dry_run,
                         verbose=verbose)
@@ -379,14 +381,12 @@ class Stack:
         # Check that there isn't already an identical stack:
         for stack in source.stacks():
             if stack.name == name:
-                err_cb("A stack named {0} "
-                       "already exists!".format(Util.colourise(name,
-                                                               Colours.ERROR)))
+                err_cb("A stack named {0} already exists!"
+                       .format(Util.colourise(name, Colours.ERROR)))
             if stack.path == path:
-                err_cb("Stack {0} is "
-                       "already at '{1}'!".format(Util.colourise(stack.name,
-                                                                 Colours.ERROR),
-                                                  path))
+                err_cb("Stack {0} is already at '{1}'!"
+                       .format(Util.colourise(stack.name, Colours.ERROR),
+                               path))
 
         source.lock.lock(force=force, verbose=verbose)
 
@@ -434,8 +434,10 @@ class Snapshot:
             sys.exit(1)
 
         # Sanity checks:
-        Util.readable("{0}/{1}".format(self.stack.path, self.name),             error=err_cb)
-        Util.readable("{0}/.emu/trees/{1}".format(self.stack.path, self.id.id), error=err_cb)
+        Util.readable("{0}/{1}".format(self.stack.path, self.name),
+                      error=err_cb)
+        Util.readable("{0}/.emu/trees/{1}".format(self.stack.path, self.id.id),
+                      error=err_cb)
 
 
     # verify() - Verify the contents of snapshot
@@ -470,8 +472,8 @@ class Snapshot:
                 node.read(path)
                 return node
             except:
-                print "Failed to read node file '{0}'".format(Util.colourise(path,
-                                                                             Colours.ERROR))
+                print ("Failed to read node file '{0}'"
+                       .format(Util.colourise(path, Colours.ERROR)))
                 sys.exit(1)
 
 
@@ -486,9 +488,11 @@ class Snapshot:
 
             if n > 0:
                 if parent:
-                    return parent.nth_child(n - 1, truncate=truncate, error=error)
+                    return parent.nth_child(n - 1, truncate=truncate,
+                                            error=error)
                 elif not truncate:
-                    id = SnapshotID(self.stack.name, self.id.id + Util.n_index_to_tilde(n))
+                    id = SnapshotID(self.stack.name,
+                                    self.id.id + Util.n_index_to_tilde(n))
                     raise SnapshotNotFoundError(id)
                 else:
                     return self
@@ -529,8 +533,8 @@ class Snapshot:
     # If 'dry_run' is True, don't make any actual changes. If 'force'
     # is True, ignore locks.
     def destroy(self, dry_run=False, force=False, verbose=False):
-        Util.printf("removing snapshot {0}".format(Util.colourise(self.name,
-                                                                  Colours.SNAPSHOT_DELETE)),
+        Util.printf("removing snapshot {0}"
+                    .format(Util.colourise(self.name, Colours.SNAPSHOT_DELETE)),
                     prefix=self.stack.name, colour=Colours.OK)
 
         most_recent_link = self.stack.path + "/Most Recent Backup"
@@ -594,7 +598,8 @@ class Snapshot:
         def _get_unique_id(checksum):
             # Generate an ID from date and checksum:
             date = time.localtime()
-            id = SnapshotID(stack.name, "{0:x}".format(calendar.timegm(date)) + checksum)
+            id = SnapshotID(stack.name,
+                            ("{0:x}".format(calendar.timegm(date)) + checksum))
             try:
                 # See if a snapshot with that ID already exists:
                 Util.get_snapshot_by_id(id, stack.snapshots())
@@ -674,12 +679,9 @@ class Snapshot:
             checksum = Util.checksum(transfer_dest)
 
         (id, date) = _get_unique_id(checksum)
-        name = "{0}-{1:02d}-{2:02d} {3:02d}.{4:02d}.{5:02d}".format(date.tm_year,
-                                                                    date.tm_mon,
-                                                                    date.tm_mday,
-                                                                    date.tm_hour,
-                                                                    date.tm_min,
-                                                                    date.tm_sec)
+        name = ("{0}-{1:02d}-{2:02d} {3:02d}.{4:02d}.{5:02d}"
+                .format(date.tm_year, date.tm_mon, date.tm_mday,
+                        date.tm_hour, date.tm_min, date.tm_sec))
         tree = stack.path + "/.emu/trees/" + id.id
         name_link = stack.path + "/" + name
 
@@ -705,11 +707,12 @@ class Snapshot:
             # Create node:
             node_path = "{0}/.emu/nodes/{1}".format(stack.path, id.id)
             node = ConfigParser()
+            date_format = "%A %B %d %H:%M:%S %Y"
             node.add_section("Node")
             node.set("Node", "snapshot", id.id)
             node.set("Node", "name",     name)
             node.set("Node", "parent",   head_id)
-            node.set("Node", "date",     time.strftime("%A %B %d %H:%M:%S %Y", date))
+            node.set("Node", "date",     time.strftime(date_format, date))
             node.set("Node", "source",   stack.source.path)
             node.set("Node", "stack",    id.stack_name)
             node.set("Node", "size",     size)
@@ -724,8 +727,8 @@ class Snapshot:
         source.lock.unlock(force=force, verbose=verbose)
         stack.lock.unlock(force=force, verbose=verbose)
 
-        Util.printf("new snapshot {0}".format(Util.colourise(name,
-                                                             Colours.SNAPSHOT_NEW)),
+        Util.printf("new snapshot {0}"
+                    .format(Util.colourise(name, Colours.SNAPSHOT_NEW)),
                     prefix=stack.name, colour=Colours.OK)
 
         if not dry_run:
@@ -769,8 +772,10 @@ class Util:
     #
     # Template paths:
     #
-    source_templates = os.path.abspath(sys.path[0] + "/../share/emu/templates/source-templates")
-    stack_templates = os.path.abspath(sys.path[0] + "/../share/emu/templates/stack-templates")
+    source_templates = os.path.abspath(sys.path[0] +
+                                       "/../share/emu/templates/source-templates")
+    stack_templates = os.path.abspath(sys.path[0] +
+                                      "/../share/emu/templates/stack-templates")
 
 
     # process_exists() - Check that a process is running
@@ -785,8 +790,8 @@ class Util:
             return True
         except Exception:
             if error and not exists:
-                e = "Process '{0}' not running!".format(Util.colourise(pid,
-                                                                       Colours.ERROR))
+                e = ("Process '{0}' not running!"
+                     .format(Util.colourise(pid, Colours.ERROR)))
                 if error:
                     if hasattr(error, '__call__'):
                         # Execute error callback if provided
@@ -830,7 +835,8 @@ class Util:
         Util.exists(path, error=error)
         read_permission = os.access(path, os.R_OK)
         if error and not read_permission:
-            e = "No read permissions for '{0}'!".format(Util.colourise(path, Colours.ERROR))
+            e = ("No read permissions for '{0}'!"
+                 .format(Util.colourise(path, Colours.ERROR)))
 
             if hasattr(error, '__call__'):
                 # Execute error callback if provided
@@ -852,7 +858,8 @@ class Util:
         Util.exists(path, error=error)
         write_permission = os.access(path, os.W_OK)
         if error and not write_permission:
-            e = "No write permissions for '{0}'!".format(Util.colourise(path, Colours.ERROR))
+            e = ("No write permissions for '{0}'!"
+                 .format(Util.colourise(path, Colours.ERROR)))
 
             if hasattr(error, '__call__'):
                 # Execute error callback if provided
@@ -899,7 +906,8 @@ class Util:
                     error(e)
                 elif error:
                     # Fatal error if required
-                    print "Failed to delete '{0}'.".format(Util.colourise(path, Colours.ERROR))
+                    print ("Failed to delete '{0}'."
+                           .format(Util.colourise(path, Colours.ERROR)))
                     sys.exit(1)
                 else:
                     return False
@@ -1013,7 +1021,8 @@ class Util:
                 os.makedirs(path, mode)
 
                 if verbose:
-                    print "Created directory '{0}' with mode 0{1:o}".format(path, mode)
+                    print ("Created directory '{0}' with mode 0{1:o}"
+                           .format(path, mode))
 
                 return True
             except Exception as e:
@@ -1054,10 +1063,9 @@ class Util:
             process.wait()
 
         if error and process.returncode:
-            e = "Process '{0}' exited with return value {1}.".format(Util.colourise(" ".join(args),
-                                                                                    Colours.ERROR),
-                                                                     Util.colourise(process.returncode,
-                                                                                    Colours.ERROR))
+            e = ("Process '{0}' exited with return value {1}."
+                 .format(Util.colourise(" ".join(args), Colours.ERROR),
+                         Util.colourise(process.returncode, Colours.ERROR)))
             # Error in operation:
             if hasattr(error, '__call__'):
                 # Execute error callback if provided
@@ -1162,8 +1170,8 @@ class Util:
                     error(e)
                 else:
                     # Else fatal error:
-                    print "Failed to read '{0}'".format(Util.colourise(path,
-                                                                       Colours.ERROR))
+                    print ("Failed to read '{0}'"
+                           .format(Util.colourise(path, Colours.ERROR)))
                     sys.exit(1)
             else:
                 raise e
@@ -1217,8 +1225,8 @@ class Util:
                     error(e)
                 else:
                     # Else fatal error:
-                    print "Failed to create checksum for '{0}'".format(Util.colourise(path,
-                                                                                      Colours.ERROR))
+                    print ("Failed to create checksum for '{0}'"
+                           .format(Util.colourise(path, Colours.ERROR)))
                     sys.exit(1)
             else:
                 raise e
