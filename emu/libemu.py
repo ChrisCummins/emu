@@ -469,25 +469,6 @@ class Snapshot:
                 sys.exit(1)
 
 
-    def log(self, short=False):
-        def full_log():
-            s =  "snapshot " + Util.colourise(self.id.id, Colours.SNAPSHOT) + "\n"
-            s += "Parent:  " + self.node("parent") + "\n"
-            s += "Name:    " + self.node("name") + "\n"
-            s += "Date:    " + self.node("date") + "\n"
-            s += "Size:    " + self.node("size") + "\n"
-            return s
-        def short_log():
-            s = "{0}  {1}".format(Util.colourise(self.id.id, Colours.SNAPSHOT),
-                                  self.node("name"))
-            return s
-
-        if short:
-            return short_log()
-        else:
-            return full_log()
-
-
     # nth_child() - Return the nth child of snapshot
     #
     # Traverse each snapshot's until we have travelled 'n' nodes from

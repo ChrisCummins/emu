@@ -75,7 +75,16 @@ def main(argv, argc):
             current_stack = snapshot.stack
             print Util.colourise("{0}:".format(current_stack.name),
                                  Colours.INFO)
-        print snapshot.log(short=options.short)
+        # Log:
+        id = Util.colourise(snapshot.id.id, Colours.SNAPSHOT)
+        if options.short:
+            print "{0}  {1}".format(id, snapshot.node("name"))
+        else:
+            print "snapshot {0}".format(id)
+            print "Parent:  {0}".format(snapshot.node("parent"))
+            print "Name:    {0}".format(snapshot.node("name"))
+            print "Date:    {0}".format(snapshot.node("date"))
+            print "Size:    {0}\n".format(snapshot.node("size"))
 
     # Flush pagination
     tmp_file.flush()
