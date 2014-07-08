@@ -33,6 +33,7 @@ from sys import exit
 sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
 from libemu import EmuParser
 from libemu import Libemu
+from libemu import Util, Colours
 from libemu import Source
 from libemu import SourceCreateError
 
@@ -45,10 +46,6 @@ def main(argv, argc):
     (options, args) = parser.parse_args()
 
     Libemu.die_if_not_source(options.source_dir)
-
-    if not len(args):
-        print "No stack specified!"
-        return 1
 
     snapshots = parser.parse_snapshots(Source(options.source_dir))
 
@@ -64,7 +61,20 @@ def main(argv, argc):
     # Reverse so that newest is first
     snapshots.reverse()
 
+    # Determine whether we need to print stack names or not:
+    print_stack_names = False
+    current_stack = snapshots[0].stack
     for snapshot in snapshots[:options.limit]:
+        if snapshot.stack != current_stack:
+            print_stack_names = True
+
+    # Print logs:
+    current_stack = None
+    for snapshot in snapshots[:options.limit]:
+        if print_stack_names and snapshot.stack != current_stack:
+            current_stack = snapshot.stack
+            print Util.colourise("{0}:".format(current_stack.name),
+                                 Colours.INFO)
         print snapshot.log(short=options.short)
 
     # Flush pagination

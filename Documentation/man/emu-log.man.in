@@ -2,9 +2,10 @@
 .SH NAME
 emu\-log \- Show stack snapshot logs
 .SH SYNOPSIS
-.B emu log [<options>] <stack>[:<snapshot>] ...
+.B emu log [<options>] [<stack>[:<snapshot>] ...]
 .SH DESCRIPTION
-Show snapshot logs for one or more snapshots.
+Show snapshot logs for one or more snapshots. If no arguments are
+given, show logs for snapshots across every stack.
 .SH OPTIONS
 .TP
 \-n <number> \-\-limit <number>
@@ -26,11 +27,11 @@ Show version information and quit.
 Show this help and quit.
 .SH EXAMPLES
 .TP
-Show log for stacks `origin' and `remote':
-emu log origin remote
+Show log for all stacks:
+emu log
 .TP
-Show only the most recent snapshot for stack `origin':
-emu log origin:HEAD
+Show only the most recent snapshots for stacks `origin' and `local':
+emu log origin:HEAD local:HEAD
 .TP
 Show a short log for the 10 most recent snapshots for stack `origin':
 emu log origin -s -n10
