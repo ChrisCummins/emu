@@ -367,6 +367,12 @@ class Stack:
         Util.exists(path, error=err_cb)
         Util.writable(path, error=err_cb)
 
+        regex = r"^[a-zA-Z]+$"
+        if not re.match(regex, name):
+            err_cb("Invalid stack name {0}!\n\n"
+                   "Stack names must consist solely of letters A-Z."
+                   .format(Util.colourise(name, Colours.ERROR)))
+
         # Resolve relative paths:
         path = os.path.abspath(path)
 
@@ -1529,8 +1535,10 @@ class EmuParser(OptionParser):
 
                 # Iterate over each arg, resolving to snapshot(s):
                 for arg in args:
-                    regex = (r"^(?P<stack>[^:]+)((:?)|(:((?P<id>[a-f0-9]{40})|"
-                             "(?P<head>HEAD))(?P<index>~([0-9]+)?)?))?$")
+                    regex = (r"^(?P<stack>[a-zA-Z]+)((:?)|"
+                             "(:((?P<id>[a-f0-9]{40})|"
+                             "(?P<head>HEAD))"
+                             "(?P<index>~([0-9]+)?)?))?$")
                     match = re.match(regex, arg)
 
                     if not match:
