@@ -1529,7 +1529,8 @@ class EmuParser(OptionParser):
 
                 # Iterate over each arg, resolving to snapshot(s):
                 for arg in args:
-                    regex = r"^(?P<stack>[^:]+)((:?)|(:((?P<id>[a-f0-9]{40})|(?P<head>HEAD))(?P<index>~([0-9]+)?)?))?$"
+                    regex = (r"^(?P<stack>[^:]+)((:?)|(:((?P<id>[a-f0-9]{40})|"
+                             "(?P<head>HEAD))(?P<index>~([0-9]+)?)?))?$")
                     match = re.match(regex, arg)
 
                     if not match:
@@ -1550,14 +1551,16 @@ class EmuParser(OptionParser):
 
                     if id_match:
                         # If there's an ID, then match it:
-                        snapshot = Util.get_snapshot_by_id(SnapshotID(stack_match, id_match),
-                                                           stack.snapshots())
-                        self._snapshots.append(snapshot.nth_child(n_index, error=True))
+                        id = SnapshotID(stack_match, id_match)
+                        snapshot = Util.get_snapshot_by_id(id, stack.snapshots())
+                        self._snapshots.append(snapshot.nth_child(n_index,
+                                                                  error=True))
                     elif head_match:
                         # Calculate the HEAD index and traverse:
                         head = stack.head()
                         if head:
-                            self._snapshots.append(head.nth_child(n_index, error=True))
+                            self._snapshots.append(head.nth_child(n_index,
+                                                                  error=True))
                     elif accept_stack_names:
                         # If there's no ID then match all snapshots
                         self._snapshots += stack.snapshots()
@@ -1600,32 +1603,33 @@ class InvalidSnapshotIDError(InvalidArgsError):
     def __init__(self, id):
         self.id = id
     def __str__(self):
-        return "Invalid snapshot identifier '{0}!'".format(Util.colourise(self.id,
-                                                                          Colours.ERROR))
+        return ("Invalid snapshot identifier '{0}!'"
+                .format(Util.colourise(self.id, Colours.ERROR)))
 
 
 class StackNotFoundError(Exception):
     def __init__(self, name):
         self.name = name
     def __str__(self):
-        return "Stack '{0}' not found!".format(Util.colourise(self.name,
-                                                              Colours.ERROR))
+        return ("Stack '{0}' not found!"
+                .format(Util.colourise(self.name, Colours.ERROR)))
 
 
 class SnapshotNotFoundError(Exception):
     def __init__(self, id):
         self.id = id
     def __str__(self):
-        return "Snapshot '{0}:{1}' not found!".format(self.id.stack_name,
-                                                      Util.colourise(self.id.id,
-                                                                    Colours.ERROR))
+        return ("Snapshot '{0}:{1}' not found!"
+                .format(self.id.stack_name,
+                        Util.colourise(self.id.id, Colours.ERROR)))
 
 
 class SourceCreateError(Exception):
     def __init__(self, source_dir):
         self.source_dir = source_dir
     def __str__(self):
-        return "Failed to create source at '{0}'!".format(self.source_dir)
+        return ("Failed to create source at '{0}'!"
+                .format(self.source_dir))
 
 
 class LockfileError(Exception):
@@ -1633,10 +1637,11 @@ class LockfileError(Exception):
         self.lock = lock
     def __str__(self):
         (pid, timestamp) = self.lock.read()
-        string = "Failed to modify lock '{0}'!\n".format(Util.colourise(self.lock.path,
-                                                                        Colours.ERROR))
-        string += "Lock was claimed by process {0} at {1}.\n".format(Util.colourise(pid, Colours.INFO),
-                                                                     Util.colourise(timestamp, Colours.INFO))
+        string = ("Failed to modify lock '{0}'!\n"
+                  .format(Util.colourise(self.lock.path, Colours.ERROR)))
+        string += ("Lock was claimed by process {0} at {1}.\n"
+                   .format(Util.colourise(pid, Colours.INFO),
+                           Util.colourise(timestamp, Colours.INFO)))
         if Util.process_exists(pid):
             string += "It looks like the process is still running."
         else:
