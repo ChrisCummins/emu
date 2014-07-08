@@ -181,7 +181,8 @@ class Stack:
 
         self.name = name
         self.source = source
-        self.path = Util.read("{0}/.emu/stacks/{1}".format(self.source.path, self.name),
+        self.path = Util.read("{0}/.emu/stacks/{1}".format(self.source.path,
+                                                           self.name),
                               error=err_cb)
         self.lock = Lockfile(self.path + "/.emu/LOCK")
 
@@ -207,7 +208,7 @@ class Stack:
     #
     # Returns the snapshot pointed to by the HEAD file, or None if
     # headless. If 'head' is provided, set this snapshot to be the new
-    # head.
+    # head. If 'delete' is True, it deletes the current head.
     def head(self, head=None, dry_run=False, delete=False, error=True):
         head_pointer = self.path + "/.emu/HEAD"
         most_recent_link = self.path + "/Most Recent Backup"
@@ -242,46 +243,62 @@ class Stack:
                 return None
 
 
-    # config() - Return the stack's configuration, or individual properties
+    # config() - Get/set stack configuration properties
     #
-    # If a 'section' and 'prop' are provided, then return that
-    # specific value. Else return the entire configuration.
-    def config(self, s=None, p=None):
+    # If 's', 'p', and 'v' are provided, set new value 'v' for
+    # property 'p' in section 's'. If 's' and 'p' are provided, then
+    # return that specific value. Else return the entire
+    # configuration.
+    def config(self, s=None, p=None, v=None):
+        path = self.path + "/.emu/config"
+
+        # Set new value for property:
+        if s and p and v:
+
+            config = self.config()
+            config.set(s, p, v)
+            with open(path, "wb") as config_file:
+                config.write(config_file)
+
+        # Get specific property:
         if s and p:
             try:
                 return self.config().get(s, p)
             except:
-                print "Error retrieving config property '{0}' in section '{1}'".format(Util.colourise(p,
-                                                                                                      Colours.ERROR),
-                                                                                       Util.colourise(s,
-                                                                                                      Colours.ERROR))
+                print ("Error retrieving config property '{0}' in section '{1}'"
+                       .format(Util.colourise(p, Colours.ERROR),
+                               Util.colourise(s, Colours.ERROR)))
                 sys.exit(1)
+
+        # Return config:
         else:
-            try:
-                return self._config
-            except AttributeError:
-                config = self.path + "/.emu/config"
-                Util.readable(config, error=True)
-                self._config = ConfigParser()
-                self._config.read(config)
-                return self._config
+            Util.readable(path, error=True)
+            config = ConfigParser()
+            config.read(path)
+            return config
 
 
-    # max_snapshots() - Return the max number of snapshots for a stack
+    # max_snapshots() - Get/Set the max number of snapshots for a stack
     #
-    def max_snapshots(self):
-        try:
-            return self._max_snapshots
-        except AttributeError:
+    def max_snapshots(self, n=None):
+        s = "Snapshots"
+        p = "Max Number"
+
+        if n:
+            # Set max snapshots:
+            self.config(s=s, p=p, n=n)
+        else:
+            # Get max snapshots:
             try:
-                self._max_snapshots = int(self.config(s="Snapshots", p="Max Number"))
-                return self.max_snapshots()
+                return int(self.config(s=s, p=p))
             except:
-                print "Couldn't interpret max number of snapshots '{0}'!".format(Util.colourise(self.config("Snapshots", "Max Number"),
-                                                                                                Colours.ERROR))
+                print ("Couldn't interpret max number of snapshots '{0}'!"
+                       .format(Util.colourise(self.config(s, p), Colours.ERROR)))
                 sys.exit(1)
 
 
+    # size() - Get the stack's size
+    #
     def size(self):
         try:
             return self._du
