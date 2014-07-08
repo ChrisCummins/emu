@@ -42,6 +42,10 @@ def main(argv, argc):
     # Reverse so that newest is first
     snapshots.reverse()
 
+    if not len(snapshots):
+        print "No snapshots to verify!"
+        status = 1
+
     for snapshot in snapshots:
         if snapshot.verify():
             print snapshot, Util.colourise("ok", Colours.OK)
