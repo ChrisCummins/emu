@@ -8,7 +8,6 @@ bin_SCRIPTS = 				\
 	emu-push			\
 	emu-squash			\
 	emu-stack			\
-	emu-status			\
 	emu-verify			\
 	$(NULL)
 
