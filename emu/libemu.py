@@ -1199,17 +1199,16 @@ class Util:
 
     # checksum() - Generate a checksum for a path
     #
-    # Create a checksum for a directory's contents by calculating the
-    # md5sum of a list of the directory contents and file modification
-    # times.
+    # Create a checksum for a directory's contents by calculating a
+    # truncated version of an sha1sum of a list of the directory
+    # contents and file modification times.
     @staticmethod
     def checksum(path, error=True):
         try:
             command = ("cd {0} && find . -type f "
                        "-printf '%T@ %p\n' 2>/dev/null | "
-                       "grep -v ' ./.emu/' | md5sum | "
-                       "awk '{{print $1}}'").format(path)
-            return subprocess.check_output(command, shell=True).rstrip()
+                       "grep -v ' ./.emu/' | sha1sum".format(path))
+            return subprocess.check_output(command, shell=True).split()[0][:32]
 
         except Exception as e:
             if error:
