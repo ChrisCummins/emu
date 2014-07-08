@@ -45,7 +45,7 @@ def main(argv, argc):
                                       single_arg=True)[0]
 
     source.checkout(snapshot, dry_run=options.dry_run,
-                    verbose=options.verbose)
+                    force=options.force, verbose=options.verbose)
 
     return 0
 
