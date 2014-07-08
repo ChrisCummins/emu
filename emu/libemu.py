@@ -518,6 +518,10 @@ class Snapshot:
                 return None
 
 
+    # destroy() - Destroy a snapshot
+    #
+    # If 'dry_run' is True, don't make any actual changes. If 'force'
+    # is True, ignore locks.
     def destroy(self, dry_run=False, force=False, verbose=False):
         Util.printf("removing snapshot {0}".format(Util.colourise(self.name,
                                                                   Colours.SNAPSHOT_DELETE)),
@@ -571,6 +575,10 @@ class Snapshot:
         return str(self.id)
 
 
+    # create() - Create a new snapshot
+    #
+    # If 'force' is True, ignore locks. If 'dry_run' is True, don't
+    # make any actual changes.
     @staticmethod
     def create(stack, force=False, dry_run=False, verbose=False):
 
@@ -1211,6 +1219,7 @@ class Util:
 
 
     # Look up a stack by name, or raise StackNotFoundError():
+    #
     @staticmethod
     def get_stack_by_name(name, stacks):
         for stack in stacks:
@@ -1221,6 +1230,7 @@ class Util:
 
 
     # Look up a snapshot by id, or raise SnapshotNotFoundError():
+    #
     @staticmethod
     def get_snapshot_by_id(id, snapshots):
         for snapshot in snapshots:
