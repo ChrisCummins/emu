@@ -15,8 +15,9 @@ ID, and can be obtained from 'emu log'. If omitted, all of the
 snapshots within a stack will be verified. If no snapshot or stack is
 specified, every stack will be verified.
 .PP
-The algorithm used to determine snapshot checksums computes the md5sum
-of the directory contents' file names and last modified time stamps.
+The algorithm used to determine snapshot checksums computes the
+sha1sum of the directory contents' file names and last modified time
+stamps.
 .SH OPTIONS
 .TP
 \-S <dir> \-\-source-dir <dir>

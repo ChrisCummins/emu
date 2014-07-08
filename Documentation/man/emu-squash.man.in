@@ -40,6 +40,9 @@ emu squash origin:HEAD
 .TP
 Squash the stack into a specific snapshot:
 emu squash origin:53b1e624ccedee864cbba76563522be43360ded5
+.TP
+Squash the stack `origin' into a new merge snapshot:
+emu squash origin:HEAD --merge
 .SH EMU
 Part of the
 .B emu
