@@ -59,10 +59,6 @@ class Source:
         Util.readable(self.path + "/.emu/stacks/",  error=err_cb)
 
 
-    def verify(self, error=True, verbose=False):
-        return 501
-
-
     # checkout() - Restore source to snapshot
     #
     # Transfer the contents of snapshot tree to source directory.
