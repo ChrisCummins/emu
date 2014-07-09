@@ -129,6 +129,16 @@ class Source:
                 sys.exit(1)
 
 
+    # clean() - Clean up the source
+    #
+    def clean(self, dry_run=False, verbose=False):
+        Util.rm(self.lock.path, dry_run=dry_run, verbose=True)
+
+
+    def __str__(self):
+        return self.path
+
+
     # create() - Create a new source
     #
     # Creates the directory structure and files for an emu source, and
