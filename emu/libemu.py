@@ -955,7 +955,8 @@ class Util:
     # 'must_exist' is True, then error if the file doesn't exist. This
     # function returns boolean on whether a file was deleted or not.
     @staticmethod
-    def rm(path, must_exist=False, error=False, verbose=False):
+    def rm(path, must_exist=False, error=False,
+           dry_run=False, verbose=False):
         exists = Util.exists(path, error=must_exist)
 
         if exists:
@@ -963,14 +964,17 @@ class Util:
 
             try:
                 if os.path.islink(path):
-                    os.unlink(path)
                     type = "link"
+                    if not dry_run:
+                        os.unlink(path)
                 elif os.path.isdir(path):
-                    shutil.rmtree(path)
                     type = "directory"
+                    if not dry_run:
+                        shutil.rmtree(path)
                 else:
-                    os.remove(path)
                     type = "file"
+                    if not dry_run:
+                        os.remove(path)
 
                 if verbose:
                     print "Deleted {0} '{1}'".format(type, path)
