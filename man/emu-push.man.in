@@ -38,6 +38,12 @@ Perform a trial run with no changes made.
 Force push the snapshot, ignoring any concurrency locks on the source
 or stack.
 .TP
+\-i \-\-ignore-errors
+Ignore errors in the file transfer stage. Errors in the file transfer
+stage can be caused by insufficient permissions to transfer file
+attributes. Using this argument causes the push to continue despite
+any such errros.
+.TP
 \-v \-\-verbose
 Increase verbosity.
 .TP
