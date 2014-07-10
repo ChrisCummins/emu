@@ -1065,31 +1065,22 @@ class Util:
     # fatally on error, or a callback function to execute.
     @staticmethod
     def ln_s(src, dst, error=False, verbose=False):
-        exists = Util.exists(src, error=error)
 
-        if exists:
-            try:
-                os.symlink(src, dst)
+        try:
+            os.symlink(src, dst)
 
-                if verbose:
-                    print "Link '{0}' -> '{1}'".format(src, dst)
+            if verbose:
+                print "Link '{0}' -> '{1}'".format(src, dst)
 
-                return True
-            except Exception as e:
-                # Error in operation:
-                if hasattr(error, '__call__'):
-                    # Execute error callback if provided
-                    error(e)
-                elif error:
-                    # Fatal error if required
-                    print "Failed to move '{0}' to '{1}'.".format(src, dst)
-                    sys.exit(1)
-                else:
-                    return False
-
-        # Source does not exist:
-        else:
-            return False
+        except Exception as e:
+            # Error in operation:
+            if hasattr(error, '__call__'):
+                # Execute error callback if provided
+                error(e)
+            elif error:
+                # Fatal error if required
+                print "Failed to move '{0}' to '{1}'.".format(src, dst)
+                sys.exit(1)
 
 
     # mkdir() - Create a directory and all required parents
