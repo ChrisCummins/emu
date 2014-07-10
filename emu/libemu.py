@@ -308,7 +308,8 @@ class Stack:
                 sys.exit(1)
 
 
-    def push(self, force=False, dry_run=False, verbose=False):
+    def push(self, force=False, ignore_errors=False,
+             dry_run=False, verbose=False):
 
         # Remove old snapshots first:
         i = len(self.snapshots())
@@ -323,8 +324,8 @@ class Stack:
         Util.printf("pushing snapshot ({0} of {1})"
                     .format(len(self.snapshots()) + 1, self.max_snapshots()),
                     prefix=self.name, colour=Colours.OK)
-        Snapshot.create(self, force=force, dry_run=dry_run,
-                        verbose=verbose)
+        Snapshot.create(self, force=force, ignore_errors=ignore_errors,
+                        dry_run=dry_run, verbose=verbose)
 
         return 0
 
@@ -662,7 +663,7 @@ class Snapshot:
     # the file transfer from source to staging area.
     @staticmethod
     def create(stack, resume=False, transfer_from_source=True, force=False,
-               dry_run=False, verbose=False):
+               ignore_errors=False, dry_run=False, verbose=False):
 
         # If two snapshots are created in the same second and with the
         # same checksum, then their IDs will be identical. To prevent
@@ -734,6 +735,12 @@ class Snapshot:
         source.lock.lock(force=force, verbose=verbose)
         stack.lock.lock(force=force, verbose=verbose)
 
+        # Ignore rsync errors if required:
+        if ignore_errors:
+            rsync_error = False
+        else:
+            rsync_error = err_cb
+
         if not resume:
             # Use all snapshots as link destinations:
             for snapshot in stack.snapshots():
@@ -744,7 +751,7 @@ class Snapshot:
                        dry_run=dry_run, link_dest=link_dests,
                        exclude=exclude, exclude_from=exclude_from,
                        delete=True, delete_excluded=True,
-                       error=err_cb, verbose=verbose)
+                       error=rsync_error, verbose=verbose)
 
         # Assert that we have a staging area to work with:
         if not dry_run:
@@ -840,7 +847,7 @@ class Util:
     #
     # Version information:
     #
-    version = { "major": 0, "minor": 1, "micro": 7 }
+    version = { "major": 0, "minor": 1, "micro": 8 }
     version_string = "{0}.{1}.{2}".format(version["major"],
                                           version["minor"],
                                           version["micro"])
