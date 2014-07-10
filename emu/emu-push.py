@@ -38,6 +38,8 @@ def main(argv, argc):
                       dest="dry_run", default=False)
     parser.add_option("-f", "--force", action="store_true",
                       dest="force", default=False)
+    parser.add_option("-i", "--ignore-errors", action="store_true",
+                      dest="ignore_errors", default=False)
     (options, args) = parser.parse_args()
 
     source = Source(options.source_dir)
@@ -45,6 +47,7 @@ def main(argv, argc):
     status = 0
     for stack in parser.parse_stacks(source):
         status ^= stack.push(force=options.force,
+                             ignore_errors=options.ignore_errors,
                              dry_run=options.dry_run,
                              verbose=options.verbose)
 
