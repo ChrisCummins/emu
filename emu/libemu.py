@@ -231,8 +231,7 @@ class Stack:
                 # Create new "Most Recent Backup" link
                 if Util.exists(most_recent_link):
                     Util.rm(most_recent_link, error=error)
-                Util.ln_s("{0}/{1}".format(self.path, head.name),
-                          most_recent_link, error=error)
+                Util.ln_s(head.name, most_recent_link, error=error)
 
             Util.printf("HEAD at {0}".format(head.id.id),
                         prefix=self.name, colour=Colours.OK)
@@ -775,7 +774,8 @@ class Snapshot:
                     verbose=verbose, must_exist=True, error=err_cb)
 
             # Make name symlink:
-            Util.ln_s(tree, name_link, verbose=verbose, error=err_cb)
+            Util.ln_s(".emu/trees/{0}".format(id.id),
+                      name_link, verbose=verbose, error=err_cb)
 
         # Get parent node ID:
         if stack.head():
