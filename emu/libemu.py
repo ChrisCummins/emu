@@ -409,6 +409,28 @@ class Stack:
         source.lock.unlock(force=force, verbose=verbose)
 
 
+    # clean() - Clean up the stack
+    #
+    def clean(self, dry_run=False, verbose=False):
+        Util.rm(self.lock.path, dry_run=dry_run, verbose=True)
+
+        # Delete broken symlinks in stack:
+        for f in Util.ls(self.path):
+            path = "{0}/{1}".format(self.path, f)
+            try:
+                if not os.path.exists(os.readlink(path)):
+                    print "Deleted broken symlink '{0}'".format(path)
+                    if not dry_run:
+                        os.unlink(path)
+            except Exception as e:
+                pass
+
+        # Delete orphan node files:
+        for f in Util.ls(self.path + "/.emu/nodes"):
+            path = "{0}/{1}".format(self.path + "/.emu/nodes", f)
+            print path
+
+
     def __str__(self):
         return "{0}  {1}".format(self.name, self.path)
 
@@ -854,7 +876,7 @@ class Util:
     #
     # Version information:
     #
-    version = { "major": 0, "minor": 1, "micro": 9 }
+    version = { "major": 0, "minor": 1, "micro": 10 }
     version_string = "{0}.{1}.{2}".format(version["major"],
                                           version["minor"],
                                           version["micro"])
