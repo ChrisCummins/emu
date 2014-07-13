@@ -37,6 +37,10 @@ def main(argv, argc):
                       dest="template_dir", default=Util.stack_templates)
     parser.add_option("-f", "--force", action="store_true", dest="force",
                       default=False)
+    parser.add_option("-i", "--ignore-errors", action="store_true",
+                      dest="ignore_errors", default=False)
+    parser.add_option("--no-archive", action="store_true",
+                      dest="no_archive", default=False)
     (options, args) = parser.parse_args()
 
     # Fail if no read/write permissions
@@ -82,6 +86,8 @@ def main(argv, argc):
                 sys.exit(1)
 
             Stack.create(source, name, path, options.template_dir,
+                         ignore_errors=options.ignore_errors,
+                         archive=not options.no_archive,
                          verbose=options.verbose, force=options.force)
 
         # Remove stacks:

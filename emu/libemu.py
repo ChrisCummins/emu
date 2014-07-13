@@ -418,7 +418,8 @@ class Stack:
     # Creates the directory structure and files for an emu stack, and
     # returns an instance.
     @staticmethod
-    def create(source, name, path, template_dir, verbose=False, force=False):
+    def create(source, name, path, template_dir, archive=True,
+               ignore_errors=False, verbose=False, force=False):
 
         # Tidy up in case of error:
         def err_cb(e):
@@ -465,9 +466,15 @@ class Stack:
         for d in directories:
             Util.mkdir(emu_dir + d, mode=0700, verbose=verbose, error=err_cb)
 
+        # Ignore rsync errors if required:
+        if ignore_errors:
+            rsync_error = False
+        else:
+            rsync_error = err_cb
+
         # Copy template files:
-        Util.rsync(template_dir + "/", emu_dir + "/", error=err_cb,
-                   archive=True, verbose=verbose, quiet=not verbose,
+        Util.rsync(template_dir + "/", emu_dir + "/", error=rsync_error,
+                   archive=archive, verbose=verbose, quiet=not verbose,
                    update=force)
 
         # Create HEAD:
@@ -662,7 +669,7 @@ class Snapshot:
     # the file transfer from source to staging area.
     @staticmethod
     def create(stack, resume=False, transfer_from_source=True, force=False,
-               ignore_errors=False, dry_run=False, verbose=False):
+               ignore_errors=False, archive=True, dry_run=False, verbose=False):
 
         # If two snapshots are created in the same second and with the
         # same checksum, then their IDs will be identical. To prevent
