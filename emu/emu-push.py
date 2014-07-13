@@ -40,6 +40,8 @@ def main(argv, argc):
                       dest="force", default=False)
     parser.add_option("-i", "--ignore-errors", action="store_true",
                       dest="ignore_errors", default=False)
+    parser.add_option("--no-archive", action="store_true",
+                      dest="no_archive", default=False)
     (options, args) = parser.parse_args()
 
     source = Source(options.source_dir)
@@ -48,6 +50,7 @@ def main(argv, argc):
     for stack in parser.parse_stacks(source):
         status ^= stack.push(force=options.force,
                              ignore_errors=options.ignore_errors,
+                             archive=not options.no_archive,
                              dry_run=options.dry_run,
                              verbose=options.verbose)
 

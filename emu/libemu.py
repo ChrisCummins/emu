@@ -307,7 +307,7 @@ class Stack:
                 sys.exit(1)
 
 
-    def push(self, force=False, ignore_errors=False,
+    def push(self, force=False, ignore_errors=False, archive=True,
              dry_run=False, verbose=False):
 
         # Remove old snapshots first:
@@ -324,7 +324,7 @@ class Stack:
                     .format(len(self.snapshots()) + 1, self.max_snapshots()),
                     prefix=self.name, colour=Colours.OK)
         Snapshot.create(self, force=force, ignore_errors=ignore_errors,
-                        dry_run=dry_run, verbose=verbose)
+                        archive=archive, dry_run=dry_run, verbose=verbose)
 
         return 0
 
@@ -746,7 +746,7 @@ class Snapshot:
                 link_dests.append(snapshot.tree)
 
             # Perform file transfer:
-            Util.rsync(source.path + "/", staging_area,
+            Util.rsync(source.path + "/", staging_area, archive=archive,
                        dry_run=dry_run, link_dest=link_dests,
                        exclude=exclude, exclude_from=exclude_from,
                        delete=True, delete_excluded=True,
@@ -1171,7 +1171,7 @@ class Util:
               stdout=None, stderr=None, args=None,
               error=False, verbose=False, quiet=False):
 
-        rsync_flags = ["rsync", "--human-readable"]
+        rsync_flags = ["rsync", "--human-readable", "--recursive"]
 
         if archive:
             rsync_flags.append("--archive")
