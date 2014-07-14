@@ -9,7 +9,6 @@ man_MANS =	 			\
 	emu-push.1			\
 	emu-squash.1			\
 	emu-stack.1			\
-	emu-status.1			\
 	emu-verify.1			\
 	$(NULL)
 

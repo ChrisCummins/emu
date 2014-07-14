@@ -168,7 +168,6 @@ dnl ================================================================
 AS_IF([test "x$enable_man_pages" = xyes],
       [AC_CONFIG_FILES([
               man/emu-checkout.man
-              man/emu-status.man
               man/emu-log.man
               man/emu.man
               man/emu-init.man
