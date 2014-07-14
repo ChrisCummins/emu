@@ -25,6 +25,10 @@
 # - /boot/*
 # - /initrd.img
 
+# Uncomment the following line to ignore cache files:
+# - /home/*/.cache/*
+# - /var/cache/*
+
 # Uncomment the following lines if you are not interested in
 # preserving binaries:
 # - /bin/*
@@ -46,9 +50,6 @@
 # - /home/*/.dropbox/*
 # - /home/*/.dropbox-master/*
 # - /home/*/Dropbox/*
-
-# Uncomment the following line to ignore local cache files:
-# - /home/*/.cache/*
 
 # The following lines contain application specific local cache and
 # configuration files which you may not be interested in preserving:
