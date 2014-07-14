@@ -44,6 +44,10 @@ stage can be caused by insufficient permissions to transfer file
 attributes. Using this argument causes the push to continue despite
 any such errros.
 .TP
+\-\-no-archive
+Do not preserve file attributes such as ownership and permission bits
+when creating the snapshot.
+.TP
 \-v \-\-verbose
 Increase verbosity.
 .TP
