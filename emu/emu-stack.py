@@ -25,6 +25,7 @@
 
 import os
 import sys
+import subprocess
 
 # Resolve and import Libemu
 sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
@@ -59,14 +60,15 @@ def main(argv, argc):
                 else:
                     head_id = ""
 
+                command = "df -h '{0}'".format(stack.path)
+                device = (subprocess.check_output(command, shell=True)
+                          .split("\n")[1].split()[0])
+
                 print "Location:        {0}".format(stack.path)
                 print "No of snapshots: {0}".format(len(snapshots))
                 print "Max snapshots:   {0}".format(stack.max_snapshots())
                 print "Head:            {0}".format(head_id)
-                sys.stdout.write("Device:          ")
-                sys.stdout.flush()
-                os.system("df -h '" + stack.path + "' | tail -n1 | awk '{{print $6}}'")
-                print
+                print "Device:          {0}".format(device)
 
     else:
         command = args.pop(0)
