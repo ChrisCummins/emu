@@ -308,7 +308,7 @@ class Stack:
 
 
     def push(self, force=False, ignore_errors=False, archive=True,
-             dry_run=False, verbose=False):
+             owner=False, dry_run=False, verbose=False):
 
         # Remove old snapshots first:
         i = len(self.snapshots())
@@ -324,7 +324,8 @@ class Stack:
                     .format(len(self.snapshots()) + 1, self.max_snapshots()),
                     prefix=self.name, colour=Colours.OK)
         Snapshot.create(self, force=force, ignore_errors=ignore_errors,
-                        archive=archive, dry_run=dry_run, verbose=verbose)
+                        archive=archive, owner=owner,
+                        dry_run=dry_run, verbose=verbose)
 
         return 0
 
@@ -691,7 +692,8 @@ class Snapshot:
     # the file transfer from source to staging area.
     @staticmethod
     def create(stack, resume=False, transfer_from_source=True, force=False,
-               ignore_errors=False, archive=True, dry_run=False, verbose=False):
+               ignore_errors=False, archive=True, owner=True,
+               dry_run=False, verbose=False):
 
         # If two snapshots are created in the same second and with the
         # same checksum, then their IDs will be identical. To prevent
@@ -775,7 +777,8 @@ class Snapshot:
                 link_dests.append(snapshot.tree)
 
             # Perform file transfer:
-            Util.rsync(source.path + "/", staging_area, archive=archive,
+            Util.rsync(source.path + "/", staging_area,
+                       archive=archive, owner=owner,
                        dry_run=dry_run, link_dest=link_dests,
                        exclude=exclude, exclude_from=exclude_from,
                        delete=True, delete_excluded=True,
@@ -1195,7 +1198,7 @@ class Util:
     @staticmethod
     def rsync(src, dst, archive=True, update=False,
               hard_links=True, keep_dirlinks=True, dry_run=False,
-              link_dest=None,
+              link_dest=None, owner=True,
               exclude=None, exclude_from=None,
               delete=False, delete_excluded=False, wait=True,
               stdout=None, stderr=None, args=None,
@@ -1205,6 +1208,9 @@ class Util:
 
         if archive:
             rsync_flags.append("--archive")
+
+        if not owner:
+            rsync_flags += ["--no-owner", "--no-group"]
 
         if update:
             rsync_flags.append("--update")

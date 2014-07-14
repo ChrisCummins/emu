@@ -42,6 +42,8 @@ def main(argv, argc):
                       dest="ignore_errors", default=False)
     parser.add_option("--no-archive", action="store_true",
                       dest="no_archive", default=False)
+    parser.add_option("--no-owner", action="store_true",
+                      dest="no_owner", default=False)
     (options, args) = parser.parse_args()
 
     source = Source(options.source_dir)
@@ -51,6 +53,7 @@ def main(argv, argc):
         status ^= stack.push(force=options.force,
                              ignore_errors=options.ignore_errors,
                              archive=not options.no_archive,
+                             owner=not options.no_owner,
                              dry_run=options.dry_run,
                              verbose=options.verbose)
 

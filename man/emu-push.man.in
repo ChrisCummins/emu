@@ -48,6 +48,10 @@ any such errros.
 Do not preserve file attributes such as ownership and permission bits
 when creating the snapshot.
 .TP
+\-\-no-owner
+Do not preserve file attributes such as ownership and permission bits
+when creating the snapshot.
+.TP
 \-v \-\-verbose
 Increase verbosity.
 .TP
