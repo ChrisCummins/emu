@@ -24,6 +24,7 @@
 #
 
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -74,11 +75,13 @@ def main(argv, argc):
         if options.short:
             print "{0}  {1}".format(id, snapshot.node("name"))
         else:
-            print "snapshot {0}".format(id)
-            print "Parent:  {0}".format(snapshot.node("parent"))
-            print "Name:    {0}".format(snapshot.node("name"))
-            print "Date:    {0}".format(snapshot.node("date"))
-            print "Size:    {0}\n".format(snapshot.node("size"))
+            node = dict(snapshot.node().items("Node"))
+
+            print "snapshot  {0}".format(id)
+            for prop in node:
+                if not re.match("(snapshot|path|source|stack)", prop):
+                    print "{:<9} {:<50}".format(prop.capitalize() + ":", node[prop])
+            print
 
     # Flush pagination
     tmp_file.flush()
