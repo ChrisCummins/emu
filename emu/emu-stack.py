@@ -63,10 +63,6 @@ def main(argv, argc):
                 print "No of snapshots: {0}".format(len(snapshots))
                 print "Max snapshots:   {0}".format(stack.max_snapshots())
                 print "Head:            {0}".format(head_id)
-                sys.stdout.write("Size:            ")
-                sys.stdout.flush()
-                os.system("du -sh '" + stack.path + "' | awk '{{print $1}}'")
-
                 sys.stdout.write("Device:          ")
                 sys.stdout.flush()
                 os.system("df -h '" + stack.path + "' | tail -n1 | awk '{{print $6}}'")
