@@ -91,7 +91,7 @@ def main(argv, argc):
                          verbose=options.verbose, force=options.force)
 
         # Remove stacks:
-        if command == "rm":
+        elif command == "rm":
             if len(args) == 1:
                 try:
                     name = args[0]
@@ -103,6 +103,10 @@ def main(argv, argc):
             else:
                 print "Usage: rm <name>"
                 sys.exit(1)
+
+        else:
+            print "Invalid command. See: emu stack --help"
+            sys.exit(1)
 
     return 0
 
