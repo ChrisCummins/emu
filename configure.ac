@@ -57,7 +57,7 @@ dnl 1. Project versions (i.e. the package version)
 dnl ================================================================
 m4_define([emu_major_version],[0])
 m4_define([emu_minor_version],[1])
-m4_define([emu_micro_version],[10])
+m4_define([emu_micro_version],[11])
 m4_define([emu_version],[emu_major_version.emu_minor_version.emu_micro_version])
 
 
