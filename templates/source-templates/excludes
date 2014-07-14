@@ -23,6 +23,7 @@
 
 # Uncomment the following line to ignore the boot loader:
 # - /boot/*
+# - /initrd.img
 
 # Uncomment the following lines if you are not interested in
 # preserving binaries:
