@@ -65,7 +65,10 @@ def main(argv, argc):
 
     # Print logs:
     current_stack = None
+    no_of_snapshots = len(snapshots[:options.limit])
+    i = 0
     for snapshot in snapshots[:options.limit]:
+        i += 1
         if print_stack_names and snapshot.stack != current_stack:
             current_stack = snapshot.stack
             print Util.colourise("{0}:".format(current_stack.name),
@@ -81,7 +84,8 @@ def main(argv, argc):
             for prop in node:
                 if not re.match("(snapshot|path|source|stack)", prop):
                     print "{:<9} {:<50}".format(prop.capitalize() + ":", node[prop])
-            print
+            if i < no_of_snapshots:
+                print
 
     # Flush pagination
     tmp_file.flush()
