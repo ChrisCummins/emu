@@ -1326,7 +1326,7 @@ class Util:
         try:
             command = ("cd {0} && find . -type f "
                        "-printf '%T@ %p\n' 2>/dev/null | "
-                       "grep -v ' ./.emu/' | sha1sum".format(path))
+                       "grep -v './.emu/' | sha1sum".format(path))
             return subprocess.check_output(command, shell=True).split()[0][:32]
 
         except Exception as e:
