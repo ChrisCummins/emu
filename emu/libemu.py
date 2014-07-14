@@ -826,8 +826,8 @@ class Snapshot:
             date_format = "%A %B %d %H:%M:%S %Y"
             node.add_section("Node")
             node.set("Node", "snapshot", id.id)
-            node.set("Node", "name",     name)
             node.set("Node", "parent",   head_id)
+            node.set("Node", "name",     name)
             node.set("Node", "date",     time.strftime(date_format, date))
             node.set("Node", "source",   stack.source.path)
             node.set("Node", "stack",    id.stack_name)
