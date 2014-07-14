@@ -832,6 +832,7 @@ class Snapshot:
             node.set("Node", "date",     time.strftime(date_format, date))
             node.set("Node", "source",   stack.source.path)
             node.set("Node", "stack",    id.stack_name)
+            node.set("Node", "path",     stack.path)
             node.set("Node", "size",     size)
             node.set("Node", "checksum", "sha1sum")
             node.set("Node", "version",  Util.version_string)
