@@ -25,7 +25,6 @@
 
 import os
 import sys
-from sys import exit
 
 # Resolve and import Libemu
 sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
@@ -113,4 +112,4 @@ def main(argv, argc):
 if __name__ == "__main__":
     argv = sys.argv[1:]
     ret = main(argv, len(argv))
-    exit(ret)
+    sys.exit(ret)
