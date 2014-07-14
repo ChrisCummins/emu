@@ -832,6 +832,8 @@ class Snapshot:
             node.set("Node", "source",   stack.source.path)
             node.set("Node", "stack",    id.stack_name)
             node.set("Node", "size",     size)
+            node.set("Node", "checksum", "sha1sum")
+            node.set("Node", "version",  Util.version_string)
             with open(node_path, "wb") as node_file:
                 node.write(node_file)
 
