@@ -30,6 +30,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import getpass
 from ConfigParser import ConfigParser
 from optparse import OptionParser
 from datetime import datetime
@@ -834,6 +835,8 @@ class Snapshot:
             node.set("Node", "size",     size)
             node.set("Node", "checksum", "sha1sum")
             node.set("Node", "version",  Util.version_string)
+            node.set("Node", "user",     getpass.getuser())
+            node.set("Node", "uid",      os.getuid())
             with open(node_path, "wb") as node_file:
                 node.write(node_file)
 
