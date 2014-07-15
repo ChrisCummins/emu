@@ -544,7 +544,7 @@ class Snapshot:
     #
     # Verify the checksum by computing it again and comparing.
     def verify(self):
-        return Util.checksum(self.tree) == self.id.checksum
+        return Checksum(self.tree).get() == self.id.checksum
 
 
     # node() - Fetch snapshot node data from file
@@ -792,7 +792,14 @@ class Snapshot:
         if dry_run:
             checksum = "0" * 32
         else:
-            checksum = Util.checksum(staging_area)
+            # Create worker threads to compute the snapshot checksum
+            # and disk usage:
+            checksum_t = Checksum(staging_area)
+            du_t = DiskUsage(staging_area)
+
+            # Blocking:
+            checksum = checksum_t.get()
+            size = du_t.get()
 
         (id, date) = _get_unique_id(checksum)
         name = ("{0}-{1:02d}-{2:02d} {3:02d}.{4:02d}.{5:02d}"
@@ -817,10 +824,6 @@ class Snapshot:
             head_id = ""
 
         if not dry_run:
-            # Get snapshot size:
-            command = "du --summarize --human-readable '{0}'".format(tree)
-            size = subprocess.check_output(command, shell=True).split()[0]
-
             # Create node:
             node_path = "{0}/.emu/nodes/{1}".format(stack.path, id.id)
             node = ConfigParser()
@@ -1328,33 +1331,6 @@ class Util:
                 raise e
 
 
-    # checksum() - Generate a checksum for a path
-    #
-    # Create a checksum for a directory's contents by calculating a
-    # truncated version of an sha1sum of a list of the directory
-    # contents and file modification times.
-    @staticmethod
-    def checksum(path, error=True):
-        try:
-            command = ("cd {0} && "
-                       "find . -type f -printf '%T@ %p\n' 2>/dev/null | "
-                       "sha1sum".format(path))
-            return subprocess.check_output(command, shell=True).split()[0][:32]
-
-        except Exception as e:
-            if error:
-                if hasattr(error, '__call__'):
-                    # Execute error callback if provided:
-                    error(e)
-                else:
-                    # Else fatal error:
-                    print ("Failed to create checksum for '{0}'"
-                           .format(Util.colourise(path, Colours.ERROR)))
-                    sys.exit(1)
-            else:
-                raise e
-
-
     # Look up a stack by name, or raise StackNotFoundError():
     #
     @staticmethod
@@ -1726,6 +1702,62 @@ class EmuParser(OptionParser):
                         sys.exit(1)
                 else:
                     raise e
+
+
+##################
+# Worker threads #
+##################
+class Checksum():
+
+    def __init__(self, path):
+        # Record the starting working directory:
+        cwd = os.getcwd()
+
+        # Set working directory to path:
+        os.chdir(path)
+
+        # Create a /dev/null pipe:
+        with open(os.devnull, 'w') as devnull:
+
+            # Create processes
+            self.p1 = subprocess.Popen(["find", ".", "-type", "f",
+                                        "-printf", "'%T@ %p\n'"],
+                                       stdout=subprocess.PIPE,
+                                       stderr=devnull)
+            self.p2 = subprocess.Popen(["sha1sum"],
+                                       stdin=self.p1.stdout,
+                                       stdout=subprocess.PIPE)
+
+        # Return to previous working directory:
+        os.chdir(cwd)
+
+
+    # get() - Return the path checksum
+    #
+    def get(self):
+        (stdout, stderr) = self.p2.communicate()
+        return stdout.split()[0][:32]
+
+
+class DiskUsage():
+
+    def __init__(self, path):
+
+        # Create a /dev/null pipe:
+        with open(os.devnull, 'w') as devnull:
+
+            # Create processes
+            self.p1 = subprocess.Popen(["du", "--summarize",
+                                        "--human-readable", path],
+                                       stdout=subprocess.PIPE,
+                                       stderr=devnull)
+
+
+    # get() - Return the disk size
+    #
+    def get(self):
+        (stdout, stderr) = self.p1.communicate()
+        return stdout.split()[0]
 
 
 ###############
