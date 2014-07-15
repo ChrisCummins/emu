@@ -795,8 +795,8 @@ class Snapshot:
         else:
             # Create worker threads to compute the snapshot checksum
             # and disk usage:
-            checksum_t = Checksum(staging_area)
-            du_t = DiskUsage(staging_area)
+            checksum_t = Checksum(staging_area, verbose=verbose)
+            du_t = DiskUsage(staging_area, verbose=verbose)
 
             # Blocking:
             checksum = checksum_t.get()
@@ -1710,7 +1710,12 @@ class EmuParser(OptionParser):
 ##################
 class Checksum():
 
-    def __init__(self, path):
+    def __init__(self, path, verbose=False):
+        self.verbose = verbose
+
+        if self.verbose:
+            print "Creating checksum worker thread..."
+
         # Record the starting working directory:
         cwd = os.getcwd()
 
@@ -1737,12 +1742,20 @@ class Checksum():
     #
     def get(self):
         (stdout, stderr) = self.p2.communicate()
+
+        if self.verbose:
+            print "Checksum worker thread complete."
+
         return stdout.split()[0][:32]
 
 
 class DiskUsage():
 
-    def __init__(self, path):
+    def __init__(self, path, verbose=False):
+        self.verbose = verbose
+
+        if self.verbose:
+            print "Creating disk usage worker thread..."
 
         # Create a /dev/null pipe:
         with open(os.devnull, 'w') as devnull:
@@ -1758,6 +1771,10 @@ class DiskUsage():
     #
     def get(self):
         (stdout, stderr) = self.p1.communicate()
+
+        if self.verbose:
+            print "Disk usage worker thread complete."
+
         return stdout.split()[0]
 
 
