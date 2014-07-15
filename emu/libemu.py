@@ -1712,6 +1712,7 @@ class Checksum():
 
     def __init__(self, path, verbose=False):
         self.verbose = verbose
+        self.start = time.time()
 
         if self.verbose:
             print "Creating checksum worker thread..."
@@ -1744,7 +1745,8 @@ class Checksum():
         (stdout, stderr) = self.p2.communicate()
 
         if self.verbose:
-            print "Checksum worker thread complete."
+            print ("Checksum worker thread complete in {0:.1f}s."
+                   .format(time.time() - self.start))
 
         return stdout.split()[0][:32]
 
@@ -1753,6 +1755,7 @@ class DiskUsage():
 
     def __init__(self, path, verbose=False):
         self.verbose = verbose
+        self.start = time.time()
 
         if self.verbose:
             print "Creating disk usage worker thread..."
@@ -1773,7 +1776,8 @@ class DiskUsage():
         (stdout, stderr) = self.p1.communicate()
 
         if self.verbose:
-            print "Disk usage worker thread complete."
+            print ("Disk usage worker thread complete in {0:.1f}s."
+                   .format(time.time() - self.start))
 
         return stdout.split()[0]
 
