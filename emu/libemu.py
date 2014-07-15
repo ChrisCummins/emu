@@ -364,7 +364,7 @@ class Stack:
         # Merge all snapshots into staging area:
         for snapshot in self.snapshots():
             link_dests = []
-            for other in self.snapshots():
+            for other in self.snapshots()[-20:]:
                 if other.id != snapshot.id:
                     link_dests.append(other.tree)
 
@@ -773,8 +773,9 @@ class Snapshot:
             rsync_error = err_cb
 
         if not resume:
-            # Use all snapshots as link destinations:
-            for snapshot in stack.snapshots():
+            # Use up to 20 of the most recent snapshots as link
+            # destinations:
+            for snapshot in stack.snapshots()[-20:]:
                 link_dests.append(snapshot.tree)
 
             # Perform file transfer:
