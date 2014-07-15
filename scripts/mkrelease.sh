@@ -2,7 +2,7 @@
 
 # Print program usage
 usage() {
-    echo "Usage: $0 <version>"
+    echo "Usage: $0 <major|minor|micro|<version-string>>"
 }
 
 # Lookup the root directory for the project. If unable to locate root,
@@ -53,9 +53,9 @@ get_micro() {
 get_current_version() {
     cd "$(get_project_root)"
 
-    local major=$(grep 'm4_define(\s*\[emu_major_version\]' configure.ac | sed -r 's/^.*([0-9]+).*$/\1/')
-    local minor=$(grep 'm4_define(\s*\[emu_minor_version\]' configure.ac | sed -r 's/^.*([0-9]+).*$/\1/')
-    local micro=$(grep 'm4_define(\s*\[emu_micro_version\]' configure.ac | sed -r 's/^.*([0-9]+).*$/\1/')
+    local major=$(grep 'm4_define(\s*\[emu_major_version\]' configure.ac | grep -oE '[0-9]+' | tail -n+2)
+    local minor=$(grep 'm4_define(\s*\[emu_minor_version\]' configure.ac | grep -oE '[0-9]+' | tail -n+2)
+    local micro=$(grep 'm4_define(\s*\[emu_micro_version\]' configure.ac | grep -oE '[0-9]+' | tail -n+2)
 
     echo "$major.$minor.$micro"
 }
@@ -160,12 +160,43 @@ main() {
         exit 1
     fi
 
+    if [ "$1" = "major" ]; then
+        local version="$(get_current_version)"
+        local major="$(get_major "$version")"
+        major=$((major+1))
+        local minor=0
+        local micro=0
+        version="$major.$minor.$micro"
+    fi
+
+    if [ "$1" = "minor" ]; then
+        local version="$(get_current_version)"
+        local major="$(get_major "$version")"
+        local minor="$(get_minor "$version")"
+        minor=$((minor+1))
+        local micro=0
+        version="$major.$minor.$micro"
+    fi
+
+    if [ "$1" = "micro" ]; then
+        local version="$(get_current_version)"
+        local major="$(get_major "$version")"
+        local minor="$(get_minor "$version")"
+        local micro="$(get_micro "$version")"
+        micro=$((micro+1))
+        version="$major.$minor.$micro"
+    fi
+
+    if [ -z "$version" ]; then
+        local version="$1"
+    fi
+
     # Sanity-check on supplied version string
-    if ! verify_version "$1"; then
+    if ! verify_version "$version"; then
         echo "Invalid version string!" >&2
         exit 1
     fi
 
-    do_mkrelease "$1"
+    do_mkrelease "$version"
 }
 main $@
