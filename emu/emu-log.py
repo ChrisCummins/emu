@@ -85,10 +85,11 @@ def main(argv, argc):
         else:
             node = dict(snapshot.node().items("Node"))
 
-            print "snapshot  {0}".format(id)
+            print "snapshot       {0}".format(id)
             for prop in node:
-                if not re.match("(snapshot|path|source|stack)", prop):
-                    print "{:<9} {:<50}".format(prop.capitalize() + ":", node[prop])
+                if not re.match("^(snapshot|path|source|stack)$", prop):
+                    print "{:<14} {:<50}".format(" ".join(prop.split("-")).capitalize() + ":",
+                                                 node[prop])
             if i < no_of_snapshots:
                 print
 
