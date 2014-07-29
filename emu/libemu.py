@@ -894,7 +894,7 @@ class Util:
     #
     # Version and copyright information:
     #
-    version = { "major": 0, "minor": 1, "micro": 19 }
+    version = { "major": 0, "minor": 1, "micro": 20 }
     version_string = "{0}.{1}.{2}".format(version["major"],
                                           version["minor"],
                                           version["micro"])
