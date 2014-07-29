@@ -890,13 +890,13 @@ class SnapshotID:
 class Util:
 
     #
-    # Version information:
+    # Version and copyright information:
     #
     version = { "major": 0, "minor": 1, "micro": 19 }
     version_string = "{0}.{1}.{2}".format(version["major"],
                                           version["minor"],
                                           version["micro"])
-
+    copyright = { "start": 2012, "end": 2014, "authors": ["Chris Cummins"]}
 
     #
     # Template paths:
@@ -1415,6 +1415,17 @@ class Util:
     @staticmethod
     def version_and_quit(*data):
         print "emu version", Util.version_string
+
+        # Assemble and print copyright string:
+        s = "Copyright (c) "
+        if Util.copyright["start"] != Util.copyright["end"]:
+            s += "{0}-{1}".format(Util.copyright["start"],
+                                  Util.copyright["end"])
+        else:
+            s += Util.copyright["end"]
+        s += " {0}".format(", ".join(Util.copyright["authors"]))
+        print s + "."
+
         sys.exit(0)
 
 
