@@ -31,7 +31,7 @@ import shutil
 import subprocess
 import sys
 import getpass
-from ConfigParser import ConfigParser
+import ConfigParser
 from optparse import OptionParser
 from datetime import datetime
 
@@ -284,7 +284,7 @@ class Stack:
         # Return config:
         else:
             Util.readable(path, error=True)
-            config = ConfigParser()
+            config = ConfigParser.ConfigParser()
             config.read(path)
             return config
 
@@ -571,7 +571,7 @@ class Snapshot:
         else:
 
             try:
-                node = ConfigParser()
+                node = ConfigParser.ConfigParser()
                 node.read(path)
                 return node
             except:
@@ -830,7 +830,7 @@ class Snapshot:
         if not dry_run:
             # Create node:
             node_path = "{0}/.emu/nodes/{1}".format(stack.path, id.id)
-            node = ConfigParser()
+            node = ConfigParser.ConfigParser()
             date_format = "%A %B %d %H:%M:%S %Y"
             node.add_section("Node")
             node.set("Node", "snapshot",      id.id)
