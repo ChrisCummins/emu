@@ -34,6 +34,13 @@ from sys import exit
 sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
 from libemu import EmuParser, Util, Colours, Source
 
+def print_dict(d):
+    for prop in d:
+        if not re.match("^(snapshot|path|source|stack)$", prop):
+            print ("{:<14} {:<50}"
+                   .format(" ".join(prop.split("-")).capitalize() + ":",
+                           d[prop]))
+
 def main(argv, argc):
     parser = EmuParser()
     parser.add_option("-n", "--limit", action="store", type="int",
@@ -83,13 +90,13 @@ def main(argv, argc):
         if options.short:
             print "{0}  {1}".format(id, snapshot.node("name"))
         else:
-            node = dict(snapshot.node().items("Node"))
+            node = snapshot.node()
 
             print "snapshot       {0}".format(id)
-            for prop in node:
-                if not re.match("^(snapshot|path|source|stack)$", prop):
-                    print "{:<14} {:<50}".format(" ".join(prop.split("-")).capitalize() + ":",
-                                                 node[prop])
+            print_dict(snapshot.node("Snapshot"))
+            if options.verbose:
+                print_dict(snapshot.node("Stack"))
+                print_dict(snapshot.node("Emu"))
             if i < no_of_snapshots:
                 print
 

@@ -528,7 +528,7 @@ class Snapshot:
         self.id = id
         self.tree = stack.path + "/.emu/trees/" + id.id
         self.stack = stack
-        self.name = self.node("name")
+        self.name = self.node("Snapshot", "name")
 
         def err_cb(e):
             print "Non-existent or malformed snapshot '{0}'".format(self.id)
@@ -552,21 +552,32 @@ class Snapshot:
 
     # node() - Fetch snapshot node data from file
     #
-    def node(self, p=None, v=None):
+    def node(self, s=None, p=None, v=None):
         path = "{0}/.emu/nodes/{1}".format(self.stack.path, self.id.id)
         Util.writable(path, error=True)
 
-        if p and v != None: # Set new value for property
+        if s and p and v != None: # Set new value for property
 
             node = self.node()
-            node.set("Node", p, v)
+            node.set(s, p, v)
             with open(path, "wb") as node_file:
                 node.write(node_file)
 
-        elif p:     # Get property value
+        elif s and p:     # Get property value
 
-            node = self.node()
-            return node.get("Node", p)
+            try:
+                node = self.node()
+                return node.get(s, p)
+            except ConfigParser.Error:
+                return None
+
+        elif s:
+
+            try:
+                node = self.node()
+                return dict(node.items(s))
+            except ConfigParser.Error:
+                return {}
 
         else:
 
@@ -619,11 +630,11 @@ class Snapshot:
     #
     def parent(self, parent=None, delete=False):
         if parent:
-            self.node(p="parent", v=parent.id.id)
+            self.node(s="Snapshot", p="parent", v=parent.id.id)
         elif delete:
-            self.node(p="parent", v="")
+            self.node(s="Snapshot", p="parent", v="")
         else:
-            parent_id = self.node(p="parent")
+            parent_id = self.node(s="Snapshot", p="parent")
 
             if parent_id:
                 return Snapshot(SnapshotID(self.stack.name, parent_id), self.stack)
@@ -832,21 +843,23 @@ class Snapshot:
             node_path = "{0}/.emu/nodes/{1}".format(stack.path, id.id)
             node = ConfigParser.ConfigParser()
             date_format = "%A %B %d %H:%M:%S %Y"
-            node.add_section("Node")
-            node.set("Node", "snapshot",      id.id)
-            node.set("Node", "parent",        head_id)
-            node.set("Node", "name",          name)
-            node.set("Node", "date",          time.strftime(date_format, date))
-            node.set("Node", "source",        stack.source.path)
-            node.set("Node", "stack",         id.stack_name)
-            node.set("Node", "path",          stack.path)
-            node.set("Node", "size",          size)
-            node.set("Node", "snapshot-no",   len(stack.snapshots()) + 1)
-            node.set("Node", "max-snapshots", stack.max_snapshots())
-            node.set("Node", "checksum",      "sha1sum")
-            node.set("Node", "emu-version",   Util.version_string)
-            node.set("Node", "user",          getpass.getuser())
-            node.set("Node", "uid",           os.getuid())
+            node.add_section("Snapshot")
+            node.set("Snapshot", "snapshot",      id.id)
+            node.set("Snapshot", "parent",        head_id)
+            node.set("Snapshot", "name",          name)
+            node.set("Snapshot", "date",          time.strftime(date_format, date))
+            node.set("Snapshot", "source",        stack.source.path)
+            node.set("Snapshot", "checksum",      "sha1sum")
+            node.set("Snapshot", "size",          size)
+            node.add_section("Stack")
+            node.set("Stack", "stack",         id.stack_name)
+            node.set("Stack", "path",          stack.path)
+            node.set("Stack", "snapshot-no",   len(stack.snapshots()) + 1)
+            node.set("Stack", "max-snapshots", stack.max_snapshots())
+            node.add_section("Emu")
+            node.set("Emu",   "emu-version",   Util.version_string)
+            node.set("Emu",   "user",          getpass.getuser())
+            node.set("Emu",   "uid",           os.getuid())
             with open(node_path, "wb") as node_file:
                 node.write(node_file)
 
