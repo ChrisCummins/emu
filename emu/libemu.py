@@ -459,6 +459,9 @@ class Stack:
                 pass
             sys.exit(1)
 
+        # Create stack directory if required:
+        Util.mkdir(path, verbose=verbose, error=err_cb)
+
         # Check that stack directory exists:
         Util.exists(path, error=err_cb)
         Util.writable(path, error=err_cb)
