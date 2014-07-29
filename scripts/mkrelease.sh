@@ -3,6 +3,9 @@
 # Print program usage
 usage() {
     echo "Usage: $0 <major|minor|micro|<version-string>>"
+    echo ""
+    echo "Create automated release bumps for major, minor, or micro versions, "
+    echo "or specify a new version string. Current version: $(get_current_version)."
 }
 
 # Lookup the root directory for the project. If unable to locate root,
