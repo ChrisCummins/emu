@@ -10,7 +10,9 @@ EOF
 }
 
 for arg in $@; do
-    if [ "$arg" == "--help" ]; then
+    if [ "$arg" == "--help" ] \
+        || [ "$arg" == "help" ] \
+        || [ "$arg" == "-h" ]; then
         print_help
         exit 0
     fi
