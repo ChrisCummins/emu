@@ -44,6 +44,11 @@ def main(argv, argc):
 
     snapshots = parser.parse_snapshots(Source(options.source_dir))
 
+    # We don't need to proceed if there are no snapshots:
+    if not len(snapshots):
+        print "No snapshots found."
+        return 0
+
     # Setup pagination
     tmp_path = tempfile.mkstemp()[1]
     tmp_file = open(tmp_path, 'a')
