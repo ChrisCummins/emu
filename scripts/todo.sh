@@ -3,11 +3,9 @@
 print_help ()
 {
     cat <<EOF
-Usage: ./scripts/todo.sh [directory ...]
+Usage: ./scripts/todo.sh
 
-Generate a list of all TODO, FIXME, and XXX tags in the current
-directory and its subdirectories, or in a list of directories if
-specified.
+Generate a list of all TODO, FIXME, and XXX tags in the repository.
 EOF
 }
 
@@ -18,14 +16,7 @@ for arg in $@; do
     fi
 done
 
-directories=$@
-
-test -z "$directories" && directories=.
-
-file_list=$(find $directories -type f \
-    | grep -v .git \
-    | grep -v Makefile \
-    | grep -v todo)
+file_list=$(git ls-files)
 
 tmp=".todo"
 while [ -f $tmp ]; do
