@@ -333,8 +333,8 @@ class Stack:
                     .format(len(self.snapshots()) + 1, self.max_snapshots()),
                     prefix=self.name, colour=Colours.OK)
         Snapshot.create(self, force=force, ignore_errors=ignore_errors,
-                        archive=archive, owner=owner,
-                        dry_run=dry_run, verbose=verbose)
+                        archive=archive, owner=owner, dry_run=dry_run,
+                        checksum_program="sha1sum", verbose=verbose)
 
         return 0
 
@@ -744,7 +744,7 @@ class Snapshot:
     @staticmethod
     def create(stack, resume=False, transfer_from_source=True, force=False,
                ignore_errors=False, archive=True, owner=True,
-               dry_run=False, verbose=False):
+               checksum_program="sha1sum", dry_run=False, verbose=False):
 
         # If two snapshots are created in the same second and with the
         # same checksum, then their IDs will be identical. To prevent
@@ -845,7 +845,8 @@ class Snapshot:
         else:
             # Create worker threads to compute the snapshot checksum
             # and disk usage:
-            checksum_t = Checksum(staging_area, verbose=verbose)
+            checksum_t = Checksum(staging_area, program=checksum_program,
+                                  verbose=verbose)
             du_t = DiskUsage(staging_area, verbose=verbose)
 
             # Blocking:
@@ -884,7 +885,7 @@ class Snapshot:
             node.set("Snapshot", "parent",        head_id)
             node.set("Snapshot", "name",          name)
             node.set("Snapshot", "date",          time.strftime(date_format, date))
-            node.set("Snapshot", "checksum",      "sha1sum")
+            node.set("Snapshot", "checksum",      checksum_program)
             node.set("Snapshot", "size",          size)
             node.add_section("Stack")
             node.set("Stack",    "source",        stack.source.path)
@@ -1790,7 +1791,7 @@ class EmuParser(OptionParser):
 ##################
 class Checksum():
 
-    def __init__(self, path, verbose=False):
+    def __init__(self, path, program="sha1sum", verbose=False):
         self.verbose = verbose
         self.start = time.time()
 
@@ -1811,9 +1812,14 @@ class Checksum():
                                         "-printf", "'%T@ %p\n'"],
                                        stdout=subprocess.PIPE,
                                        stderr=devnull)
-            self.p2 = subprocess.Popen(["sha1sum"],
-                                       stdin=self.p1.stdout,
-                                       stdout=subprocess.PIPE)
+            try:
+                self.p2 = subprocess.Popen([program],
+                                           stdin=self.p1.stdout,
+                                           stdout=subprocess.PIPE)
+            except OSError:
+                print ("Invalid checksum program '{0}'!"
+                       .format(Util.colourise(program, Colours.RED)))
+                sys.exit(1)
 
         # Return to previous working directory:
         os.chdir(cwd)
