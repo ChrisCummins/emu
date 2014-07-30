@@ -36,7 +36,7 @@ from libemu import EmuParser, Util, Colours, Source
 
 def print_dict(d):
     for prop in d:
-        if not re.match("^(snapshot|path|source|stack)$", prop):
+        if not re.match("^snapshot$", prop):
             print ("{:<14} {:<50}"
                    .format(" ".join(prop.split("-")).capitalize() + ":",
                            d[prop]))
