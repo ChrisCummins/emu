@@ -319,6 +319,9 @@ class Stack:
     def push(self, force=False, ignore_errors=False, archive=True,
              owner=False, dry_run=False, verbose=False):
 
+        # Get the checksum algorithm from the stack config:
+        checksum_program = self.config(s="Snapshots", p="checksum")
+
         # Remove old snapshots first:
         i = len(self.snapshots())
         while i >= self.max_snapshots():
@@ -334,7 +337,7 @@ class Stack:
                     prefix=self.name, colour=Colours.OK)
         Snapshot.create(self, force=force, ignore_errors=ignore_errors,
                         archive=archive, owner=owner, dry_run=dry_run,
-                        checksum_program="sha1sum", verbose=verbose)
+                        checksum_program=checksum_program, verbose=verbose)
 
         return 0
 
@@ -583,7 +586,12 @@ class Snapshot:
     #
     # Verify the checksum by computing it again and comparing.
     def verify(self):
-        return Checksum(self.tree).get() == self.id.checksum
+        # Get the checksum algorithm from the node:
+        program = self.node(s="Snapshot", p="checksum")
+        if not program:
+            program = "sha1sum"
+
+        return Checksum(self.tree, program=program).get() == self.id.checksum
 
 
     # node() - Fetch snapshot node data from file
@@ -1796,7 +1804,7 @@ class Checksum():
         self.start = time.time()
 
         if self.verbose:
-            print "Creating checksum worker thread..."
+            print "Creating {0} checksum worker thread...".format(program)
 
         # Record the starting working directory:
         cwd = os.getcwd()
