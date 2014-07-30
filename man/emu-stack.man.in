@@ -10,6 +10,9 @@ emu\-stack \- manage set of emu stacks
 .sp
 .B emu stack
 [<options>] rm <stack ...>
+.sp
+.B emu stack
+[<options>] clean <stack ...>
 .SH DESCRIPTION
 With no arguments, show a list of existing stacks.
 .SH COMMANDS
@@ -22,7 +25,15 @@ trees and nodes. Each stack <stack> must be unique.
 rm <stack ...>
 Removes named stacks from the source refs. This does not affect the
 stack structure and is non\-destructive.
+.TP
+clean <stack ...>
+Cleans named stacks, removing locks and orphaned files where appropriate. See
+.B emu-clean
+(1).
 .SH OPTIONS
+.TP
+\-d \-\-dry-run
+(clean only) Perform a trial run with no changes made.
 .TP
 \-S <dir> \-\-source-dir <dir>
 Specify the directory to use as an emu source. Defaults to `.'.

@@ -414,23 +414,51 @@ class Stack:
     # clean() - Clean up the stack
     #
     def clean(self, dry_run=False, verbose=False):
+        if verbose:
+            print ("Cleaning stack {0} at '{1}'..."
+                   .format(Util.colourise(self.name, Colours.BLUE), self.path))
+
         Util.rm(self.lock.path, dry_run=dry_run, verbose=True)
 
         # Delete broken symlinks in stack:
         for f in Util.ls(self.path):
             path = "{0}/{1}".format(self.path, f)
-            try:
-                if not os.path.exists(os.readlink(path)):
-                    print "Deleted broken symlink '{0}'".format(path)
-                    if not dry_run:
-                        os.unlink(path)
-            except Exception as e:
-                pass
 
-        # Delete orphan node files:
+            if os.path.islink(path):
+                try:
+                    # Compose absolute path of link destination:
+                    dst = "{0}/{1}".format(self.path, os.readlink(path))
+
+                    # Delete link if link destination doesn't exist:
+                    if not os.path.exists(dst):
+                        if not dry_run:
+                            os.unlink(path)
+                        print ("Deleted broken symlink '{0}'"
+                               .format(Util.colourise(path, Colours.RED)))
+                except Exception as e:
+                    pass
+
+        # Check for orphan node files:
+        trees = Util.ls(self.path + "/.emu/trees")
         for f in Util.ls(self.path + "/.emu/nodes"):
-            path = "{0}/{1}".format(self.path + "/.emu/nodes", f)
-            print path
+            if f not in trees:
+                path = "{0}/{1}".format(self.path + "/.emu/nodes", f)
+
+                if not dry_run:
+                    Util.rm(path, must_exist=True)
+                print ("Deleted orphan node file '{0}'"
+                       .format(Util.colourise(path, Colours.RED)))
+
+        # Check for orphan trees:
+        nodes = Util.ls(self.path + "/.emu/nodes")
+        for f in Util.ls(self.path + "/.emu/trees"):
+            if f not in nodes:
+                path = "{0}/{1}".format(self.path + "/.emu/trees", f)
+
+                if not dry_run:
+                    Util.rm(path, must_exist=True)
+                print ("Deleted orphan tree '{0}'"
+                       .format(Util.colourise(path, Colours.RED)))
 
 
     def __str__(self):

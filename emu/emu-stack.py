@@ -33,6 +33,8 @@ from libemu import Util, EmuParser, Source, Stack, StackNotFoundError, Colours
 
 def main(argv, argc):
     parser = EmuParser()
+    parser.add_option("-d", "--dry-run", action="store_true",
+                      dest="dry_run", default=False)
     parser.add_option("-t", "--template-dir", action="store", type="string",
                       dest="template_dir", default=Util.stack_templates)
     parser.add_option("-f", "--force", action="store_true", dest="force",
@@ -100,7 +102,20 @@ def main(argv, argc):
                 except StackNotFoundError as e:
                     print e
                     sys.exit(1)
+
+        # Clean stacks:
+        elif command == "clean":
+            if not len(args):
+                print "Usage: clean <name ...>"
                 sys.exit(1)
+
+            for arg in args:
+                try:
+                    stack = Util.get_stack_by_name(arg, source.stacks())
+                    stack.clean(verbose=options.verbose, dry_run=options.dry_run)
+                except StackNotFoundError as e:
+                    print e
+                    sys.exit(1)
 
         else:
             print "Invalid command. See: emu stack --help"
