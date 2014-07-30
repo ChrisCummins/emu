@@ -85,7 +85,7 @@ def main(argv, argc):
         # Log:
         id = Util.colourise(snapshot.id.id, Colours.SNAPSHOT)
         if options.short:
-            print "{0}  {1}".format(id, snapshot.node("snapshot", "name"))
+            print "{0}  {1}".format(id, snapshot.node(s="Snapshot", p="name"))
         else:
             print "snapshot       {0}".format(id)
             print_dict(snapshot.node("Snapshot"))
