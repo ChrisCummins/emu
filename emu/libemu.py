@@ -1832,14 +1832,14 @@ class DiskUsage():
 class InvalidArgsError(Exception):
     def __init__(self, msg):
         self.msg = msg
-    def __repr__(self):
+    def __str__(self):
         return self.msg
 
 
 class InvalidSnapshotIDError(InvalidArgsError):
     def __init__(self, id):
         self.id = id
-    def __repr__(self):
+    def __str__(self):
         return ("Invalid snapshot identifier '{0}!'"
                 .format(Util.colourise(self.id, Colours.ERROR)))
 
@@ -1847,7 +1847,7 @@ class InvalidSnapshotIDError(InvalidArgsError):
 class StackNotFoundError(Exception):
     def __init__(self, name):
         self.name = name
-    def __repr__(self):
+    def __str__(self):
         return ("Stack '{0}' not found!"
                 .format(Util.colourise(self.name, Colours.ERROR)))
 
@@ -1855,7 +1855,7 @@ class StackNotFoundError(Exception):
 class SnapshotNotFoundError(Exception):
     def __init__(self, id):
         self.id = id
-    def __repr__(self):
+    def __str__(self):
         return ("Snapshot '{0}:{1}' not found!"
                 .format(self.id.stack_name,
                         Util.colourise(self.id.id, Colours.ERROR)))
@@ -1864,7 +1864,7 @@ class SnapshotNotFoundError(Exception):
 class SourceCreateError(Exception):
     def __init__(self, source_dir):
         self.source_dir = source_dir
-    def __repr__(self):
+    def __str__(self):
         return ("Failed to create source at '{0}'!"
                 .format(self.source_dir))
 
@@ -1872,7 +1872,7 @@ class SourceCreateError(Exception):
 class LockfileError(Exception):
     def __init__(self, lock):
         self.lock = lock
-    def __repr__(self):
+    def __str__(self):
         (pid, timestamp) = self.lock.read()
         string = ("Failed to modify lock '{0}'!\n"
                   .format(Util.colourise(self.lock.path, Colours.ERROR)))
