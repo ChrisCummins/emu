@@ -136,7 +136,7 @@ class Source:
         Util.rm(self.lock.path, dry_run=dry_run, verbose=True)
 
 
-    def __str__(self):
+    def __repr__(self):
         return self.path
 
 
