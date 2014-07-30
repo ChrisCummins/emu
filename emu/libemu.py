@@ -301,7 +301,7 @@ class Stack:
     #
     def max_snapshots(self, n=None):
         s = "Snapshots"
-        p = "Max Number"
+        p = "max-number"
 
         if n:
             # Set max snapshots:
