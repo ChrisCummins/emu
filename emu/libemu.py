@@ -943,7 +943,7 @@ class Util:
     #
     # Version and copyright information:
     #
-    version = { "major": 0, "minor": 1, "micro": 24 }
+    version = { "major": 0, "minor": 1, "micro": 25 }
     version_string = "{0}.{1}.{2}".format(version["major"],
                                           version["minor"],
                                           version["micro"])
