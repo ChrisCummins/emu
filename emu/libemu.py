@@ -132,8 +132,16 @@ class Source:
 
     # clean() - Clean up the source
     #
-    def clean(self, dry_run=False, verbose=False):
+    def clean(self, dry_run=False, verbose=False, recursive=False):
+        if verbose:
+            print "Cleaning source at '{0}'...".format(self.path)
+
         Util.rm(self.lock.path, dry_run=dry_run, verbose=True)
+
+        # Clean stacks:
+        if recursive:
+            for stack in self.stacks():
+                stack.clean(dry_run=dry_run, verbose=verbose)
 
 
     def __repr__(self):
