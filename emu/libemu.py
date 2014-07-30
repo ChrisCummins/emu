@@ -1707,8 +1707,8 @@ class EmuParser(OptionParser):
                             self._snapshots.append(head.nth_child(n_index,
                                                                   error=True))
                     elif accept_stack_names:
-                        # If there's no ID then match all snapshots
-                        self._snapshots += stack.snapshots()
+                        # If there's no ID then match all snapshots (in reverse)
+                        self._snapshots += stack.snapshots()[::-1]
                     else:
                         raise InvalidSnapshotIDError(arg)
 

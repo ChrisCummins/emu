@@ -65,9 +65,6 @@ def main(argv, argc):
     if options.limit <= 0:
         options.limit = len(snapshots)
 
-    # Reverse so that newest is first
-    snapshots.reverse()
-
     # Determine whether we need to print stack names or not:
     print_stack_names = False
     current_stack = snapshots[0].stack
