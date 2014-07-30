@@ -47,9 +47,15 @@ def main(argv, argc):
     (options, args) = parser.parse_args()
 
     source = Source(options.source_dir)
+    stacks = parser.parse_stacks(source)
+
+    # Fail if source has no stacks:
+    if not len(stacks):
+        print "Source has no stacks!"
+        sys.exit(1)
 
     status = 0
-    for stack in parser.parse_stacks(source):
+    for stack in stacks:
         status ^= stack.push(force=options.force,
                              ignore_errors=options.ignore_errors,
                              archive=not options.no_archive,
