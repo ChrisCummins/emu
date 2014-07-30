@@ -3,24 +3,26 @@ test_setup
 
 cd $EMU_TEST_DIR/test-source
 
-emu init -v
-emu stack -v add origin ../test-stack
+emu init
+emu stack add origin ../test-stack
 
 assert_is_file .emu/excludes
 
 echo "- test" >> .emu/excludes
 echo "hello, world!" > test
-emu push -v
+emu push
 
 hash=$(ls ../test-stack/.emu/trees)
 assert_is_dir ../test-stack/.emu/trees/$hash
 assert_is_not_file ../test-stack/.emu/trees/$hash/test
 
-rm -rfv ../test-stack/.emu/trees/$hash ../test-stack/.emu/nodes/$hash ../test-stack/.emu/HEAD
+emu prune origin:HEAD
 
-sleep 1
-emu push -v
+echo "" > .emu/excludes
+emu push
+hash=$(ls ../test-stack/.emu/trees)
 assert_is_dir ../test-stack/.emu/trees/$hash
 assert_is_file ../test-stack/.emu/trees/$hash/test
+
 
 test_teardown

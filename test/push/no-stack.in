@@ -2,7 +2,7 @@ set -eu
 test_setup
 
 cd $EMU_TEST_DIR/test-source
-emu init -v
+emu init
 
 assert_fail "emu push"
 

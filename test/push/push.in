@@ -4,9 +4,9 @@ test_setup
 cd $EMU_TEST_DIR/test-source
 
 assert_fail "emu push"
-emu init -v
+emu init
 echo "hello, world!" > test
-emu stack -v add origin ../test-stack
+emu stack add origin ../test-stack
 emu push
 assert_strings_match "hello, world!" "$(cat ../test-stack/.emu/trees/*/test)"
 

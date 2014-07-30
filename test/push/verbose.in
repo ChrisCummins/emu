@@ -3,27 +3,13 @@ test_setup
 
 cd $EMU_TEST_DIR/test-source
 
-emu init -v
-emu stack -v add origin ../test-stack
+emu init
+emu stack add origin ../test-stack
 
-emu push
 emu push > ../tmp
 emu push -v > ../tmp2
 
 if [[ "$(wc -l ../tmp2 | awk '{ print $1 }')" -le "$(wc -l ../tmp | awk '{ print $1 }')" ]]
-then
-    echo "Output not verbose!"
-    echo "Standard:"
-    cat ../tmp
-    echo "Verbose:"
-    cat ../tmp2
-    exit 5
-fi
-
-emu push -vp > ../tmp
-emu push -p > ../tmp2
-
-if [[ "$(wc -l ../tmp2 | awk '{ print $1 }')" -lt "$(wc -l ../tmp | awk '{ print $1 }')" ]]
 then
     echo "Output not verbose!"
     echo "Standard:"

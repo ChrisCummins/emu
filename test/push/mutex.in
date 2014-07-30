@@ -2,7 +2,7 @@ set -eu
 test_setup
 
 cd $EMU_TEST_DIR/test-source
-emu init -v
+emu init
 emu stack add origin ../test-stack
 
 emu push
@@ -12,14 +12,12 @@ source @prefix@/libexec/emu/libemu
 lock_dir
 set -u
 
-sleep 1
 assert_fail "emu push"
 
 set +u
 unlock_dir
 set -u
 
-sleep 1
 emu push
 
 test_teardown
