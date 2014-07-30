@@ -185,11 +185,9 @@ AS_IF([test "x$enable_tests" = xyes],
               test/clean/lock
               test/clean/orphans
               test/clean/deadlink
-              test/stack/show
               test/stack/add
               test/stack/rm
               test/stack/stack
-              test/stack/quiet
               test/libtest.sh
               test/push/message
               test/push/no-stack
