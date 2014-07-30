@@ -9,7 +9,7 @@ emu\-stack \- manage set of emu stacks
 [<options>] add <stack> <path>
 .sp
 .B emu stack
-[<options>] rm <stack>
+[<options>] rm <stack ...>
 .SH DESCRIPTION
 With no arguments, show a list of existing stacks.
 .SH COMMANDS
@@ -19,8 +19,8 @@ Initialises an empty stack named <stack> in the directory <path>. This
 means creating a .emu directory at <path> with subdirectories for
 trees and nodes. Each stack <stack> must be unique.
 .TP
-rm <stack>
-Removes stack <stack> from the source refs. This does not affect the
+rm <stack ...>
+Removes named stacks from the source refs. This does not affect the
 stack structure and is non\-destructive.
 .SH OPTIONS
 .TP

@@ -89,16 +89,17 @@ def main(argv, argc):
 
         # Remove stacks:
         elif command == "rm":
-            if len(args) == 1:
+            if not len(args):
+                print "Usage: rm <name ...>"
+                sys.exit(1)
+
+            for arg in args:
                 try:
-                    name = args[0]
-                    stack = Util.get_stack_by_name(name, source.stacks())
+                    stack = Util.get_stack_by_name(arg, source.stacks())
                     stack.destroy(force=options.force, verbose=options.verbose)
                 except StackNotFoundError as e:
                     print e
                     sys.exit(1)
-            else:
-                print "Usage: rm <name>"
                 sys.exit(1)
 
         else:
