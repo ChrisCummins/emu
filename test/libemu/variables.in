@@ -1,8 +1,0 @@
-set -e
-test_setup
-source @prefix@/libexec/emu/libemu
-
-assert "$EMU_VERSION"
-assert "$EMU_DIR"
-
-test_teardown
