@@ -1672,10 +1672,15 @@ class EmuParser(OptionParser):
 
                 # Iterate over each arg, resolving to snapshot(s):
                 for arg in args:
+                    # Regular expression for snapshot syntax, matching:
+                    #
+                    #    <stack>(:<id>(~(<n>))(..))
+                    #
                     regex = (r"^(?P<stack>[a-zA-Z]+)((:?)|"
                              "(:((?P<id>[a-f0-9]{40})|"
                              "(?P<head>HEAD))"
-                             "(?P<index>~([0-9]+)?)?))?$")
+                             "(?P<index>~([0-9]+)?)?"
+                             "(?P<branch>\.\.)?))?$")
                     match = re.match(regex, arg)
 
                     if not match:
@@ -1686,6 +1691,7 @@ class EmuParser(OptionParser):
                     id_match = match.group("id")
                     head_match = match.group("head")
                     index_match = match.group("index")
+                    branch_match = match.group("branch")
 
                     stack = Util.get_stack_by_name(stack_match, source.stacks())
 
@@ -1711,6 +1717,15 @@ class EmuParser(OptionParser):
                         self._snapshots += stack.snapshots()[::-1]
                     else:
                         raise InvalidSnapshotIDError(arg)
+
+                    # If we have the ".." suffix to indicate branch
+                    # notation, then we start from the indicated node
+                    # and work back, creating a branch history.
+                    if branch_match:
+                        n = self._snapshots[len(self._snapshots) - 1].parent()
+                        while n:
+                            self._snapshots.append(n)
+                            n = n.parent()
 
                 if require and not len(self._snapshots):
                     raise InvalidArgsError("One or more snapshots must be "
