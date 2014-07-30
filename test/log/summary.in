@@ -2,9 +2,9 @@ set -eu
 test_setup
 
 cd $EMU_TEST_DIR/test-source
-emu init -v
+emu init
 
-emu stack -v add origin ../test-stack
+emu stack add origin ../test-stack
 
 emu push
 
@@ -29,8 +29,7 @@ then
     exit 5
 fi
 
-sleep 1
-emu push -v
+emu push
 emu log origin -s > $EMU_TEST_DIR/log-summary
 if [[ "$(wc -l $EMU_TEST_DIR/log-summary | awk '{ print $1 }')" -ne 2 ]]
 then

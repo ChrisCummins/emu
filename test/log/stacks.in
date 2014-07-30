@@ -7,13 +7,12 @@ emu init -v
 emu stack -v add origin ../test-stack
 emu stack -v add test ../test-stack2
 
-emu push -v
+emu push
 
 emu log origin > $EMU_TEST_DIR/log-origin
 emu log test > $EMU_TEST_DIR/log-test
 
-sleep 1
-emu push -v
+emu push
 
 if [[ "$(wc -l $EMU_TEST_DIR/log-origin | awk '{ print $1 }')" -lt "$(wc -l "$EMU_TEST_DIR"/log-test | awk '{ print $1 }')" ]]
 then
