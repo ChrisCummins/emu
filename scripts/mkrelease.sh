@@ -88,7 +88,7 @@ set_new_version() {
 
     echo "Setting new version... emu/libemu.py"
     test -f emu/libemu.py || { echo "fatal: 'emu/libemu.py' not found!"; exit 3; }
-    sed -r -i 's/(\s*version\s*=\s*\{\s*"major"\s*:\s*)([0-9]+)(,\s*"minor"\s*:\s*)([0-9]+)(,\s*"micro"\s*:\s*)([0-9]+)/\1'"$major"'\3'"$minor"'\5'"$micro"'/' emu/libemu.py
+    sed -r -i 's/(\s*version\s*=\s*Version\(\s*)([0-9]+)(,\s*)([0-9]+)(,\s*)([0-9]+)/\1'"$major"'\3'"$minor"'\5'"$micro"'/' emu/libemu.py
 }
 
 # Make the git version bump commit.

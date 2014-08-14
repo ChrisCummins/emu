@@ -903,7 +903,7 @@ class Snapshot:
             node.set("Stack",    "snapshot-no",   len(stack.snapshots()) + 1)
             node.set("Stack",    "max-snapshots", stack.max_snapshots())
             node.add_section("Emu")
-            node.set("Emu",      "emu-version",   Util.version_string)
+            node.set("Emu",      "emu-version",   Util.version)
             node.set("Emu",      "user",          getpass.getuser())
             node.set("Emu",      "uid",           os.getuid())
             with open(node_path, "wb") as node_file:
@@ -945,6 +945,68 @@ class SnapshotID:
         return not self.__eq__(other)
 
 
+#################################
+# Three digit version numbering #
+#################################
+class Version:
+
+    def __init__(self, major, minor, micro):
+        self.major = major
+        self.minor = minor
+        self.micro = micro
+
+
+    def __repr__(self):
+        return "{0}.{1}.{2}".format(self.major, self.minor, self.micro)
+
+    # Numerical comparison operators:
+    def __eq__(self, other):
+        return (self.major == other.major and
+                self.minor == other.minor and
+                self.micro == other.micro)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __gt__(self, other):
+        if self.major > other.major:
+            return True
+        elif self.minor > other.minor:
+            return True
+        else:
+            return self.micro > other.micro
+
+    def __ge__(self, other):
+        return self.__gt__(other) or self.__eq__(other)
+
+    def __lt__(self, other):
+        if self.major < other.major:
+            return True
+        elif self.minor < other.minor:
+            return True
+        else:
+            return self.micro < other.micro
+
+    def __le__(self, other):
+        return self.__lt__(other) or self.__eq__(other)
+
+
+    @staticmethod
+    def from_str(string):
+        # Regex for matching version strings:
+        regex = r"^(?P<major>[0-9]+)\.(?P<minor>[0-9]+)\.(?P<micro>[0-9]+)$"
+
+        # Match version string, or through Version Error if no match:
+        match = re.match(regex, string)
+        if not match:
+            raise VersionError("Invalid version string '{0}'!".format(string))
+        major = match.group("major")
+        minor = match.group("minor")
+        micro = match.group("micro")
+
+        return Version(major, minor, micro)
+
+
 ##############################################
 # Utility static class with helper functions #
 ##############################################
@@ -953,10 +1015,7 @@ class Util:
     #
     # Version and copyright information:
     #
-    version = { "major": 0, "minor": 1, "micro": 28 }
-    version_string = "{0}.{1}.{2}".format(version["major"],
-                                          version["minor"],
-                                          version["micro"])
+    version = Version(0, 1, 28)
     copyright = { "start": 2012, "end": 2014, "authors": ["Chris Cummins"]}
 
     #
@@ -1475,7 +1534,7 @@ class Util:
 
     @staticmethod
     def version_and_quit(*data):
-        print "emu version", Util.version_string
+        print "emu version", Util.version
 
         # Assemble and print copyright string:
         s = "Copyright (c) "
@@ -1936,6 +1995,14 @@ class LockfileError(Exception):
             string += "It looks like the process is no longer running.\n"
         string += "\nTo ignore this lock and overwrite, use option '--force'."
         return string
+
+
+class VersionError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+    def __str__(self):
+        return self.msg
+
 
 ###################
 # Signal handlers #
