@@ -28,6 +28,7 @@ import os
 import re
 import shlex
 import shutil
+import signal
 import subprocess
 import sys
 import getpass
@@ -1935,3 +1936,17 @@ class LockfileError(Exception):
             string += "It looks like the process is no longer running.\n"
         string += "\nTo ignore this lock and overwrite, use option '--force'."
         return string
+
+###################
+# Signal handlers #
+###################
+
+# If a Python process is interrupted (Ctrl+C), a KeyboardInterrupt
+# exception is thrown. In order to prevent having to wrap *every*
+# possible point of interruption in a try-except block, we can
+# register a SIGINT handler. In our case, we don't need it to do
+# anything other than acknowledge the signal, as the err_cb() methods
+# are used for tidying up.
+def _sigint_handler(signum, frame):
+    print "emu: received SIGINT"
+signal.signal(signal.SIGINT, _sigint_handler)
