@@ -84,6 +84,7 @@ set_new_version() {
     echo "Setting new version... README"
     test -f README || { echo "fatal: 'README' not found!"; exit 3; }
     sed -r -i 's/(\s*README for emu version )([0-9\.]+)/\1'"$major.$minor.$micro"'/' README
+    sed -r -i 's/(\s*This directory contains version )([0-9\.]+)/\1'"$major.$minor.$micro"'/' README
 
     echo "Setting new version... emu/libemu.py"
     test -f emu/libemu.py || { echo "fatal: 'emu/libemu.py' not found!"; exit 3; }
