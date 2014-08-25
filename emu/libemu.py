@@ -604,14 +604,57 @@ class Snapshot:
 
     # verify() - Verify the contents of snapshot
     #
-    # Verify the checksum by computing it again and comparing.
-    def verify(self):
-        # Get the checksum algorithm from the node:
-        program = self.node(s="Snapshot", p="checksum")
-        if not program:
-            program = "sha1sum"
+    # Verify the checksum by computing it again and comparing. The
+    # result of this verification is then cached in the node, under
+    # the "Tree" section:
+    #
+    #   [Tree]
+    #   Status: (CLEAN|DIRTY)
+    #   Last-Verified: <timestamp>
+    #
+    # If "use_cache" is True, then fetch the status from the node (if
+    # present), rather than computing a new status.
+    def verify(self, use_cache=False):
 
-        return Checksum(self.tree, program=program).get() == self.id.checksum
+        if use_cache:
+            # Retrieve the status from the cache:
+            status = self.node(s="Tree", p="Status")
+
+            # If there is a cached status, then return
+            # that. Otherwise, compute a new status by verifying:
+            if status:
+                if status == "CLEAN":
+                    clean = True
+                else:
+                    clean = False
+            else:
+                return self.verify()
+
+            return clean
+        else:
+
+            # To verify a node, we first get the checksum algorithm
+            # from the node (with a fallback to sha1sum):
+            program = self.node(s="Snapshot", p="checksum")
+            if not program:
+                program = "sha1sum"
+
+            # We compute a new checksum and compare that against the
+            # ID:
+            clean = Checksum(self.tree, program=program).get() == self.id.checksum
+
+            if clean:
+                status = "CLEAN"
+            else:
+                status = "DIRTY"
+
+            # Update the node with status and last-verified info:
+            date = time.localtime()
+            date_format = "%A %B %d %H:%M:%S %Y"
+            self.node(s="Tree", p="Status", v=status)
+            self.node(s="Tree", p="Last-Verified", v=time.strftime(date_format, date))
+
+            return clean
 
 
     # node() - Fetch snapshot node data from file
