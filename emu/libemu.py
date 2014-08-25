@@ -44,7 +44,7 @@ class Source:
 
     def __init__(self, path):
         self.path = path
-        self.lock = Lockfile(self.path + "/.emu/LOCK")
+        self.lock = Lockfile(Util.join_dirs(self.path, "/.emu/LOCK"))
 
         def err_cb(e):
             s = "fatal: Malformed emu source"
@@ -54,12 +54,12 @@ class Source:
             sys.exit(1)
 
         # Sanity checks:
-        Util.readable(self.path,                    error=err_cb)
-        Util.readable(self.path + "/.emu/",         error=err_cb)
-        Util.readable(self.path + "/.emu/config",   error=err_cb)
-        Util.readable(self.path + "/.emu/excludes", error=err_cb)
-        Util.readable(self.path + "/.emu/hooks/",   error=err_cb)
-        Util.readable(self.path + "/.emu/stacks/",  error=err_cb)
+        Util.readable(self.path,                                   error=err_cb)
+        Util.readable(Util.join_dirs(self.path, "/.emu/"),         error=err_cb)
+        Util.readable(Util.join_dirs(self.path, "/.emu/config"),   error=err_cb)
+        Util.readable(Util.join_dirs(self.path, "/.emu/excludes"), error=err_cb)
+        Util.readable(Util.join_dirs(self.path, "/.emu/hooks/"),   error=err_cb)
+        Util.readable(Util.join_dirs(self.path, "/.emu/stacks/"),  error=err_cb)
 
 
     # checkout() - Restore source to snapshot
@@ -89,14 +89,14 @@ class Source:
 
         stack = snapshot.stack
         exclude = ["/.emu"]
-        exclude_from = [self.path + "/.emu/excludes"]
+        exclude_from = [Util.join_dirs(self.path, "/.emu/excludes")]
 
         self.lock.lock(force=force, verbose=verbose)
         stack.lock.lock(force=force, verbose=verbose)
 
         if not dry_run:
             # Perform file transfer:
-            Util.rsync(snapshot.tree + "/", self.path,
+            Util.rsync(Util.join_dirs(snapshot.tree, "/"), self.path,
                        dry_run=dry_run, exclude=exclude,
                        exclude_from=exclude_from,
                        delete=True, error=err_cb,
@@ -123,7 +123,8 @@ class Source:
 
                 # Generate list of stacks:
                 self._stacks = []
-                for name in Util.ls(self.path + "/.emu/stacks", must_exist=True):
+                for name in Util.ls(Util.join_dirs(self.path, "/.emu/stacks"),
+                                    must_exist=True):
                     self._stacks.append(Stack(name, self))
                 return self._stacks
 
@@ -165,15 +166,16 @@ class Source:
         Util.exists(path, error=err_cb)
 
         # Create directory structure
-        source_dir = path + "/.emu"
+        source_dir = Util.join_dirs(path, "/.emu")
         directories = ["/", "/hooks", "/stacks"]
         for d in directories:
             Util.mkdir(source_dir + d, mode=0700, verbose=verbose, error=err_cb)
 
         # Copy template files
-        Util.rsync(template_dir + "/", source_dir + "/", error=err_cb,
-                   archive=True, verbose=verbose, quiet=not verbose,
-                   update=force)
+        Util.rsync(Util.join_dirs(template_dir, "/"),
+                   Util.join_dirs(source_dir, "/"),
+                   error=err_cb, archive=True, update=force,
+                   verbose=verbose, quiet=not verbose)
 
         print "Initialised source at '{0}'".format(path)
 
@@ -198,20 +200,20 @@ class Stack:
         self.path = Util.read("{0}/.emu/stacks/{1}".format(self.source.path,
                                                            self.name),
                               error=err_cb)
-        self.lock = Lockfile(self.path + "/.emu/LOCK")
+        self.lock = Lockfile(Util.join_dirs(self.path, "/.emu/LOCK"))
 
         # Sanity checks:
-        Util.readable(self.path + "/.emu/",       error=err_cb)
-        Util.readable(self.path + "/.emu/nodes/", error=err_cb)
-        Util.readable(self.path + "/.emu/trees/", error=err_cb)
-        Util.readable(self.path + "/.emu/HEAD",   error=err_cb)
-        Util.readable(self.path + "/.emu/config", error=err_cb)
+        Util.readable(Util.join_dirs(self.path, "/.emu/"),       error=err_cb)
+        Util.readable(Util.join_dirs(self.path, "/.emu/nodes/"), error=err_cb)
+        Util.readable(Util.join_dirs(self.path, "/.emu/trees/"), error=err_cb)
+        Util.readable(Util.join_dirs(self.path, "/.emu/HEAD"),   error=err_cb)
+        Util.readable(Util.join_dirs(self.path, "/.emu/config"), error=err_cb)
 
 
     # snapshots() - Return a list of all snapshots
     #
     def snapshots(self):
-        ids = Util.ls(self.path + "/.emu/nodes", must_exist=True)
+        ids = Util.ls(Util.join_dirs(self.path, "/.emu/nodes"), must_exist=True)
         snapshots = []
         for id in ids:
             snapshots.append(Snapshot(SnapshotID(self.name, id), self))
@@ -224,8 +226,8 @@ class Stack:
     # headless. If 'head' is provided, set this snapshot to be the new
     # head. If 'delete' is True, it deletes the current head.
     def head(self, head=None, dry_run=False, delete=False, error=True):
-        head_pointer = self.path + "/.emu/HEAD"
-        most_recent_link = self.path + "/Most Recent Backup"
+        head_pointer = Util.join_dirs(self.path, "/.emu/HEAD")
+        most_recent_link = Util.join_dirs(self.path, "/Most Recent Backup")
 
         if head:
             old_head = self.head()
@@ -271,7 +273,7 @@ class Stack:
     # return that specific value. Else return the entire
     # configuration.
     def config(self, s=None, p=None, v=None):
-        path = self.path + "/.emu/config"
+        path = Util.join_dirs(self.path, "/.emu/config")
 
         # Set new value for property:
         if s and p and v:
@@ -385,12 +387,13 @@ class Stack:
                         .format(Util.colourise(snapshot.name,
                                                Colours.SNAPSHOT_NEW)),
                         prefix=self.name, colour=Colours.OK)
-            Util.rsync(snapshot.tree + "/", self.path + "/.emu/trees/new",
+            Util.rsync(Util.join_dirs(snapshot.tree, "/"),
+                       Util.join_dirs(self.path, "/.emu/trees/new"),
                        dry_run=dry_run, link_dest=link_dests,
                        error=True, verbose=verbose, quiet=not verbose)
 
         # Check that merge was successful:
-        Util.exists(self.path + "/.emu/trees/new", error=True)
+        Util.exists(Util.join_dirs(self.path, "/.emu/trees/new"), error=True)
         Util.printf("merged {0} snapshots".format(no_of_snapshots),
                     prefix=self.name, colour=Colours.OK)
 
@@ -452,10 +455,10 @@ class Stack:
                     pass
 
         # Check for orphan node files:
-        trees = Util.ls(self.path + "/.emu/trees")
-        for f in Util.ls(self.path + "/.emu/nodes"):
+        trees = Util.ls(Util.join_dirs(self.path, "/.emu/trees"))
+        for f in Util.ls(Util.join_dirs(self.path, "/.emu/nodes")):
             if f not in trees:
-                path = "{0}/{1}".format(self.path + "/.emu/nodes", f)
+                path = Util.join_dirs(self.path, "/.emu/nodes/", f)
 
                 if not dry_run:
                     Util.rm(path, must_exist=True)
@@ -463,10 +466,10 @@ class Stack:
                        .format(Util.colourise(path, Colours.RED)))
 
         # Check for orphan trees:
-        nodes = Util.ls(self.path + "/.emu/nodes")
-        for f in Util.ls(self.path + "/.emu/trees"):
+        nodes = Util.ls(Util.join_dirs(self.path, "/.emu/nodes"))
+        for f in Util.ls(Util.join_dirs(self.path, "/.emu/trees")):
             if f not in nodes:
-                path = "{0}/{1}".format(self.path + "/.emu/trees", f)
+                path = Util.join_dirs(self.path, "/.emu/trees/", f)
 
                 if not dry_run:
                     Util.rm(path, must_exist=True)
@@ -529,10 +532,11 @@ class Stack:
         source.lock.lock(force=force, verbose=verbose)
 
         # Create directory structure:
-        emu_dir = path + "/.emu"
+        emu_dir = Util.join_dirs(path, "/.emu")
         directories = ["/", "/trees", "/nodes"]
         for d in directories:
-            Util.mkdir(emu_dir + d, mode=0700, verbose=verbose, error=err_cb)
+            Util.mkdir(Util.join_dirs(emu_dir, d), mode=0700,
+                       verbose=verbose, error=err_cb)
 
         # Ignore rsync errors if required:
         if ignore_errors:
@@ -541,12 +545,13 @@ class Stack:
             rsync_error = err_cb
 
         # Copy template files:
-        Util.rsync(template_dir + "/", emu_dir + "/", error=rsync_error,
-                   archive=archive, verbose=verbose, quiet=not verbose,
-                   update=force)
+        Util.rsync(Util.join_dirs(template_dir, "/"),
+                   Util.join_dirs(emu_dir, "/"),
+                   error=rsync_error, archive=archive, update=force,
+                   verbose=verbose, quiet=not verbose)
 
         # Create HEAD:
-        Util.write(emu_dir + "/HEAD", "", error=err_cb)
+        Util.write(Util.join_dirs(emu_dir, "/HEAD"), "", error=err_cb)
 
         # Create pointer:
         Util.write("{0}/.emu/stacks/{1}".format(source.path, name),
@@ -567,7 +572,7 @@ class Snapshot:
 
     def __init__(self, id, stack):
         self.id = id
-        self.tree = stack.path + "/.emu/trees/" + id.id
+        self.tree = Util.join_dirs(stack.path, "/.emu/trees/", id.id)
         self.stack = stack
         self.name = self.node("Snapshot", "name")
 
@@ -697,7 +702,7 @@ class Snapshot:
                     .format(Util.colourise(self.name, Colours.SNAPSHOT_DELETE)),
                     prefix=self.stack.name, colour=Colours.OK)
 
-        most_recent_link = self.stack.path + "/Most Recent Backup"
+        most_recent_link = Util.join_dirs(self.stack.path, "/Most Recent Backup")
         stack = self.stack
 
         # We don't actually need to modify anything on a dry run:
@@ -712,7 +717,7 @@ class Snapshot:
             new_head = head.parent()
 
             # Remove old "Most Recent Backup" link:
-            Util.rm(stack.path + "/Most Recent Backup",
+            Util.rm(Util.join_dirs(stack.path, "/Most Recent Backup"),
                     verbose=verbose)
 
             if new_head:
@@ -733,7 +738,7 @@ class Snapshot:
                     snapshot.parent(delete=True)
 
         # Delete snapshot files:
-        Util.rm(stack.path + "/" + self.name,
+        Util.rm(Util.join_dirs(stack.path, "/", self.name),
                 must_exist=True, error=True, verbose=verbose)
         Util.rm(self.tree, must_exist=True, error=True, verbose=verbose)
         Util.rm("{0}/.emu/nodes/{1}".format(stack.path, self.id.id),
@@ -818,9 +823,9 @@ class Snapshot:
             sys.exit(1)
 
         source = stack.source
-        staging_area = stack.path + "/.emu/trees/new"
+        staging_area = Util.join_dirs(stack.path, "/.emu/trees/new")
         exclude = ["/.emu"]
-        exclude_from = [source.path + "/.emu/excludes"]
+        exclude_from = [Util.join_dirs(source.path, "/.emu/excludes")]
         link_dests = []
 
         source.lock.lock(force=force, verbose=verbose)
@@ -839,7 +844,7 @@ class Snapshot:
                 link_dests.append(snapshot.tree)
 
             # Perform file transfer:
-            Util.rsync(source.path + "/", staging_area,
+            Util.rsync(Util.join_dirs(source.path, "/"), staging_area,
                        archive=archive, owner=owner,
                        dry_run=dry_run, link_dest=link_dests,
                        exclude=exclude, exclude_from=exclude_from,
@@ -867,8 +872,8 @@ class Snapshot:
         name = ("{0}-{1:02d}-{2:02d} {3:02d}.{4:02d}.{5:02d}"
                 .format(date.tm_year, date.tm_mon, date.tm_mday,
                         date.tm_hour, date.tm_min, date.tm_sec))
-        tree = stack.path + "/.emu/trees/" + id.id
-        name_link = stack.path + "/" + name
+        tree = Util.join_dirs(stack.path, "/.emu/trees/", id.id)
+        name_link = Util.join_dirs(stack.path, "/", name)
 
         if not dry_run:
             # Move tree into position
