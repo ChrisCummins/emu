@@ -34,7 +34,7 @@ from libemu import Util, EmuParser, Source, SourceCreateError
 def main(argv, argc):
     parser = EmuParser()
     parser.add_option("-S", "--source-dir", action="store", type="string",
-                        dest="source_dir", default=os.getcwd())
+                      dest="source_dir", default=os.getcwd())
     parser.add_option("-t", "--template-dir", action="store", type="string",
                       dest="template_dir", default=Util.source_templates)
     parser.add_option("-f", "--force", action="store_true", dest="force",
