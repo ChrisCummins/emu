@@ -437,24 +437,6 @@ class Stack:
 
         Util.rm(self.lock.path, dry_run=dry_run, verbose=True)
 
-        # Delete broken symlinks in stack:
-        for f in Util.ls(self.path):
-            path = "{0}/{1}".format(self.path, f)
-
-            if os.path.islink(path):
-                try:
-                    # Compose absolute path of link destination:
-                    dst = "{0}/{1}".format(self.path, os.readlink(path))
-
-                    # Delete link if link destination doesn't exist:
-                    if not os.path.exists(dst):
-                        if not dry_run:
-                            os.unlink(path)
-                        print ("Deleted broken symlink '{0}'"
-                               .format(Util.colourise(path, Colours.RED)))
-                except Exception as e:
-                    pass
-
         # Check for orphan node files:
         trees = Util.ls(Util.concat_paths(self.path, "/.emu/trees"))
         for f in Util.ls(Util.concat_paths(self.path, "/.emu/nodes")):
@@ -476,6 +458,24 @@ class Stack:
                     Util.rm(path, must_exist=True)
                 print ("Deleted orphan tree '{0}'"
                        .format(Util.colourise(path, Colours.RED)))
+
+        # Delete broken symlinks in stack:
+        for f in Util.ls(self.path):
+            path = "{0}/{1}".format(self.path, f)
+
+            if os.path.islink(path):
+                try:
+                    # Compose absolute path of link destination:
+                    dst = "{0}/{1}".format(self.path, os.readlink(path))
+
+                    # Delete link if link destination doesn't exist:
+                    if not os.path.exists(dst):
+                        if not dry_run:
+                            os.unlink(path)
+                        print ("Deleted broken symlink '{0}'"
+                               .format(Util.colourise(path, Colours.RED)))
+                except Exception as e:
+                    pass
 
         # Check for orphan HEAD:
         head_pointer = Util.concat_paths(self.path, "/.emu/HEAD")
