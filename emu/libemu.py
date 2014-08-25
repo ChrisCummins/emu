@@ -47,9 +47,10 @@ class Source:
         self.lock = Lockfile(self.path + "/.emu/LOCK")
 
         def err_cb(e):
-            print "Non-existent or malformed emu source."
+            s = "fatal: Malformed emu source"
             if e:
-                print e
+                s += ". {0}".format(e)
+            print s
             sys.exit(1)
 
         # Sanity checks:
