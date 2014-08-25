@@ -1683,6 +1683,10 @@ class EmuParser(OptionParser):
         # Instantiate superclass
         OptionParser.__init__(self, add_help_option=False)
 
+        # We allow user to override the default handlers by adding
+        # their own:
+        self.set_conflict_handler("resolve")
+
         # Set default parser arguments:
         self.add_option("-S", "--source-dir", action="store", type="string",
                         dest="source_dir", default=os.getcwd())
