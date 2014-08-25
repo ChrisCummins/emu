@@ -15,10 +15,14 @@ ID, and can be obtained from 'emu log'. If omitted, all of the
 snapshots within a stack will be verified. If no snapshot or stack is
 specified, every stack will be verified.
 .PP
-The algorithm used to determine snapshot checksums computes the
-sha1sum of the directory contents' file names and last modified time
-stamps.
+Verification uses the same checksum algorithm which was used to
+generate the snapshot ID. The results of verification are cached in
+the snapshot node.
 .SH OPTIONS
+.TP
+\-\-cached
+Use cached values from a previous verification where available,
+instead of computing new checksums.
 .TP
 \-S <dir> \-\-source-dir <dir>
 Specify the directory to use as an emu source. Defaults to `.'.
