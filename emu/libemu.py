@@ -1303,7 +1303,11 @@ class Util:
     def join_dirs(*paths):
         s = ""
         for path in paths:
-            if path != "/":
+            # Don't create paths with two forward slashes: "//".
+            if (len(s) and len(path) and
+                s[-1] == "/" and path[0] == "/"):
+                s += path[1:]
+            else:
                 s += path
         return s
 
