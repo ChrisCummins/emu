@@ -146,6 +146,7 @@ class Source:
             for stack in self.stacks():
                 stack.clean(dry_run=dry_run, verbose=verbose)
 
+        print "Source is clean."
 
     def __repr__(self):
         return self.path
@@ -475,6 +476,9 @@ class Stack:
                     Util.rm(path, must_exist=True)
                 print ("Deleted orphan tree '{0}'"
                        .format(Util.colourise(path, Colours.RED)))
+
+        print ("Stack {0} is clean."
+               .format(Util.colourise(self.name, Colours.BLUE)))
 
 
     def __str__(self):
