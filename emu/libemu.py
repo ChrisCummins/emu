@@ -477,6 +477,15 @@ class Stack:
                 print ("Deleted orphan tree '{0}'"
                        .format(Util.colourise(path, Colours.RED)))
 
+        # Check for orphan HEAD:
+        head_pointer = Util.concat_paths(self.path, "/.emu/HEAD")
+        pointer = Util.read(head_pointer)
+        head_node = Util.concat_paths(self.path, "/.emu/nodes/", pointer)
+        if not Util.exists(head_node):
+            print ("Deleted orphan HEAD '{0}'"
+                   .format(Util.colourise(pointer, Colours.RED)))
+            self.head(delete=True, dry_run=dry_run)
+
         print ("Stack {0} is clean."
                .format(Util.colourise(self.name, Colours.BLUE)))
 
