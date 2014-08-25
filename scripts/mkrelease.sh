@@ -105,11 +105,18 @@ make_version_bump_commit() {
     git add emu/libemu.py
     git commit --allow-empty -m "Bump release version for '$new_version'" >/dev/null
     git tag $new_version -a -m "Release $new_version"
+}
 
-    echo "Pushing master"
-    git push origin master
-    echo "Pushing release tag"
-    git push origin $new_version
+# Push the version commit and release tag to git remotes.
+#
+#      @param $@ List of remotes to push to
+push_to_remotes() {
+    for remote in $@; do
+        echo "Pushing branch $remote/master"
+        git push $remote master
+        echo "Pushing tag $remote/$new_version"
+        git push $remote $new_version
+    done
 }
 
 # Perform the new release.
@@ -126,6 +133,7 @@ do_mkrelease() {
 
     set_new_version "$new_version"
     make_version_bump_commit "$new_version"
+    push_to_remotes "origin"
 }
 
 # Given a version string in the form <major>.<minor>.<micro>, verify
