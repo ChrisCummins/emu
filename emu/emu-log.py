@@ -36,7 +36,7 @@ from libemu import EmuParser, Util, Colours, Source
 
 def print_dict(d):
     for prop in d:
-        if not re.match("^snapshot$", prop):
+        if not re.match("^(snapshot|status)$", prop):
             print ("{:<14} {:<50}"
                    .format(" ".join(prop.split("-")).capitalize() + ":",
                            d[prop]))
@@ -87,7 +87,19 @@ def main(argv, argc):
         if options.short:
             print "{0}  {1}".format(id, snapshot.node(s="Snapshot", p="name"))
         else:
-            print "snapshot       {0}".format(id)
+            s = "snapshot       {0}".format(id)
+
+            # Print cached status, if available:
+            status = snapshot.node(s="Tree", p="Status")
+            if status:
+                s += " ("
+                if status == "CLEAN":
+                    s += Util.colourise("ok", Colours.OK)
+                else:
+                    s += Util.colourise("bad", Colours.ERROR)
+                s += ")"
+            print s
+
             print_dict(snapshot.node("Snapshot"))
             print_dict(snapshot.node("Tree"))
             if options.verbose:
