@@ -915,6 +915,7 @@ class Snapshot:
             node.set("Snapshot", "date",          time.strftime(date_format, date))
             node.set("Snapshot", "checksum",      checksum_program)
             node.set("Snapshot", "size",          size)
+            node.add_section("Tree")
             node.add_section("Stack")
             node.set("Stack",    "source",        stack.source.path)
             node.set("Stack",    "stack",         id.stack_name)

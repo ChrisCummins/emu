@@ -89,6 +89,7 @@ def main(argv, argc):
         else:
             print "snapshot       {0}".format(id)
             print_dict(snapshot.node("Snapshot"))
+            print_dict(snapshot.node("Tree"))
             if options.verbose:
                 print_dict(snapshot.node("Stack"))
                 print_dict(snapshot.node("Emu"))
