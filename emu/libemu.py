@@ -1679,6 +1679,28 @@ class Colours:
 ##############################
 class EmuParser(OptionParser):
 
+    # Attempt to determine the source directory, by iterating up the
+    # directory tree, starting from the current working directory. If
+    # no source is found, fail:
+    @staticmethod
+    def _get_source_dir():
+        base_source_dir = os.getcwd()
+        source_dir = base_source_dir
+        while True:
+            # Check if emu directory exists in current directory:
+            emu_dir = Util.join_dirs(source_dir, "/.emu")
+            is_source = Util.readable(emu_dir)
+            if is_source:
+                return source_dir
+
+            # If not, then get the parent directory and repeat:
+            new_source_dir = Util.par_dir(source_dir)
+            if new_source_dir == source_dir:
+                print ("fatal: Not an emu source (or any parent directory) '{0}'"
+                       .format(base_source_dir))
+                sys.exit(1)
+            source_dir = new_source_dir
+
     def __init__(self):
         # Instantiate superclass
         OptionParser.__init__(self, add_help_option=False)
@@ -1689,7 +1711,7 @@ class EmuParser(OptionParser):
 
         # Set default parser arguments:
         self.add_option("-S", "--source-dir", action="store", type="string",
-                        dest="source_dir", default=os.getcwd())
+                        dest="source_dir", default=self._get_source_dir())
         self.add_option("--version", action="callback",
                         callback=Util.version_and_quit)
         self.add_option("-v", "--verbose", action="store_true",
