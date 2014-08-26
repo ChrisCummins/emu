@@ -649,10 +649,9 @@ class Snapshot:
                 status = "DIRTY"
 
             # Update the node with status and last-verified info:
-            date = time.localtime()
-            date_format = "%A %B %d %H:%M:%S %Y"
+            date = EmuDate()
             self.node(s="Tree", p="Status", v=status)
-            self.node(s="Tree", p="Last-Verified", v=time.strftime(date_format, date))
+            self.node(s="Tree", p="Last-Verified", v=date)
 
             return clean
 
@@ -822,9 +821,8 @@ class Snapshot:
         # this, we need to wait until the timestamp will be different.
         def _get_unique_id(checksum):
             # Generate an ID from date and checksum:
-            date = time.localtime()
-            id = SnapshotID(stack.name,
-                            ("{0:x}".format(calendar.timegm(date)) + checksum))
+            date = EmuDate()
+            id = SnapshotID(stack.name, date.hex() + checksum)
             try:
                 # See if a snapshot with that ID already exists:
                 Util.get_snapshot_by_id(id, stack.snapshots())
@@ -925,9 +923,7 @@ class Snapshot:
             size = du_t.get()
 
         (id, date) = _get_unique_id(checksum)
-        name = ("{0}-{1:02d}-{2:02d} {3:02d}.{4:02d}.{5:02d}"
-                .format(date.tm_year, date.tm_mon, date.tm_mday,
-                        date.tm_hour, date.tm_min, date.tm_sec))
+        name = date.snapshotfmt()
         tree = Util.concat_paths(stack.path, "/.emu/trees/", id.id)
         name_link = Util.concat_paths(stack.path, "/", name)
 
@@ -950,12 +946,11 @@ class Snapshot:
             # Create node:
             node_path = "{0}/.emu/nodes/{1}".format(stack.path, id.id)
             node = ConfigParser.ConfigParser()
-            date_format = "%A %B %d %H:%M:%S %Y"
             node.add_section("Snapshot")
             node.set("Snapshot", "snapshot",      id.id)
             node.set("Snapshot", "parent",        head_id)
             node.set("Snapshot", "name",          name)
-            node.set("Snapshot", "date",          time.strftime(date_format, date))
+            node.set("Snapshot", "date",          date)
             node.set("Snapshot", "checksum",      checksum_program)
             node.set("Snapshot", "size",          size)
             node.add_section("Tree")
@@ -1718,6 +1713,36 @@ class Lockfile:
                     sys.exit(1)
             else:
                 raise e
+
+
+#############################
+# Date representation class #
+#############################
+class EmuDate:
+
+    REPR_FORMAT = "%A %B %d %H:%M:%S %Y"
+    SNAPSHOT_FORMAT = "{0}-{1:02d}-{2:02d} {3:02d}.{4:02d}.{5:02d}"
+
+    def __init__(self):
+        self.date = time.localtime()
+
+
+    # hex() - Return hex formatted date timestamp
+    #
+    def hex(self):
+        return "{0:x}".format(calendar.timegm(self.date))
+
+
+    # snapshotfmt() - Return snapshot name formatted date
+    #
+    def snapshotfmt(self):
+        return (self.SNAPSHOT_FORMAT
+                .format(self.date.tm_year, self.date.tm_mon, self.date.tm_mday,
+                        self.date.tm_hour, self.date.tm_min, self.date.tm_sec))
+
+
+    def __repr__(self):
+        return time.strftime(self.REPR_FORMAT, self.date)
 
 
 #############################
