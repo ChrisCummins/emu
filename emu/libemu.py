@@ -1923,13 +1923,26 @@ class EmuParser(OptionParser):
                 for arg in args:
                     # Regular expression for snapshot syntax, matching:
                     #
-                    #    <stack>(:<id>(~(<n>))(..))
+                    #    <stack>(:<id>(~(<n>))(..(<id>(~(<n>)))))
+                    #
+                    # Examples:
+                    #
+                    #   origin
+                    #   origin:HEAD
+                    #   origin:HEAD~
+                    #   origin:HEAD~21
+                    #   origin:53fc7fa0da39a3ee5e6b4b0d3255bfef95601890~
+                    #   origin:HEAD..
+                    #   origin:HEAD..53fc7fa0da39a3ee5e6b4b0d3255bfef95601890~
                     #
                     regex = (r"^(?P<stack>[a-zA-Z]+)((:?)|"
                              "(:((?P<id>[a-f0-9]{40})|"
                              "(?P<head>HEAD))"
                              "(?P<index>~([0-9]+)?)?"
-                             "(?P<branch>\.\.)?))?$")
+                             "(?P<branch>\.\."
+                             "(((?P<t_id>[a-f0-9]{40})|"
+                             "(?P<t_head>HEAD))"
+                             "(?P<t_index>~([0-9]+)?)?)?)?))?$")
                     match = re.match(regex, arg)
 
                     if not match:
@@ -1941,6 +1954,9 @@ class EmuParser(OptionParser):
                     head_match = match.group("head")
                     index_match = match.group("index")
                     branch_match = match.group("branch")
+                    t_id_match = match.group("t_id")
+                    t_head_match = match.group("t_head")
+                    t_index_match = match.group("t_index")
 
                     stack = Util.get_stack_by_name(stack_match, source.stacks())
 
@@ -1967,14 +1983,44 @@ class EmuParser(OptionParser):
                     else:
                         raise InvalidSnapshotIDError(arg)
 
-                    # If we have the ".." suffix to indicate branch
+                    # If we have a ".." suffix to indicate branch
                     # notation, then we start from the indicated node
                     # and work back, creating a branch history.
                     if branch_match:
-                        n = self._snapshots[len(self._snapshots) - 1].parent()
-                        while n:
-                            self._snapshots.append(n)
-                            n = n.parent()
+                        t_n_index = 0
+                        if t_index_match:
+                            t_n_index = Util.tilde_to_n_index(t_index_match)
+
+                        if t_id_match:
+                            id = SnapshotID(stack_match, t_id_match)
+                            t_snapshot = Util.get_snapshot_by_id(id, stack.snapshots()).nth_child(t_n_index, error=True)
+
+                        elif t_head_match:
+                            head = stack.head()
+                            if head:
+                                t_snapshot = head.nth_child(t_n_index, error=True)
+
+                        else:
+                            t_snapshot = None
+
+                        # We start from the indicated node and work
+                        # back, stopping if/when we reach the
+                        # terminating snapshot.
+                        b_head = self._snapshots[-1]
+                        if not (t_snapshot and t_snapshot == b_head):
+                            n = b_head.parent()
+                            while n:
+                                self._snapshots.append(n)
+                                if t_snapshot and n == t_snapshot:
+                                    break
+                                n = n.parent()
+                        b_tail = self._snapshots[-1]
+
+                        # If the last snapshot doesn't match the
+                        # terminating snapshot, then we were unable to
+                        # create a branch history.
+                        if t_snapshot and t_snapshot != b_tail:
+                            raise InvalidBranchError(b_head, b_tail)
 
                 if require and not len(self._snapshots):
                     raise InvalidArgsError("One or more snapshots must be "
@@ -2096,6 +2142,16 @@ class InvalidSnapshotIDError(InvalidArgsError):
     def __str__(self):
         return ("Invalid snapshot identifier '{0}!'"
                 .format(Util.colourise(self.id, Colours.ERROR)))
+
+
+class InvalidBranchError(InvalidArgsError):
+    def __init__(self, head, tail):
+        self.head = head
+        self.tail = tail
+    def __str__(self):
+        return ("Could not create a branch history between snapshots {0} and {1}!"
+                .format(Util.colourise(self.head, Colours.ERROR),
+                        Util.colourise(self.tail, Colours.ERROR)))
 
 
 class StackNotFoundError(Exception):
