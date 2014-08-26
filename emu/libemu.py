@@ -805,6 +805,12 @@ class Snapshot:
     def __repr__(self):
         return str(self.id)
 
+    def __eq__(self, other):
+        return self.id == other.id
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
     # create() - Create a new snapshot
     #
