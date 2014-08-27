@@ -36,7 +36,7 @@ def main(argv, argc):
     parser.add_option("-d", "--dry-run", action="store_true",
                       dest="dry_run", default=False)
     parser.add_option("-t", "--template-dir", action="store", type="string",
-                      dest="template_dir", default=Util.stack_templates)
+                      dest="template_dir", default=Emu.stack_templates)
     parser.add_option("-f", "--force", action="store_true", dest="force",
                       default=False)
     parser.add_option("-i", "--ignore-errors", action="store_true",

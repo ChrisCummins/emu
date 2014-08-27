@@ -36,7 +36,7 @@ def main(argv, argc):
     parser.add_option("-S", "--source-dir", action="store", type="string",
                       dest="source_dir", default=os.getcwd())
     parser.add_option("-t", "--template-dir", action="store", type="string",
-                      dest="template_dir", default=Util.source_templates)
+                      dest="template_dir", default=Emu.source_templates)
     parser.add_option("-f", "--force", action="store_true", dest="force",
                       default=False)
     (options, args) = parser.parse_args()

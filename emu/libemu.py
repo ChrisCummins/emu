@@ -967,7 +967,7 @@ class Snapshot:
             node.set("Stack",    "snapshot-no",   len(stack.snapshots()) + 1)
             node.set("Stack",    "max-snapshots", stack.max_snapshots())
             node.add_section("Emu")
-            node.set("Emu",      "emu-version",   Util.version)
+            node.set("Emu",      "emu-version",   Emu.version)
             node.set("Emu",      "user",          getpass.getuser())
             node.set("Emu",      "uid",           os.getuid())
             with open(node_path, "wb") as node_file:
@@ -1071,10 +1071,10 @@ class Version:
         return Version(major, minor, micro)
 
 
-##############################################
-# Utility static class with helper functions #
-##############################################
-class Util:
+######################
+# Emu metadata class #
+######################
+class Emu:
 
     #
     # Version and copyright information:
@@ -1091,6 +1091,10 @@ class Util:
                                       "/../share/emu/templates/stack-templates")
 
 
+##############################################
+# Utility static class with helper functions #
+##############################################
+class Util:
     # process_exists() - Check that a process is running
     #
     # If 'error' is True and 'pid' is not running, then exit fatally
@@ -1622,16 +1626,16 @@ class Util:
 
     @staticmethod
     def version_and_quit(*data):
-        print "emu version", Util.version
+        print "emu version", Emu.version
 
         # Assemble and print copyright string:
         s = "Copyright (c) "
-        if Util.copyright["start"] != Util.copyright["end"]:
-            s += "{0}-{1}".format(Util.copyright["start"],
-                                  Util.copyright["end"])
+        if Emu.copyright["start"] != Emu.copyright["end"]:
+            s += "{0}-{1}".format(Emu.copyright["start"],
+                                  Emu.copyright["end"])
         else:
-            s += Util.copyright["end"]
-        s += " {0}".format(", ".join(Util.copyright["authors"]))
+            s += Emu.copyright["end"]
+        s += " {0}".format(", ".join(Emu.copyright["authors"]))
         print s + "."
 
         sys.exit(0)
