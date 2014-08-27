@@ -1091,6 +1091,32 @@ class Emu:
                                       "/../share/emu/templates/stack-templates")
 
 
+    @staticmethod
+    def versionstr():
+        try:
+            return Emu._versionstr
+        except AttributeError:
+            version = Emu.version
+            start = Emu.copyright["start"]
+            end = Emu.copyright["end"]
+            authors = Emu.copyright["authors"]
+
+            # Create version string:
+            s = "emu version {0}\nCopyright (c) ".format(version)
+
+            # Add copyright date range or exact year:
+            if start != end:
+                s += "{0}-{1}".format(start, end)
+            else:
+                s += end
+
+            # Append list of authors:
+            s += " {0}.".format(", ".join(authors))
+
+            Emu._versionstr = s
+            return Emu.versionstr()
+
+
 ##############################################
 # Utility static class with helper functions #
 ##############################################
@@ -1626,18 +1652,7 @@ class Util:
 
     @staticmethod
     def version_and_quit(*data):
-        print "emu version", Emu.version
-
-        # Assemble and print copyright string:
-        s = "Copyright (c) "
-        if Emu.copyright["start"] != Emu.copyright["end"]:
-            s += "{0}-{1}".format(Emu.copyright["start"],
-                                  Emu.copyright["end"])
-        else:
-            s += Emu.copyright["end"]
-        s += " {0}".format(", ".join(Emu.copyright["authors"]))
-        print s + "."
-
+        print Emu.versionstr()
         sys.exit(0)
 
 
