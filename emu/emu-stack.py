@@ -29,7 +29,7 @@ import subprocess
 
 # Resolve and import Libemu
 sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
-from libemu import Util, EmuParser, Source, Stack, StackNotFoundError, Colours
+from libemu import Util, Emu, EmuParser, Source, Stack, StackNotFoundError, Colours
 
 def main(argv, argc):
     parser = EmuParser()

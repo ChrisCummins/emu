@@ -29,7 +29,7 @@ from sys import exit
 
 # Resolve and import Libemu
 sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
-from libemu import Util, EmuParser, Source, SourceCreateError
+from libemu import Util, Emu, EmuParser, Source, SourceCreateError
 
 def main(argv, argc):
     parser = EmuParser()
