@@ -1085,10 +1085,9 @@ class Emu:
     #
     # Template paths:
     #
-    source_templates = os.path.abspath(sys.path[0] +
-                                       "/../share/emu/templates/source-templates")
-    stack_templates = os.path.abspath(sys.path[0] +
-                                      "/../share/emu/templates/stack-templates")
+    templates = sys.path[0] + "/../share/emu/templates"
+    source_templates = os.path.abspath(templates + "/source-templates")
+    stack_templates = os.path.abspath(templates + "/stack-templates")
 
 
     @staticmethod
@@ -1658,7 +1657,11 @@ class Util:
 
     @staticmethod
     def help_and_quit(*data):
-        Util.p_exec("man " + os.path.basename(sys.argv[0]), error=True)
+        script = sys.argv[0]                # Name of the current script
+        basename = os.path.basename(script) # Basename of current script
+        cmd = "man {0}".format(basename)    # Man page invocation
+
+        Util.p_exec(cmd, error=True)
         sys.exit(0)
 
 
