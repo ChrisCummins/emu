@@ -1,0 +1,68 @@
+.TH emu-sink @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
+.SH NAME
+emu\-sink \- manage set of emu sinks
+.SH SYNOPSIS
+.B emu sink
+[<options>]
+.sp
+.B emu sink
+[<options>] add <sink> <path>
+.sp
+.B emu sink
+[<options>] rm <sink ...>
+.sp
+.B emu sink
+[<options>] clean <sink ...>
+.SH DESCRIPTION
+With no arguments, show a list of existing sinks.
+.SH COMMANDS
+.TP
+add <sink> <path>
+Initialises an empty sink named <sink> in the directory <path>. This
+means creating a .emu directory at <path> with subdirectories for
+trees and nodes. Each sink <sink> must be unique.
+.TP
+rm <sink ...>
+Removes named sinks from the source refs. This does not affect the
+sink structure and is non\-destructive.
+.TP
+clean <sink ...>
+Cleans named sinks, removing locks and orphaned files where appropriate. See
+.B emu-clean
+(1).
+.SH OPTIONS
+.TP
+\-d \-\-dry-run
+(clean only) Perform a trial run with no changes made.
+.TP
+\-S <dir> \-\-source-dir <dir>
+Specify the directory to use as an emu source. Defaults to `.'.
+.TP
+\-v \-\-verbose
+Increase verbosity.
+.TP
+\-\-version
+Show version information and quit.
+.TP
+\-h \-\-help
+Show this help and quit.
+.SH EXAMPLES
+.TP
+List information about sinks:
+emu sink --verbose
+.TP
+Add a new sink `origin' at `~/backup':
+emu sink add origin ~/backup
+.TP
+Remove sink `origin':
+emu sink rm origin
+.SH EMU
+Part of the
+.B emu
+(1)
+suite
+.SH AUTHOR
+Chris Cummins <chrisc.101@gmail.com>
+.SH SEE ALSO
+.B emu
+(1)

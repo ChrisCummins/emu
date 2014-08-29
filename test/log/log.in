@@ -4,7 +4,7 @@ test_setup
 cd $EMU_TEST_DIR/test-source
 emu init -v
 
-emu stack -v add origin ../test-stack
+emu sink -v add origin ../test-sink
 emu log origin
 
 test_teardown

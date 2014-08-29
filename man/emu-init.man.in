@@ -6,7 +6,7 @@ emu\-init \- Create emu sources
 [<options>]
 .SH DESCRIPTION
 Creates an empty emu source, with a .emu directory with subdirectories
-for hooks, stack refs and the configuration file. The directories are
+for hooks, sink refs and the configuration file. The directories are
 populated using template files.
 .PP
 This command is non-destructive: running it on an existing emu source

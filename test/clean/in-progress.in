@@ -1,27 +1,27 @@
 set -ex
 test_setup
 
-stack=../stack
+sink=../sink
 
 emu init
-mkdir -pv $stack
-emu stack add origin $stack
+mkdir -pv $sink
+emu sink add origin $sink
 
-mkdir $stack/.emu/trees/new
-touch $stack/.emu/trees/new/test
-assert_is_dir $stack/.emu/trees/new
-assert_is_file $stack/.emu/trees/new/test
+mkdir $sink/.emu/trees/new
+touch $sink/.emu/trees/new/test
+assert_is_dir $sink/.emu/trees/new
+assert_is_file $sink/.emu/trees/new/test
 
 set +e
 emu clean --dry-run --recursive
 set -e
-assert_is_dir $stack/.emu/trees/new
-assert_is_file $stack/.emu/trees/new/test
+assert_is_dir $sink/.emu/trees/new
+assert_is_file $sink/.emu/trees/new/test
 
 set +e
 emu clean --recursive
 set -e
-assert_is_not_dir $stack/.emu/trees/new
-assert_is_not_file $stack/.emu/trees/new/test
+assert_is_not_dir $sink/.emu/trees/new
+assert_is_not_file $sink/.emu/trees/new/test
 
 test_teardown

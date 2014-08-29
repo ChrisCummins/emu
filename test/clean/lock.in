@@ -2,7 +2,7 @@ set -eux
 test_setup
 
 lock=.emu/LOCK
-stack=../stack
+sink=../sink
 
 emu init
 echo -e "$(date) $$" > $lock
@@ -18,25 +18,25 @@ emu clean
 set -e
 assert_is_not_file $lock
 
-mkdir -pv $stack
-emu stack add origin $stack
+mkdir -pv $sink
+emu sink add origin $sink
 
-echo -e "$(date) $$" > $stack/$lock
-assert_is_file $stack/$lock
+echo -e "$(date) $$" > $sink/$lock
+assert_is_file $sink/$lock
 
 set +e
 emu clean
 set -e
-assert_is_file $stack/$lock
+assert_is_file $sink/$lock
 
 set +e
 emu clean --dry-run --recursive
 set -e
-assert_is_file $stack/$lock
+assert_is_file $sink/$lock
 
 set +e
 emu clean --recursive
 set -e
-assert_is_not_file $stack/$lock
+assert_is_not_file $sink/$lock
 
 test_teardown

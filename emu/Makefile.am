@@ -6,8 +6,8 @@ bin_SCRIPTS = 				\
 	emu-log				\
 	emu-prune			\
 	emu-push			\
+	emu-sink			\
 	emu-squash			\
-	emu-stack			\
 	emu-verify			\
 	$(NULL)
 

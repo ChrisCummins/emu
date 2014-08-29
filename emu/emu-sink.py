@@ -29,14 +29,14 @@ import subprocess
 
 # Resolve and import Libemu
 sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
-from libemu import Util, Emu, EmuParser, Source, Stack, StackNotFoundError, Colours
+from libemu import Util, Emu, EmuParser, Source, Sink, SinkNotFoundError, Colours
 
 def main(argv, argc):
     parser = EmuParser()
     parser.add_option("-d", "--dry-run", action="store_true",
                       dest="dry_run", default=False)
     parser.add_option("-t", "--template-dir", action="store", type="string",
-                      dest="template_dir", default=Emu.stack_templates)
+                      dest="template_dir", default=Emu.sink_templates)
     parser.add_option("-f", "--force", action="store_true", dest="force",
                       default=False)
     parser.add_option("-i", "--ignore-errors", action="store_true",
@@ -52,30 +52,30 @@ def main(argv, argc):
     source = Source(options.source_dir)
 
     if len(args) < 1:
-        # List stacks:
-        for stack in source.stacks():
-            print Util.colourise(stack.name, Colours.GREEN)
+        # List sinks:
+        for sink in source.sinks():
+            print Util.colourise(sink.name, Colours.GREEN)
             if options.verbose:
-                snapshots = stack.snapshots()
-                if stack.head():
-                    head_id = stack.head().id.id
+                snapshots = sink.snapshots()
+                if sink.head():
+                    head_id = sink.head().id.id
                 else:
                     head_id = ""
 
-                command = "df -h '{0}'".format(stack.path)
+                command = "df -h '{0}'".format(sink.path)
                 device = (subprocess.check_output(command, shell=True)
                           .split("\n")[1].split()[0])
 
-                print "Location:        {0}".format(stack.path)
+                print "Location:        {0}".format(sink.path)
                 print "No of snapshots: {0}".format(len(snapshots))
-                print "Max snapshots:   {0}".format(stack.max_snapshots())
+                print "Max snapshots:   {0}".format(sink.max_snapshots())
                 print "Head:            {0}".format(head_id)
                 print "Device:          {0}".format(device)
 
     else:
         command = args.pop(0)
 
-        # Add stacks:
+        # Add sinks:
         if command == "add":
             if len(args) == 2:
                 name = args[0]
@@ -84,12 +84,12 @@ def main(argv, argc):
                 print "Usage: add <name> <path>"
                 sys.exit(1)
 
-            Stack.create(source, name, path, options.template_dir,
-                         ignore_errors=options.ignore_errors,
-                         archive=not options.no_archive,
-                         verbose=options.verbose, force=options.force)
+            Sink.create(source, name, path, options.template_dir,
+                        ignore_errors=options.ignore_errors,
+                        archive=not options.no_archive,
+                        verbose=options.verbose, force=options.force)
 
-        # Remove stacks:
+        # Remove sinks:
         elif command == "rm":
             if not len(args):
                 print "Usage: rm <name ...>"
@@ -97,13 +97,13 @@ def main(argv, argc):
 
             for arg in args:
                 try:
-                    stack = Util.get_stack_by_name(arg, source.stacks())
-                    stack.destroy(force=options.force, verbose=options.verbose)
-                except StackNotFoundError as e:
+                    sink = Util.get_sink_by_name(arg, source.sinks())
+                    sink.destroy(force=options.force, verbose=options.verbose)
+                except SinkNotFoundError as e:
                     print e
                     sys.exit(1)
 
-        # Clean stacks:
+        # Clean sinks:
         elif command == "clean":
             if not len(args):
                 print "Usage: clean <name ...>"
@@ -111,14 +111,14 @@ def main(argv, argc):
 
             for arg in args:
                 try:
-                    stack = Util.get_stack_by_name(arg, source.stacks())
-                    stack.clean(verbose=options.verbose, dry_run=options.dry_run)
-                except StackNotFoundError as e:
+                    sink = Util.get_sink_by_name(arg, source.sinks())
+                    sink.clean(verbose=options.verbose, dry_run=options.dry_run)
+                except SinkNotFoundError as e:
                     print e
                     sys.exit(1)
 
         else:
-            print "Invalid command. See: emu stack --help"
+            print "Invalid command. See: emu sink --help"
             sys.exit(1)
 
     return 0

@@ -65,22 +65,22 @@ def main(argv, argc):
     if options.limit <= 0:
         options.limit = len(snapshots)
 
-    # Determine whether we need to print stack names or not:
-    print_stack_names = False
-    current_stack = snapshots[0].stack
+    # Determine whether we need to print sink names or not:
+    print_sink_names = False
+    current_sink = snapshots[0].sink
     for snapshot in snapshots[:options.limit]:
-        if snapshot.stack != current_stack:
-            print_stack_names = True
+        if snapshot.sink != current_sink:
+            print_sink_names = True
 
     # Print logs:
-    current_stack = None
+    current_sink = None
     no_of_snapshots = len(snapshots[:options.limit])
     i = 0
     for snapshot in snapshots[:options.limit]:
         i += 1
-        if print_stack_names and snapshot.stack != current_stack:
-            current_stack = snapshot.stack
-            print Util.colourise("{0}:".format(current_stack.name),
+        if print_sink_names and snapshot.sink != current_sink:
+            current_sink = snapshot.sink
+            print Util.colourise("{0}:".format(current_sink.name),
                                  Colours.INFO)
         # Log:
         id = Util.colourise(snapshot.id.id, Colours.SNAPSHOT)
@@ -103,7 +103,7 @@ def main(argv, argc):
             print_dict(snapshot.node("Snapshot"))
             print_dict(snapshot.node("Tree"))
             if options.verbose:
-                print_dict(snapshot.node("Stack"))
+                print_dict(snapshot.node("Sink"))
                 print_dict(snapshot.node("Emu"))
             if i < no_of_snapshots:
                 print

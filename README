@@ -32,13 +32,13 @@ _after_ installation:
 
 BACKGROUND
 --------------------------------------------------------------------------------
-A snapshot backup system is one in which multiple full "snapshots" of a
-directory tree are built up incrementally, allowing the user to see, explore or
-restore the state of the tree from any one snapshot. Emu refers to the target
-directory that is to be backed up as a "source". The destination for these
-source snapshots is referred to as a "stack"; this is because multiple snapshots
-are arranged in a stacking fashion. New snapshots are "pushed" form the source
-onto the stack, and snapshots can be "popped" from a stack onto the source.
+A snapshot backup system is one in which multiple full "snapshots" of
+a directory tree are built up incrementally, allowing the user to see,
+explore or restore the state of the tree from any one snapshot. Emu
+refers to the target directory that is to be backed up as a
+"source". The destination for these source snapshots is referred to as
+a "sink". New snapshots are "pushed" form the source onto the sink,
+and snapshots can be checked out from a sink onto the source.
 
 There are many different ways of creating snapshot backups. The first technique
 - the "tarball approach" - is to create a full copy of the source directory for
@@ -59,14 +59,14 @@ from a set of incomplete snapshots can increase the amount of time required to
 create and restore snapshots.
 
 The technique that emu uses combines the strenghts of the tarball and
-incremental approaches to produce a robust stack with minimal data bandwidth
+incremental approaches to produce a robust sink with minimal data bandwidth
 requirements and fast execution times. It does this by using hardlinks to keep
 multiple references to identical files without storing duplicate data.
 
 HOW IT WORKS
 --------------------------------------------------------------------------------
 One of the key features of emu is the way in which snapshots are stored within a
-stack. Unix-like operating systems have the ability to maintain multiple
+sink. Unix-like operating systems have the ability to maintain multiple
 references within a filesystem to the same inode, this means that '~/foo' and
 '~/bar' can both refer to the same physical data on the block device, while
 appearing and behaving like separate files. In emu, this ability is exploited in
@@ -75,10 +75,10 @@ identical data. This erases the need for using 'diffs', since the actual
 mechanisms for sharing inodes happens within the kernel, completely
 transparently to emu.
 
-There is a 1-n relationship of sources to stacks. That means that for any
+There is a 1-n relationship of sources to sinks. That means that for any
 directory tree that the user wishes to backup, there may be as many backup
 destinations as they wish. This enables multiple redundancy in the case of
-catastrophic data loss. Stacks are independent structures, and no data is shared
+catastrophic data loss. Sinks are independent structures, and no data is shared
 between them.
 
 LICENSE

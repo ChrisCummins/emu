@@ -1,38 +1,38 @@
 set -eux
 test_setup
 
-stack=../stack
+sink=../sink
 
 emu init
-mkdir -pv $stack
-emu stack add origin $stack
+mkdir -pv $sink
+emu sink add origin $sink
 
 emu push
 emu push
 emu push
 
-node=$(ls $stack/.emu/nodes | head -n1)
-tree=$(ls $stack/.emu/trees | tail -n1)
+node=$(ls $sink/.emu/nodes | head -n1)
+tree=$(ls $sink/.emu/trees | tail -n1)
 
-rm -v $stack/.emu/nodes/$node
-rm -rfv $stack/.emu/trees/$tree
+rm -v $sink/.emu/nodes/$node
+rm -rfv $sink/.emu/trees/$tree
 
-assert_is_not_file $stack/.emu/nodes/$node
-assert_is_not_dir $stack/.emu/trees/$tree
+assert_is_not_file $sink/.emu/nodes/$node
+assert_is_not_dir $sink/.emu/trees/$tree
 
-assert_is_dir $stack/.emu/trees/$node
-assert_is_file $stack/.emu/nodes/$tree
+assert_is_dir $sink/.emu/trees/$node
+assert_is_file $sink/.emu/nodes/$tree
 
 set +e
 emu clean --dry-run --recursive
 set -e
-assert_is_dir $stack/.emu/trees/$node
-assert_is_file $stack/.emu/nodes/$tree
+assert_is_dir $sink/.emu/trees/$node
+assert_is_file $sink/.emu/nodes/$tree
 
 set +e
 emu clean --recursive
 set -e
-assert_is_not_dir $stack/.emu/trees/$node
-assert_is_not_file $stack/.emu/nodes/$tree
+assert_is_not_dir $sink/.emu/trees/$node
+assert_is_not_file $sink/.emu/nodes/$tree
 
 test_teardown

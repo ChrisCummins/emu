@@ -7,8 +7,8 @@ assert_is_dir .emu
 assert_is_dir .emu/hooks
 assert_is_dir .emu/hooks/exec
 assert_is_dir .emu/hooks/push
-assert_is_dir .emu/stacks
-assert_dir_is_empty .emu/stacks
+assert_is_dir .emu/sinks
+assert_dir_is_empty .emu/sinks
 assert_dirs_match .emu/hooks @prefix@/share/emu/templates/source-templates/hooks
 
 test_teardown

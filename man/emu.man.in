@@ -17,10 +17,10 @@ see
           checkout      restore source from snapshot
           clean         remove locks and orphaned data
           init          create emu sources
-          log           show stack snapshot logs
-          squash        squash stack into single snapshot
-          stack         manage stacks
-          prune         remove snapshots from stacks
+          log           show sink snapshot logs
+          squash        squash sink into single snapshot
+          sink          manage sinks
+          prune         remove snapshots from sinks
           push          record source snapshots
           verify        verify the contents of snapshots
 .SH OPTIONS

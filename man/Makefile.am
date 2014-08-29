@@ -7,8 +7,8 @@ man_MANS =	 			\
 	emu-log.1			\
 	emu-prune.1			\
 	emu-push.1			\
+	emu-sink.1			\
 	emu-squash.1			\
-	emu-stack.1			\
 	emu-verify.1			\
 	$(NULL)
 

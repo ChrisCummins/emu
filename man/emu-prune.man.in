@@ -1,17 +1,17 @@
 .TH emu-prune @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
 .SH NAME
-emu\-prune \- Remove snapshots from stacks
+emu\-prune \- Remove snapshots from sinks
 .SH SYNOPSIS
 .B emu prune
-[<options>] <stack>:<snapshot> ...
+[<options>] <sink>:<snapshot> ...
 .SH DESCRIPTION
-Deletes one or more snapshots from their stacks, permanently erasing
+Deletes one or more snapshots from their sinks, permanently erasing
 any files contained within them. If a snapshot is the head of the
-stack, then the head is reallocated to the snapshot's parent, if there
+sink, then the head is reallocated to the snapshot's parent, if there
 is one.
 .PP
 The format for specifying snapshots is in the form
-<stack>:<snapshot>. The <snapshot> value is the 40 digit snapshot ID,
+<sink>:<snapshot>. The <snapshot> value is the 40 digit snapshot ID,
 and can be obtained from 'emu log'.
 .SH OPTIONS
 .TP
@@ -28,7 +28,7 @@ Show version information and quit.
 Show this help and quit.
 .SH EXAMPLES
 .TP
-Delete the head of stack `origin':
+Delete the head of sink `origin':
 emu prune origin:HEAD
 .TP
 Delete a specific snapshot by ID:

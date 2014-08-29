@@ -47,21 +47,21 @@ def main(argv, argc):
     (options, args) = parser.parse_args()
 
     source = Source(options.source_dir)
-    stacks = parser.parse_stacks(source)
+    sinks = parser.parse_sinks(source)
 
-    # Fail if source has no stacks:
-    if not len(stacks):
-        print "Source has no stacks!"
+    # Fail if source has no sinks:
+    if not len(sinks):
+        print "Source has no sinks!"
         sys.exit(1)
 
     status = 0
-    for stack in stacks:
-        status ^= stack.push(force=options.force,
-                             ignore_errors=options.ignore_errors,
-                             archive=not options.no_archive,
-                             owner=not options.no_owner,
-                             dry_run=options.dry_run,
-                             verbose=options.verbose)
+    for sink in sinks:
+        status ^= sink.push(force=options.force,
+                            ignore_errors=options.ignore_errors,
+                            archive=not options.no_archive,
+                            owner=not options.no_owner,
+                            dry_run=options.dry_run,
+                            verbose=options.verbose)
 
     return status
 

@@ -32,7 +32,7 @@ from sys import exit
 
 # Resolve and import Libemu
 sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
-from libemu import EmuParser, Util, Colours, Source, StackNotFoundError
+from libemu import EmuParser, Util, Colours, Source, SinkNotFoundError
 
 def main(argv, argc):
     parser = EmuParser()
@@ -47,9 +47,9 @@ def main(argv, argc):
     if len(args):
         for arg in args:
             try:
-                stack = Util.get_stack_by_name(arg, source.stacks())
-                stack.clean(verbose=options.verbose, dry_run=options.dry_run)
-            except StackNotFoundError as e:
+                sink = Util.get_sink_by_name(arg, source.sinks())
+                sink.clean(verbose=options.verbose, dry_run=options.dry_run)
+            except SinkNotFoundError as e:
                 print e
                 sys.exit(1)
     else:

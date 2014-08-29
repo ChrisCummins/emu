@@ -1,0 +1,26 @@
+set -ue
+test_setup
+
+cd $EMU_TEST_DIR/test-source
+emu init
+
+assert_is_not_dir "$EMU_TEST_DIR/test-sink"
+
+emu sink add origin $EMU_TEST_DIR/test-sink
+
+assert_is_file ".emu/sinks/origin"
+assert_is_dir "$EMU_TEST_DIR/test-sink"
+
+emu sink rm origin
+
+assert_is_not_file ".emu/sinks/origin"
+assert_is_dir "$EMU_TEST_DIR/test-sink"
+
+# Test -R
+rm -rvf $EMU_TEST_DIR/test-sink
+emu sink add origin $EMU_TEST_DIR/test-sink
+
+assert_is_file ".emu/sinks/origin"
+assert_is_dir "$EMU_TEST_DIR/test-sink"
+
+test_teardown

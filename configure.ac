@@ -115,8 +115,8 @@ AC_SUBST(EMU_TEMPLATE_FILES)
 SOURCE_TEMPLATES="$prefix/share/emu/templates/source-templates"
 AC_SUBST([SOURCE_TEMPLATES])
 
-STACK_TEMPLATES="$prefix/share/emu/templates/stack-templates"
-AC_SUBST([STACK_TEMPLATES])
+SINK_TEMPLATES="$prefix/share/emu/templates/sink-templates"
+AC_SUBST([SINK_TEMPLATES])
 
 AC_SUBST([MANSECTION], [1])
 
@@ -174,7 +174,7 @@ AS_IF([test "x$enable_man_pages" = xyes],
               man/emu-prune.man
               man/emu-push.man
               man/emu-squash.man
-              man/emu-stack.man
+              man/emu-sink.man
               man/emu-clean.man
               man/emu-verify.man])],)
 
@@ -185,12 +185,12 @@ AS_IF([test "x$enable_tests" = xyes],
               test/clean/lock
               test/clean/orphans
               test/clean/deadlink
-              test/stack/add
-              test/stack/rm
-              test/stack/stack
+              test/sink/add
+              test/sink/rm
+              test/sink/sink
               test/libtest.sh
               test/push/message
-              test/push/no-stack
+              test/push/no-sink
               test/push/max
               test/push/dry-run
               test/push/force
@@ -198,8 +198,8 @@ AS_IF([test "x$enable_tests" = xyes],
               test/push/verbose
               test/push/excludes
               test/push/mutex
-              test/log/no-stack
-              test/log/stacks
+              test/log/no-sink
+              test/log/sinks
               test/log/log
               test/log/push
               test/log/summary
@@ -216,7 +216,7 @@ AS_IF([test "x$enable_tests" = xyes],
               test/version
               test/verify/hash
               test/verify/invalid-hash
-              test/verify/stack-hash])],)
+              test/verify/sink-hash])],)
 
 
 AC_CONFIG_FILES([

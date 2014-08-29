@@ -2,7 +2,7 @@ templatesdir = $(datarootdir)/emu/templates
 
 templates = 				\
 	source-templates		\
-	stack-templates			\
+	sink-templates			\
 	$(NULL)
 
 EXTRA_DIST = $(shell find $(templates))

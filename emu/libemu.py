@@ -59,7 +59,7 @@ class Source:
         Util.readable(Util.concat_paths(self.path, "/.emu/config"),   error=err_cb)
         Util.readable(Util.concat_paths(self.path, "/.emu/excludes"), error=err_cb)
         Util.readable(Util.concat_paths(self.path, "/.emu/hooks/"),   error=err_cb)
-        Util.readable(Util.concat_paths(self.path, "/.emu/stacks/"),  error=err_cb)
+        Util.readable(Util.concat_paths(self.path, "/.emu/sinks/"),  error=err_cb)
 
 
     # checkout() - Restore source to snapshot
@@ -69,30 +69,30 @@ class Source:
 
         def err_cb(e):
             Util.printf("Woops! Something went wrong.",
-                        prefix=stack.name, colour=Colours.ERROR)
+                        prefix=sink.name, colour=Colours.ERROR)
             if e:
                 print e
 
             try:
-                stack.lock.unlock(force=force, verbose=True)
+                sink.lock.unlock(force=force, verbose=True)
                 self.lock.unlock(force=force, verbose=True)
             except Exception:
                 pass
 
             Util.printf("Failed to checkout snapshot {0}!"
                         .format(Util.colourise(snapshot.id.id, Colours.GREEN)),
-                        prefix=stack.name, colour=Colours.ERROR)
+                        prefix=sink.name, colour=Colours.ERROR)
 
             sys.exit(1)
 
         print "Checking out {0}".format(snapshot.id)
 
-        stack = snapshot.stack
+        sink = snapshot.sink
         exclude = ["/.emu"]
         exclude_from = [Util.concat_paths(self.path, "/.emu/excludes")]
 
         self.lock.lock(force=force, verbose=verbose)
-        stack.lock.lock(force=force, verbose=verbose)
+        sink.lock.lock(force=force, verbose=verbose)
 
         if not dry_run:
             # Perform file transfer:
@@ -103,32 +103,32 @@ class Source:
                        verbose=verbose)
 
         # Set new HEAD:
-        stack.head(head=snapshot, dry_run=dry_run, error=err_cb)
+        sink.head(head=snapshot, dry_run=dry_run, error=err_cb)
 
-        stack.lock.unlock(force=force, verbose=verbose)
+        sink.lock.unlock(force=force, verbose=verbose)
         self.lock.unlock(force=force, verbose=verbose)
 
         print ("Source restored from {0}"
                .format(Util.colourise(snapshot.name, Colours.SNAPSHOT_NEW)))
 
 
-    # stacks() - Get a source's stacks
+    # sinks() - Get a source's sinks
     #
-    # Returns a list of Stack objects.
-    def stacks(self):
+    # Returns a list of Sink objects.
+    def sinks(self):
         try:
-            return self._stacks
+            return self._sinks
         except AttributeError:
             try:
 
-                # Generate list of stacks:
-                self._stacks = []
-                for name in Util.ls(Util.concat_paths(self.path, "/.emu/stacks"),
+                # Generate list of sinks:
+                self._sinks = []
+                for name in Util.ls(Util.concat_paths(self.path, "/.emu/sinks"),
                                     must_exist=True):
-                    self._stacks.append(Stack(name, self))
-                return self._stacks
+                    self._sinks.append(Sink(name, self))
+                return self._sinks
 
-            except StackNotFoundError as e:
+            except SinkNotFoundError as e:
                 print e
                 sys.exit(1)
 
@@ -141,10 +141,10 @@ class Source:
 
         Util.rm(self.lock.path, dry_run=dry_run, verbose=True)
 
-        # Clean stacks:
+        # Clean sinks:
         if recursive:
-            for stack in self.stacks():
-                stack.clean(dry_run=dry_run, verbose=verbose)
+            for sink in self.sinks():
+                sink.clean(dry_run=dry_run, verbose=verbose)
 
         print "Source is clean."
 
@@ -168,7 +168,7 @@ class Source:
 
         # Create directory structure
         source_dir = Util.concat_paths(path, "/.emu")
-        directories = ["/", "/hooks", "/stacks"]
+        directories = ["/", "/hooks", "/sinks"]
         for d in directories:
             Util.mkdir(source_dir + d, mode=0700, verbose=verbose, error=err_cb)
 
@@ -183,22 +183,22 @@ class Source:
         return Source(path)
 
 
-######################
-# Emu snapshot stack #
-######################
-class Stack:
+#####################
+# Emu snapshot sink #
+#####################
+class Sink:
 
     def __init__(self, name, source):
 
         def err_cb(e):
-            print "Non-existent or malformed emu stack."
+            print "Non-existent or malformed emu sink."
             if e:
                 print e
             sys.exit(1)
 
         self.name = name
         self.source = source
-        self.path = Util.read("{0}/.emu/stacks/{1}".format(self.source.path,
+        self.path = Util.read("{0}/.emu/sinks/{1}".format(self.source.path,
                                                            self.name),
                               error=err_cb)
         self.lock = Lockfile(Util.concat_paths(self.path, "/.emu/LOCK"))
@@ -221,7 +221,7 @@ class Stack:
         return snapshots
 
 
-    # head() - Get/Set the current stack head
+    # head() - Get/Set the current sink head
     #
     # Returns the snapshot pointed to by the HEAD file, or None if
     # headless. If 'head' is provided, set this snapshot to be the new
@@ -267,7 +267,7 @@ class Stack:
                 return None
 
 
-    # config() - Get/set stack configuration properties
+    # config() - Get/set sink configuration properties
     #
     # If 's', 'p', and 'v' are provided, set new value 'v' for
     # property 'p' in section 's'. If 's' and 'p' are provided, then
@@ -302,7 +302,7 @@ class Stack:
             return config
 
 
-    # max_snapshots() - Get/Set the max number of snapshots for a stack
+    # max_snapshots() - Get/Set the max number of snapshots for a sink
     #
     def max_snapshots(self, n=None):
         s = "Snapshots"
@@ -324,7 +324,7 @@ class Stack:
     def push(self, force=False, ignore_errors=False, archive=True,
              owner=False, dry_run=False, verbose=False):
 
-        # Get the checksum algorithm from the stack config:
+        # Get the checksum algorithm from the sink config:
         checksum_program = self.config(s="Snapshots", p="checksum")
 
         # Remove old snapshots first:
@@ -407,32 +407,32 @@ class Stack:
                         dry_run=dry_run, verbose=verbose)
 
 
-    # destroy() - Remove a stack from source
+    # destroy() - Remove a sink from source
     #
-    # Note that this only removes the stack pointer from the source,
-    # it does not modify the stack.
+    # Note that this only removes the sink pointer from the source,
+    # it does not modify the sink.
     def destroy(self, force=False, verbose=False):
         source = self.source
 
         source.lock.lock(force=force, verbose=verbose)
         self.lock.lock(force=force, verbose=verbose)
 
-        # Delete stack pointer:
-        Util.rm("{0}/.emu/stacks/{1}".format(source.path, self.name),
+        # Delete sink pointer:
+        Util.rm("{0}/.emu/sinks/{1}".format(source.path, self.name),
                 must_exist=True, error=True, verbose=verbose)
 
-        print "Removed stack {0}".format(Util.colourise(self.name,
+        print "Removed sink {0}".format(Util.colourise(self.name,
                                                         Colours.RED))
 
         self.lock.unlock(force=force, verbose=verbose)
         source.lock.unlock(force=force, verbose=verbose)
 
 
-    # clean() - Clean up the stack
+    # clean() - Clean up the sink
     #
     def clean(self, dry_run=False, verbose=False):
         if verbose:
-            print ("Cleaning stack {0} at '{1}'..."
+            print ("Cleaning sink {0} at '{1}'..."
                    .format(Util.colourise(self.name, Colours.BLUE), self.path))
 
         Util.rm(self.lock.path, dry_run=dry_run, verbose=True)
@@ -459,7 +459,7 @@ class Stack:
                 print ("Deleted orphan tree '{0}'"
                        .format(Util.colourise(path, Colours.RED)))
 
-        # Delete broken symlinks in stack:
+        # Delete broken symlinks in sink:
         for f in Util.ls(self.path):
             path = "{0}/{1}".format(self.path, f)
 
@@ -486,7 +486,7 @@ class Stack:
                    .format(Util.colourise(pointer, Colours.RED)))
             self.head(delete=True, dry_run=dry_run)
 
-        print ("Stack {0} is clean."
+        print ("Sink {0} is clean."
                .format(Util.colourise(self.name, Colours.BLUE)))
 
 
@@ -494,9 +494,9 @@ class Stack:
         return "{0}  {1}".format(self.name, self.path)
 
 
-    # create() - Create a new stack
+    # create() - Create a new sink
     #
-    # Creates the directory structure and files for an emu stack, and
+    # Creates the directory structure and files for an emu sink, and
     # returns an instance.
     @staticmethod
     def create(source, name, path, template_dir, archive=True,
@@ -516,30 +516,30 @@ class Stack:
                 pass
             sys.exit(1)
 
-        # Create stack directory if required:
+        # Create sink directory if required:
         Util.mkdir(path, verbose=verbose, error=err_cb)
 
-        # Check that stack directory exists:
+        # Check that sink directory exists:
         Util.exists(path, error=err_cb)
         Util.writable(path, error=err_cb)
 
         regex = r"^[a-zA-Z]+$"
         if not re.match(regex, name):
-            err_cb("Invalid stack name {0}!\n\n"
-                   "Stack names must consist solely of letters A-Z."
+            err_cb("Invalid sink name {0}!\n\n"
+                   "Sink names must consist solely of letters A-Z."
                    .format(Util.colourise(name, Colours.ERROR)))
 
         # Resolve relative paths:
         path = os.path.abspath(path)
 
-        # Check that there isn't already an identical stack:
-        for stack in source.stacks():
-            if stack.name == name:
-                err_cb("A stack named {0} already exists!"
+        # Check that there isn't already an identical sink:
+        for sink in source.sinks():
+            if sink.name == name:
+                err_cb("A sink named {0} already exists!"
                        .format(Util.colourise(name, Colours.ERROR)))
-            if stack.path == path:
-                err_cb("Stack {0} is already at '{1}'!"
-                       .format(Util.colourise(stack.name, Colours.ERROR),
+            if sink.path == path:
+                err_cb("Sink {0} is already at '{1}'!"
+                       .format(Util.colourise(sink.name, Colours.ERROR),
                                path))
 
         source.lock.lock(force=force, verbose=verbose)
@@ -567,15 +567,15 @@ class Stack:
         Util.write(Util.concat_paths(emu_dir, "/HEAD"), "", error=err_cb)
 
         # Create pointer:
-        Util.write("{0}/.emu/stacks/{1}".format(source.path, name),
+        Util.write("{0}/.emu/sinks/{1}".format(source.path, name),
                    path + "\n", error=err_cb)
 
         source.lock.unlock(force=force, verbose=verbose)
 
-        print ("Initialised stack {0} "
+        print ("Initialised sink {0} "
                "at '{1}'").format(Util.colourise(name, Colours.INFO), path)
 
-        return Stack(name, source)
+        return Sink(name, source)
 
 
 #########################
@@ -583,10 +583,10 @@ class Stack:
 #########################
 class Snapshot:
 
-    def __init__(self, id, stack):
+    def __init__(self, id, sink):
         self.id = id
-        self.tree = Util.concat_paths(stack.path, "/.emu/trees/", id.id)
-        self.stack = stack
+        self.tree = Util.concat_paths(sink.path, "/.emu/trees/", id.id)
+        self.sink = sink
         self.name = self.node("Snapshot", "name")
 
         def err_cb(e):
@@ -596,9 +596,9 @@ class Snapshot:
             sys.exit(1)
 
         # Sanity checks:
-        Util.readable("{0}/{1}".format(self.stack.path, self.name),
+        Util.readable("{0}/{1}".format(self.sink.path, self.name),
                       error=err_cb)
-        Util.readable("{0}/.emu/trees/{1}".format(self.stack.path, self.id.id),
+        Util.readable("{0}/.emu/trees/{1}".format(self.sink.path, self.id.id),
                       error=err_cb)
 
 
@@ -659,7 +659,7 @@ class Snapshot:
     # node() - Fetch snapshot node data from file
     #
     def node(self, s=None, p=None, v=None):
-        path = "{0}/.emu/nodes/{1}".format(self.stack.path, self.id.id)
+        path = "{0}/.emu/nodes/{1}".format(self.sink.path, self.id.id)
         Util.writable(path, error=True)
 
         if s and p and v != None: # Set new value for property
@@ -711,7 +711,7 @@ class Snapshot:
                     return parent.nth_child(n - 1, truncate=truncate,
                                             error=error)
                 elif not truncate:
-                    id = SnapshotID(self.stack.name,
+                    id = SnapshotID(self.sink.name,
                                     self.id.id + Util.n_index_to_tilde(n))
                     raise SnapshotNotFoundError(id)
                 else:
@@ -743,7 +743,7 @@ class Snapshot:
             parent_id = self.node(s="Snapshot", p="parent")
 
             if parent_id:
-                return Snapshot(SnapshotID(self.stack.name, parent_id), self.stack)
+                return Snapshot(SnapshotID(self.sink.name, parent_id), self.sink)
             else:
                 return None
 
@@ -755,36 +755,36 @@ class Snapshot:
     def destroy(self, dry_run=False, force=False, verbose=False):
         Util.printf("removing snapshot {0}"
                     .format(Util.colourise(self.name, Colours.SNAPSHOT_DELETE)),
-                    prefix=self.stack.name, colour=Colours.OK)
+                    prefix=self.sink.name, colour=Colours.OK)
 
-        most_recent_link = Util.concat_paths(self.stack.path, "/Most Recent Backup")
-        stack = self.stack
+        most_recent_link = Util.concat_paths(self.sink.path, "/Most Recent Backup")
+        sink = self.sink
 
         # We don't actually need to modify anything on a dry run:
         if dry_run:
             return
 
-        stack.lock.lock(force=force, verbose=verbose)
+        sink.lock.lock(force=force, verbose=verbose)
 
         # If current snapshot is HEAD, then set parent HEAD:
-        head = stack.head()
+        head = sink.head()
         if head and head.id == self.id:
             new_head = head.parent()
 
             # Remove old "Most Recent Backup" link:
-            Util.rm(Util.concat_paths(stack.path, "/Most Recent Backup"),
+            Util.rm(Util.concat_paths(sink.path, "/Most Recent Backup"),
                     verbose=verbose)
 
             if new_head:
                 # Update head:
-                stack.head(head=new_head, dry_run=dry_run)
+                sink.head(head=new_head, dry_run=dry_run)
             else:
                 # Remove head:
-                stack.head(delete=True, dry_run=dry_run)
+                sink.head(delete=True, dry_run=dry_run)
 
         # Re-allocate parent references from all other snapshots:
         new_parent = self.parent()
-        for snapshot in stack.snapshots():
+        for snapshot in sink.snapshots():
             parent = snapshot.parent()
             if parent and parent.id == self.id:
                 if new_parent:
@@ -793,13 +793,13 @@ class Snapshot:
                     snapshot.parent(delete=True)
 
         # Delete snapshot files:
-        Util.rm(Util.concat_paths(stack.path, "/", self.name),
+        Util.rm(Util.concat_paths(sink.path, "/", self.name),
                 must_exist=True, error=True, verbose=verbose)
         Util.rm(self.tree, must_exist=True, error=True, verbose=verbose)
-        Util.rm("{0}/.emu/nodes/{1}".format(stack.path, self.id.id),
+        Util.rm("{0}/.emu/nodes/{1}".format(sink.path, self.id.id),
                 must_exist=True, error=True, verbose=verbose)
 
-        stack.lock.unlock(force=force, verbose=verbose)
+        sink.lock.unlock(force=force, verbose=verbose)
 
 
     def __repr__(self):
@@ -818,7 +818,7 @@ class Snapshot:
     # make any actual changes. If 'resume' is True then don't perform
     # the file transfer from source to staging area.
     @staticmethod
-    def create(stack, resume=False, transfer_from_source=True, force=False,
+    def create(sink, resume=False, transfer_from_source=True, force=False,
                ignore_errors=False, archive=True, owner=True,
                checksum_program="sha1sum", dry_run=False, verbose=False):
 
@@ -828,10 +828,10 @@ class Snapshot:
         def _get_unique_id(checksum):
             # Generate an ID from date and checksum:
             date = EmuDate()
-            id = SnapshotID(stack.name, date.hex() + checksum)
+            id = SnapshotID(sink.name, date.hex() + checksum)
             try:
                 # See if a snapshot with that ID already exists:
-                Util.get_snapshot_by_id(id, stack.snapshots())
+                Util.get_snapshot_by_id(id, sink.snapshots())
                 # If id does, wait for a bit and try again:
                 time.sleep(0.05)
                 return _get_unique_id(checksum)
@@ -841,7 +841,7 @@ class Snapshot:
 
         def err_cb(e):
             Util.printf("Woops! Something went wrong.",
-                        prefix=stack.name, colour=Colours.ERROR)
+                        prefix=sink.name, colour=Colours.ERROR)
             if e:
                 print e
 
@@ -863,13 +863,13 @@ class Snapshot:
             except Exception:
                 pass
             try:
-                if stack.head().id == id:
-                    stack.head(delete=true, verbose=True)
+                if sink.head().id == id:
+                    sink.head(delete=true, verbose=True)
             except Exception:
                 pass
             try:
                 source.lock.unlock(force=force, verbose=True)
-                stack.lock.unlock(force=force, verbose=True)
+                sink.lock.unlock(force=force, verbose=True)
             except Exception:
                 pass
             try:
@@ -879,17 +879,17 @@ class Snapshot:
                 pass
 
             Util.printf("Failed to create new snapshot!",
-                        prefix=stack.name, colour=Colours.ERROR)
+                        prefix=sink.name, colour=Colours.ERROR)
             sys.exit(1)
 
-        source = stack.source
-        staging_area = Util.concat_paths(stack.path, "/.emu/trees/new")
+        source = sink.source
+        staging_area = Util.concat_paths(sink.path, "/.emu/trees/new")
         exclude = ["/.emu"]
         exclude_from = [Util.concat_paths(source.path, "/.emu/excludes")]
         link_dests = []
 
         source.lock.lock(force=force, verbose=verbose)
-        stack.lock.lock(force=force, verbose=verbose)
+        sink.lock.lock(force=force, verbose=verbose)
 
         # Ignore rsync errors if required:
         if ignore_errors:
@@ -900,7 +900,7 @@ class Snapshot:
         if not resume:
             # Use up to 20 of the most recent snapshots as link
             # destinations:
-            for snapshot in stack.snapshots()[-20:]:
+            for snapshot in sink.snapshots()[-20:]:
                 link_dests.append(snapshot.tree)
 
             # Perform file transfer:
@@ -930,8 +930,8 @@ class Snapshot:
 
         (id, date) = _get_unique_id(checksum)
         name = date.snapshotfmt()
-        tree = Util.concat_paths(stack.path, "/.emu/trees/", id.id)
-        name_link = Util.concat_paths(stack.path, "/", name)
+        tree = Util.concat_paths(sink.path, "/.emu/trees/", id.id)
+        name_link = Util.concat_paths(sink.path, "/", name)
 
         if not dry_run:
             # Move tree into position
@@ -943,14 +943,14 @@ class Snapshot:
                       name_link, verbose=verbose, error=err_cb)
 
         # Get parent node ID:
-        if stack.head():
-            head_id = stack.head().id.id
+        if sink.head():
+            head_id = sink.head().id.id
         else:
             head_id = ""
 
         if not dry_run:
             # Create node:
-            node_path = "{0}/.emu/nodes/{1}".format(stack.path, id.id)
+            node_path = "{0}/.emu/nodes/{1}".format(sink.path, id.id)
             node = ConfigParser.ConfigParser()
             node.add_section("Snapshot")
             node.set("Snapshot", "snapshot",      id.id)
@@ -960,12 +960,12 @@ class Snapshot:
             node.set("Snapshot", "checksum",      checksum_program)
             node.set("Snapshot", "size",          size)
             node.add_section("Tree")
-            node.add_section("Stack")
-            node.set("Stack",    "source",        stack.source.path)
-            node.set("Stack",    "stack",         id.stack_name)
-            node.set("Stack",    "path",          stack.path)
-            node.set("Stack",    "snapshot-no",   len(stack.snapshots()) + 1)
-            node.set("Stack",    "max-snapshots", stack.max_snapshots())
+            node.add_section("Sink")
+            node.set("Sink",     "source",        sink.source.path)
+            node.set("Sink",     "sink",          id.sink_name)
+            node.set("Sink",     "path",          sink.path)
+            node.set("Sink",     "snapshot-no",   len(sink.snapshots()) + 1)
+            node.set("Sink",     "max-snapshots", sink.max_snapshots())
             node.add_section("Emu")
             node.set("Emu",      "emu-version",   Emu.version)
             node.set("Emu",      "user",          getpass.getuser())
@@ -975,15 +975,15 @@ class Snapshot:
 
         # Update HEAD:
         if not dry_run:
-            snapshot = Snapshot(SnapshotID(stack.name, id.id), stack)
-            stack.head(head=snapshot, dry_run=dry_run, error=err_cb)
+            snapshot = Snapshot(SnapshotID(sink.name, id.id), sink)
+            sink.head(head=snapshot, dry_run=dry_run, error=err_cb)
 
         source.lock.unlock(force=force, verbose=verbose)
-        stack.lock.unlock(force=force, verbose=verbose)
+        sink.lock.unlock(force=force, verbose=verbose)
 
         Util.printf("new snapshot {0}"
                     .format(Util.colourise(name, Colours.SNAPSHOT_NEW)),
-                    prefix=stack.name, colour=Colours.OK)
+                    prefix=sink.name, colour=Colours.OK)
 
         if not dry_run:
             return snapshot
@@ -993,17 +993,17 @@ class Snapshot:
 # Unique global snapshot identifier #
 #####################################
 class SnapshotID:
-    def __init__(self, stack_name, id):
-        self.stack_name = stack_name
+    def __init__(self, sink_name, id):
+        self.sink_name = sink_name
         self.id = id
         self.timestamp = id[:8]
         self.checksum = id[8:]
 
     def __repr__(self):
-        return self.stack_name + ":" + self.id
+        return self.sink_name + ":" + self.id
 
     def __eq__(self, other):
-        return self.id == other.id and self.stack_name == other.stack_name
+        return self.id == other.id and self.sink_name == other.sink_name
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -1087,7 +1087,7 @@ class Emu:
     #
     templates = sys.path[0] + "/../share/emu/templates"
     source_templates = os.path.abspath(templates + "/source-templates")
-    stack_templates = os.path.abspath(templates + "/stack-templates")
+    sink_templates = os.path.abspath(templates + "/sink-templates")
 
 
     @staticmethod
@@ -1572,15 +1572,15 @@ class Util:
                 raise e
 
 
-    # Look up a stack by name, or raise StackNotFoundError():
+    # Look up a sink by name, or raise SinkNotFoundError():
     #
     @staticmethod
-    def get_stack_by_name(name, stacks):
-        for stack in stacks:
-            if stack.name == name:
-                return stack
+    def get_sink_by_name(name, sinks):
+        for sink in sinks:
+            if sink.name == name:
+                return sink
 
-        raise StackNotFoundError(name)
+        raise SinkNotFoundError(name)
 
 
     # Look up a snapshot by id, or raise SnapshotNotFoundError():
@@ -1864,33 +1864,33 @@ class EmuParser(OptionParser):
             return self.args()
 
 
-    # parse_stacks() - Parse the arguments for stack identifiers
+    # parse_sinks() - Parse the arguments for sink identifiers
     #
-    # Parses the command line arguments and searches for stack
-    # identifiers, returning a list of Stack objects for each of the
-    # named stacks. If 'accept_no_args' is True, then if no
-    # arguments are provided, all stacks will be returned. If an
-    # argument does not correspond with a stack, then a
-    # StackNotFoundError is raised.
-    def parse_stacks(self, source, accept_no_args=True, error=True):
+    # Parses the command line arguments and searches for sink
+    # identifiers, returning a list of Sink objects for each of the
+    # named sinks. If 'accept_no_args' is True, then if no
+    # arguments are provided, all sinks will be returned. If an
+    # argument does not correspond with a sink, then a
+    # SinkNotFoundError is raised.
+    def parse_sinks(self, source, accept_no_args=True, error=True):
 
         try:
-            return self._stacks
+            return self._sinks
         except AttributeError:
             try:
 
-                # Return all stacks if no args:
+                # Return all sinks if no args:
                 if accept_no_args and not len(self.args()):
-                    return source.stacks()
+                    return source.sinks()
                 else:
                     # Else parse arguments:
-                    self._stacks = []
+                    self._sinks = []
                     for arg in self.args():
-                        self._stacks.append(Util.get_stack_by_name(arg,
-                                                                   source.stacks()))
-                    return self._stacks
+                        self._sinks.append(Util.get_sink_by_name(arg,
+                                                                   source.sinks()))
+                    return self._sinks
 
-            except StackNotFoundError as e:
+            except SinkNotFoundError as e:
                 if error:
                     if hasattr(error, '__call__'):
                         # Execute error callback if provided:
@@ -1907,12 +1907,12 @@ class EmuParser(OptionParser):
     #
     # Parses the command line arguments and searches for snapshot IDs,
     # returning a list of Snapshot objects for each of the identified
-    # snapshots. If 'accept_stack_names' is True, then if a stack is
+    # snapshots. If 'accept_sink_names' is True, then if a sink is
     # only named, then a list of all of its snapshots will be used,
     # instead of having to identify a single one. 'If
-    # 'accept_no_args' is True, then a list of all stacks will be
+    # 'accept_no_args' is True, then a list of all sinks will be
     # used if no arguments are provided.
-    def parse_snapshots(self, source, accept_stack_names=True,
+    def parse_snapshots(self, source, accept_sink_names=True,
                         accept_no_args=True, single_arg=False,
                         require=False, error=True):
 
@@ -1936,16 +1936,16 @@ class EmuParser(OptionParser):
                         print e
                         sys.exit(1)
 
-                # If no args are given, generate a list of all stack names:
+                # If no args are given, generate a list of all sink names:
                 if accept_no_args and not len(args):
-                    for stack in source.stacks():
-                        args.append(stack.name)
+                    for sink in source.sinks():
+                        args.append(sink.name)
 
                 # Iterate over each arg, resolving to snapshot(s):
                 for arg in args:
                     # Regular expression for snapshot syntax, matching:
                     #
-                    #    <stack>(:<id>(~(<n>))(..(<id>(~(<n>)))))
+                    #    <sink>(:<id>(~(<n>))(..(<id>(~(<n>)))))
                     #
                     # Examples:
                     #
@@ -1957,7 +1957,7 @@ class EmuParser(OptionParser):
                     #   origin:HEAD..
                     #   origin:HEAD..53fc7fa0da39a3ee5e6b4b0d3255bfef95601890~
                     #
-                    regex = (r"^(?P<stack>[a-zA-Z]+)((:?)|"
+                    regex = (r"^(?P<sink>[a-zA-Z]+)((:?)|"
                              "(:((?P<id>[a-f0-9]{40})|"
                              "(?P<head>HEAD))"
                              "(?P<index>~([0-9]+)?)?"
@@ -1971,7 +1971,7 @@ class EmuParser(OptionParser):
                         raise InvalidSnapshotIDError(arg)
 
                     # Regex components:
-                    stack_match = match.group("stack")
+                    sink_match = match.group("sink")
                     id_match = match.group("id")
                     head_match = match.group("head")
                     index_match = match.group("index")
@@ -1980,7 +1980,7 @@ class EmuParser(OptionParser):
                     t_head_match = match.group("t_head")
                     t_index_match = match.group("t_index")
 
-                    stack = Util.get_stack_by_name(stack_match, source.stacks())
+                    sink = Util.get_sink_by_name(sink_match, source.sinks())
 
                     # Resolve tilde index notation:
                     n_index = 0
@@ -1989,19 +1989,19 @@ class EmuParser(OptionParser):
 
                     if id_match:
                         # If there's an ID, then match it:
-                        id = SnapshotID(stack_match, id_match)
-                        snapshot = Util.get_snapshot_by_id(id, stack.snapshots())
+                        id = SnapshotID(sink_match, id_match)
+                        snapshot = Util.get_snapshot_by_id(id, sink.snapshots())
                         self._snapshots.append(snapshot.nth_child(n_index,
                                                                   error=True))
                     elif head_match:
                         # Calculate the HEAD index and traverse:
-                        head = stack.head()
+                        head = sink.head()
                         if head:
                             self._snapshots.append(head.nth_child(n_index,
                                                                   error=True))
-                    elif accept_stack_names:
+                    elif accept_sink_names:
                         # If there's no ID then match all snapshots (in reverse)
-                        self._snapshots += stack.snapshots()[::-1]
+                        self._snapshots += sink.snapshots()[::-1]
                     else:
                         raise InvalidSnapshotIDError(arg)
 
@@ -2014,11 +2014,11 @@ class EmuParser(OptionParser):
                             t_n_index = Util.tilde_to_n_index(t_index_match)
 
                         if t_id_match:
-                            id = SnapshotID(stack_match, t_id_match)
-                            t_snapshot = Util.get_snapshot_by_id(id, stack.snapshots()).nth_child(t_n_index, error=True)
+                            id = SnapshotID(sink_match, t_id_match)
+                            t_snapshot = Util.get_snapshot_by_id(id, sink.snapshots()).nth_child(t_n_index, error=True)
 
                         elif t_head_match:
-                            head = stack.head()
+                            head = sink.head()
                             if head:
                                 t_snapshot = head.nth_child(t_n_index, error=True)
 
@@ -2047,12 +2047,12 @@ class EmuParser(OptionParser):
                 if require and not len(self._snapshots):
                     raise InvalidArgsError("One or more snapshots must be "
                                            "specified using "
-                                           "<stack>:<snapshot>")
+                                           "<sink>:<snapshot>")
 
                 return self._snapshots
 
             except (InvalidArgsError,
-                    StackNotFoundError,
+                    SinkNotFoundError,
                     SnapshotNotFoundError) as e:
                 if error:
                     if hasattr(error, '__call__'):
@@ -2176,11 +2176,11 @@ class InvalidBranchError(InvalidArgsError):
                         Util.colourise(self.tail, Colours.ERROR)))
 
 
-class StackNotFoundError(Exception):
+class SinkNotFoundError(Exception):
     def __init__(self, name):
         self.name = name
     def __str__(self):
-        return ("Stack '{0}' not found!"
+        return ("Sink '{0}' not found!"
                 .format(Util.colourise(self.name, Colours.ERROR)))
 
 
@@ -2189,7 +2189,7 @@ class SnapshotNotFoundError(Exception):
         self.id = id
     def __str__(self):
         return ("Snapshot '{0}:{1}' not found!"
-                .format(self.id.stack_name,
+                .format(self.id.sink_name,
                         Util.colourise(self.id.id, Colours.ERROR)))
 
 

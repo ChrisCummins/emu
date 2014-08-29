@@ -3,17 +3,17 @@
 emu\-verify \- Verify the contents of snapshots
 .SH SYNOPSIS
 .B emu verify
-[<options>] [<stack>[:<snapshot>] ...]
+[<options>] [<sink>[:<snapshot>] ...]
 .SH DESCRIPTION
 Verifies snapshot checksums by computing against the stored tree. A
 checksum which does not match is indicative of a snapshot that is in
 some way corrupted or has been tampered with.
 .PP
 The format for specifying snapshots is in the form
-<stack>[:<snapshot>]. The <snapshot> value is the 40 digit snapshot
+<sink>[:<snapshot>]. The <snapshot> value is the 40 digit snapshot
 ID, and can be obtained from 'emu log'. If omitted, all of the
-snapshots within a stack will be verified. If no snapshot or stack is
-specified, every stack will be verified.
+snapshots within a sink will be verified. If no snapshot or sink is
+specified, every sink will be verified.
 .PP
 Verification uses the same checksum algorithm which was used to
 generate the snapshot ID. The results of verification are cached in
@@ -37,10 +37,10 @@ Show version information and quit.
 Show this help and quit.
 .SH EXAMPLES
 .TP
-Verify all snapshots for all stacks:
+Verify all snapshots for all sinks:
 emu verify
 .TP
-Verify all snapshots for stack `origin':
+Verify all snapshots for sink `origin':
 emu verify origin
 .TP
 Verify a specific snapshot by ID:

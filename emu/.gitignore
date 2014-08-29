@@ -8,8 +8,8 @@ emu-pop
 emu-prune
 emu-push
 emu
+emu-sink
 emu-squash
-emu-stack
 emu-status
 emu-verify
 libemu

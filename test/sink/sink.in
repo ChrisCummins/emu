@@ -1,0 +1,32 @@
+set -eu
+test_setup
+
+cd $EMU_TEST_DIR/test-source
+
+assert_fail "emu sink"
+
+emu init
+emu sink
+
+assert_is_not_dir "$EMU_TEST_DIR/test-sink"
+
+emu sink add origin $EMU_TEST_DIR/test-sink
+sink=$(emu sink | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g")
+
+if [ "$sink" != origin ]
+then
+    exit 5
+fi
+
+emu sink -v
+
+emu sink add master $EMU_TEST_DIR/test-master
+
+sink="$(emu sink | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g")"
+
+if [ "$sink" != $(ls .emu/sinks) ]
+then
+    exit 5
+fi
+
+test_teardown

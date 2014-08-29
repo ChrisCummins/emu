@@ -38,7 +38,7 @@ def main(argv, argc):
     (options, args) = parser.parse_args()
 
     snapshots = parser.parse_snapshots(Source(options.source_dir),
-                                       accept_stack_names=False,
+                                       accept_sink_names=False,
                                        accept_no_args=False,
                                        require=True)
 

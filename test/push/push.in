@@ -6,8 +6,8 @@ cd $EMU_TEST_DIR/test-source
 assert_fail "emu push"
 emu init
 echo "hello, world!" > test
-emu stack add origin ../test-stack
+emu sink add origin ../test-sink
 emu push
-assert_strings_match "hello, world!" "$(cat ../test-stack/.emu/trees/*/test)"
+assert_strings_match "hello, world!" "$(cat ../test-sink/.emu/trees/*/test)"
 
 test_teardown

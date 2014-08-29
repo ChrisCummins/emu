@@ -3,14 +3,14 @@
 emu\-push \- record source snapshots
 .SH SYNOPSIS
 .B emu push
-[<options>] [<stack> ...]
+[<options>] [<sink> ...]
 .SH DESCRIPTION
 Push a new snapshot of the source directory onto one or more
-stacks. If none are specified, push to all stacks.
+sinks. If none are specified, push to all sinks.
 .PP
-The difference between the source and a stack's HEAD is transferred
+The difference between the source and a sink's HEAD is transferred
 and linked against the existing content, combining to produce a full
-snapshot of the source directory. This enables emu stacks to be very
+snapshot of the source directory. This enables emu sinks to be very
 compact, allowing multiple full snapshots to be stored in a space
 little larger than a single full snapshot.
 .PP
@@ -27,7 +27,7 @@ Emu uses the
 (1) file\-copying tool for its delta\-transfer
 algorithm, which reduces the amount of data sent by sending only the
 differences between the source files and the existing files in the
-stack. Rsync finds files that need to be transferred using a "quick
+sink. Rsync finds files that need to be transferred using a "quick
 check" algorithm that looks for files that have changed in size or in
 last\-modified time.
 .SH OPTIONS
@@ -36,7 +36,7 @@ Perform a trial run with no changes made.
 .TP
 \-f \-\-force
 Force push the snapshot, ignoring any concurrency locks on the source
-or stack.
+or sink.
 .TP
 \-i \-\-ignore-errors
 Ignore errors in the file transfer stage. Errors in the file transfer

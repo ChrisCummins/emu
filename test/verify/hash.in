@@ -6,7 +6,7 @@ source=source
 # Push a snapshot
 emu init
 mkdir $source
-emu stack add origin $source
+emu sink add origin $source
 emu push
 hash=$(ls $source/.emu/nodes)
 

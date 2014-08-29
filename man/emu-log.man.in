@@ -1,12 +1,12 @@
 .TH emu-log @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
 .SH NAME
-emu\-log \- Show stack snapshot logs
+emu\-log \- Show sink snapshot logs
 .SH SYNOPSIS
 .B emu log
-[<options>] [<stack>[:<snapshot>] ...]
+[<options>] [<sink>[:<snapshot>] ...]
 .SH DESCRIPTION
 Show snapshot logs for one or more snapshots. If no arguments are
-given, show logs for snapshots across every stack.
+given, show logs for snapshots across every sink.
 .SH OPTIONS
 .TP
 \-n <number> \-\-limit <number>
@@ -28,13 +28,13 @@ Show version information and quit.
 Show this help and quit.
 .SH EXAMPLES
 .TP
-Show log for all stacks:
+Show log for all sinks:
 emu log
 .TP
-Show only the most recent snapshots for stacks `origin' and `local':
+Show only the most recent snapshots for sinks `origin' and `local':
 emu log origin:HEAD local:HEAD
 .TP
-Show a short log for the 10 most recent snapshots for stack `origin':
+Show a short log for the 10 most recent snapshots for sink `origin':
 emu log origin -s -n10
 .SH EMU
 Part of the

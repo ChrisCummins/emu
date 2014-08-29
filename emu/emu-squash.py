@@ -43,18 +43,18 @@ def main(argv, argc):
     (options, args) = parser.parse_args()
     source = Source(options.source_dir)
     snapshot = parser.parse_snapshots(source,
-                                      accept_stack_names=False,
+                                      accept_sink_names=False,
                                       accept_no_args=False,
                                       single_arg=True,
                                       require=True)[0]
-    stack = snapshot.stack
+    sink = snapshot.sink
 
     if options.merge:
-        stack.merge(dry_run=options.dry_run, force=options.force,
-                    verbose=options.verbose)
+        sink.merge(dry_run=options.dry_run, force=options.force,
+                   verbose=options.verbose)
     else:
-        stack.squash(snapshot, dry_run=options.dry_run,
-                     force=options.force, verbose=options.verbose)
+        sink.squash(snapshot, dry_run=options.dry_run,
+                    force=options.force, verbose=options.verbose)
 
     return 0
 
