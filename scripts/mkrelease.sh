@@ -113,7 +113,7 @@ make_development_version_commit() {
     cd "$(get_project_root)"
 
     echo "Creating dirty version commit... '$new_version*'"
-    sed -r -i 's/(\s*version\s*=\s*Version\(\s*)[0-9]+,\s*[0-9]+,\s*[0-9]+,\s*dirty\s*=\s*)False/\1True/' emu/libemu.py
+    sed -r -i 's/(\s*version\s*=\s*Version\(\s*[0-9]+,\s*[0-9]+,\s*[0-9]+,\s*dirty\s*=\s*)False/\1True/' emu/libemu.py
     git add emu/libemu.py
     git commit -m "libemu: Set version dirty flag"
 }
