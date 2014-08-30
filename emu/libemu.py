@@ -43,6 +43,10 @@ from datetime import datetime
 class Source:
 
     def __init__(self, path):
+        if not path:
+            print "fatal: Not an emu source (or any parent directory)"
+            sys.exit(1)
+
         self.path = path
         self.lock = Lockfile(Util.concat_paths(self.path, "/.emu/LOCK"))
 
@@ -1822,9 +1826,7 @@ class EmuParser(OptionParser):
             # If not, then get the parent directory and repeat:
             new_source_dir = Util.par_dir(source_dir)
             if new_source_dir == source_dir:
-                print ("fatal: Not an emu source (or any parent directory) '{0}'"
-                       .format(base_source_dir))
-                sys.exit(1)
+                return None
             source_dir = new_source_dir
 
     def __init__(self):
