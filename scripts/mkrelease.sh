@@ -115,7 +115,7 @@ make_development_version_commit() {
     echo "Creating dirty version commit... '$new_version*'"
     sed -r -i 's/(\s*version\s*=\s*Version\(\s*[0-9]+,\s*[0-9]+,\s*[0-9]+,\s*dirty\s*=\s*)False/\1True/' emu/libemu.py
     git add emu/libemu.py
-    git commit -m "libemu: Set version dirty flag"
+    git commit -m "libemu: Set version dirty flag" >/dev/null
 }
 
 # Push the version commit and release tag to git remotes.
