@@ -230,35 +230,43 @@ class Sink:
         head_pointer = Util.concat_paths(self.path, "/.emu/HEAD")
         most_recent_link = Util.concat_paths(self.path, "/Most Recent Backup")
 
+        # Option 1 of 3: Set a new HEAD pointer.
         if head:
             old_head = self.head()
-            change_head = not old_head or old_head.id != head.id
+            # Check that the new HEAD is different from the current
+            # HEAD pointer:
+            head_is_different = not old_head or (old_head.id != head.id)
 
-            # Only change HEAD if it is different from current head:
-            if not change_head:
+            # If the new HEAD is the same as the current one, then do
+            # nothing:
+            if not head_is_different:
                 return
 
-            if not dry_run and change_head:
-                # Write new pointer to HEAD:
+            # Else write a new HEAD pointer:
+            if not dry_run:
                 Util.write(head_pointer, head.id.id + "\n",
                            error=error)
-                # Create new "Most Recent Backup" link
+
+                # Create a new "Most Recent Backup" link:
                 if Util.exists(most_recent_link):
                     Util.rm(most_recent_link, error=error)
                 Util.ln_s(head.name, most_recent_link, error=error)
 
             Util.printf("HEAD at {0}".format(head.id.id),
                         prefix=self.name, colour=Colours.OK)
+
+        # Option 2 of 3: Delete the HEAD pointer, leaving the sink
+        #              headless.
         elif delete:
             if not dry_run:
-                # Remove HEAD and most "Most Recent Backup" link
                 Util.rm(most_recent_link, error=error)
                 Util.write(head_pointer, "", error=error)
 
             Util.printf("now in headless state",
                         prefix=self.name, colour=Colours.OK)
+
+        # Option 3 of 3: Fetch the HEAD snapshot, or None if headless.
         else:
-            # Get current head:
             pointer = Util.read(head_pointer, error=error)
             if pointer:
                 id = SnapshotID(self.name, pointer)
@@ -276,25 +284,25 @@ class Sink:
     def config(self, s=None, p=None, v=None):
         path = Util.concat_paths(self.path, "/.emu/config")
 
-        # Set new value for property:
+        # Option 1 of 3: Set a new property value.
         if s and p and v:
-
             config = self.config()
             config.set(s, p, v)
             with open(path, "wb") as config_file:
                 config.write(config_file)
 
-        # Get specific property:
+        # Option 2 of 3: Get a property value.
         if s and p:
             try:
                 return self.config().get(s, p)
             except:
-                print ("Error retrieving config property '{0}' in section '{1}'"
-                       .format(Util.colourise(p, Colours.ERROR),
-                               Util.colourise(s, Colours.ERROR)))
+                print ("Error retrieving config property '{0}' in section "
+                       "'{1}' of '{2}'".format(Util.colourise(p, Colours.ERROR),
+                                               Util.colourise(s, Colours.ERROR),
+                                               path))
                 sys.exit(1)
 
-        # Return config:
+        # Option 3 of 3: Return the ConfigParser.
         else:
             Util.readable(path, error=True)
             config = ConfigParser.ConfigParser()
@@ -305,18 +313,17 @@ class Sink:
     # max_snapshots() - Get/Set the max number of snapshots for a sink
     #
     def max_snapshots(self, n=None):
-        s = "Snapshots"
-        p = "max-number"
+        s, p = "Snapshots", "max-number"
 
         if n:
-            # Set max snapshots:
+            # Option 1 of 2: Set the maximum number of snapshots.
             self.config(s=s, p=p, n=n)
         else:
-            # Get max snapshots:
+            # Option 2 of 2: Get the maximum number of snapshots.
             try:
                 return int(self.config(s=s, p=p))
             except:
-                print ("Couldn't interpret max number of snapshots '{0}'!"
+                print ("Error retrieving max number of snapshots '{0}'!"
                        .format(Util.colourise(self.config(s, p), Colours.ERROR)))
                 sys.exit(1)
 
