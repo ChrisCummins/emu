@@ -1098,23 +1098,21 @@ class Emu:
             return Emu._versionstr
         except AttributeError:
             version = Emu.version
+
             start = Emu.copyright["start"]
             end = Emu.copyright["end"]
-            authors = Emu.copyright["authors"]
+            if start != end:
+                copyright = "{0}-{1}".format(start, end)
+            else:
+                copyright = end
+
+            authors = ", ".join(Emu.copyright["authors"])
 
             # Create version string:
-            s = "emu version {0}\nCopyright (c) ".format(version)
+            Emu._versionstr = ("emu version {0}\n"
+                               "Copyright (c) {1} {2}"
+                               .format(version, copyright, authors))
 
-            # Add copyright date range or exact year:
-            if start != end:
-                s += "{0}-{1}".format(start, end)
-            else:
-                s += end
-
-            # Append list of authors:
-            s += " {0}.".format(", ".join(authors))
-
-            Emu._versionstr = s
             return Emu.versionstr()
 
 
