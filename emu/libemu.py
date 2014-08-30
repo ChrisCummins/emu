@@ -672,7 +672,14 @@ class Snapshot:
         if s and p and v != None: # Set new value for property
 
             node = self.node()
-            node.set(s, p, v)
+            # Set the property value. If the section does not exist,
+            # then create it:
+            try:
+                node.set(s, p, v)
+            except ConfigParser.NoSectionError:
+                node.add_section(s)
+                node.set(s, p, v)
+
             with open(path, "wb") as node_file:
                 node.write(node_file)
 
@@ -681,7 +688,7 @@ class Snapshot:
             try:
                 node = self.node()
                 return node.get(s, p)
-            except ConfigParser.Error:
+            except:
                 return None
 
         elif s:
