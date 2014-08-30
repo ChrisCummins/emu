@@ -757,7 +757,6 @@ class Snapshot:
                     .format(Util.colourise(self.name, Colours.SNAPSHOT_DELETE)),
                     prefix=self.sink.name, colour=Colours.OK)
 
-        most_recent_link = Util.concat_paths(self.sink.path, "/Most Recent Backup")
         sink = self.sink
 
         # We don't actually need to modify anything on a dry run:
@@ -848,10 +847,6 @@ class Snapshot:
             # Tidy up any intermediate files which may have been created:
             try:
                 Util.rm(name_link, verbose=True)
-            except Exception:
-                pass
-            try:
-                Util.rm(most_recent_link, verbose=True)
             except Exception:
                 pass
             try:
