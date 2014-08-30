@@ -1027,20 +1027,25 @@ class SnapshotID:
 #################################
 class Version:
 
-    def __init__(self, major, minor, micro):
+    def __init__(self, major, minor, micro, dirty=False):
         self.major = major
         self.minor = minor
         self.micro = micro
+        self.dirty = dirty
 
 
     def __repr__(self):
-        return "{0}.{1}.{2}".format(self.major, self.minor, self.micro)
+        s = "{0}.{1}.{2}".format(self.major, self.minor, self.micro)
+        if self.dirty:
+            s += "*"
+        return s
 
     # Numerical comparison operators:
     def __eq__(self, other):
         return (self.major == other.major and
                 self.minor == other.minor and
-                self.micro == other.micro)
+                self.micro == other.micro and
+                self.dirty == other.dirty)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -1092,7 +1097,7 @@ class Emu:
     #
     # Version and copyright information:
     #
-    version = Version(0, 1, 35)
+    version = Version(0, 1, 35, dirty=True)
     copyright = { "start": 2012, "end": 2014, "authors": ["Chris Cummins"]}
 
     #

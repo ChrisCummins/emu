@@ -88,7 +88,7 @@ set_new_version() {
 
     echo "Setting new version... emu/libemu.py"
     test -f emu/libemu.py || { echo "fatal: 'emu/libemu.py' not found!"; exit 3; }
-    sed -r -i 's/(\s*version\s*=\s*Version\(\s*)([0-9]+)(,\s*)([0-9]+)(,\s*)([0-9]+)/\1'"$major"'\3'"$minor"'\5'"$micro"'/' emu/libemu.py
+    sed -r -i 's/(\s*version\s*=\s*Version\(\s*)([0-9]+)(,\s*)([0-9]+)(,\s*)([0-9]+)(,\s*)dirty(\s*=\s*)True/\1'"$major"'\3'"$minor"'\5'"$micro"'\7dirty\8False/' emu/libemu.py
 }
 
 # Make the git version bump commit.
@@ -105,6 +105,17 @@ make_version_bump_commit() {
     git add emu/libemu.py
     git commit --allow-empty -m "Bump release version for '$new_version'" >/dev/null
     git tag $new_version -a -m "Release $new_version"
+}
+
+# Make a commit to set the library version dirty flag
+#
+make_development_version_commit() {
+    cd "$(get_project_root)"
+
+    echo "Creating dirty version commit... '$new_version*'"
+    sed -r -i 's/(\s*version\s*=\s*Version\(\s*)[0-9]+,\s*[0-9]+,\s*[0-9]+,\s*dirty\s*=\s*)False/\1True/' emu/libemu.py
+    git add emu/libemu.py
+    git commit -m "libemu: Set version dirty flag"
 }
 
 # Push the version commit and release tag to git remotes.
@@ -133,6 +144,7 @@ do_mkrelease() {
 
     set_new_version "$new_version"
     make_version_bump_commit "$new_version"
+    make_development_version_commit "$new_version"
     push_to_remotes "mary origin"
 }
 
