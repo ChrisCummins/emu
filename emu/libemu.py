@@ -1062,12 +1062,7 @@ class Version:
         return self.__gt__(other) or self.__eq__(other)
 
     def __lt__(self, other):
-        if self.major < other.major:
-            return True
-        elif self.minor < other.minor:
-            return True
-        else:
-            return self.micro < other.micro
+        return not self.__ge__(other)
 
     def __le__(self, other):
         return self.__lt__(other) or self.__eq__(other)
