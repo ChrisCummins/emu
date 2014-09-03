@@ -1663,17 +1663,14 @@ class Util:
     # message.
     @staticmethod
     def printf(msg, prefix=None, colour=None):
-        string = Colours.RESET
-
-        if colour:
-            string += colour
 
         if prefix:
-            string += prefix + Colours.RESET + ": "
+            if colour:
+                prefix = Util.colourise(prefix, colour)
 
-        string += msg + Colours.RESET
+            prefix = "{0}: ".format(prefix)
 
-        print string
+        print str(prefix) + msg
 
 
     # colourise() - Colourise a string
