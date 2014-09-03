@@ -819,6 +819,13 @@ class Snapshot:
         sink.lock.unlock(force=force, verbose=verbose)
 
 
+    # diff() - Compare snapshot checksums
+    #
+    # Returns True if other snapshot has identical checksum.
+    def diff(self, other):
+        return self.id.checksum == other.id.checksum
+
+
     def __repr__(self):
         return str(self.id)
 
