@@ -1015,11 +1015,28 @@ class SnapshotID:
     def __repr__(self):
         return self.sink_name + ":" + self.id
 
+# Snapshot IDs can be compared using the standard operators. Snapshots
+# are given priority based on their timestamp, so a more recent
+# snapshot will be > an older snapshot.
+
     def __eq__(self, other):
         return self.id == other.id and self.sink_name == other.sink_name
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __gt__(self, other):
+        date, other_date = int(self.timestamp), int(other.timestamp)
+        return date > other_date
+
+    def __ge__(self, other):
+        return self.__gt__(other) or self.__eq__(other)
+
+    def __lt__(self, other):
+        return not self.__ge__(other)
+
+    def __le__(self, other):
+        return self.__lt__(other) or self.__eq__(other)
 
 
 #################################
