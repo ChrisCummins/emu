@@ -279,65 +279,26 @@ class Sink:
                 return None
 
 
-    # config() - Get/set sink configuration properties
+    # config() - Get the SinkConfig instance
     #
-    # If 's', 'p', and 'v' are provided, set new value 'v' for
-    # property 'p' in section 's'. If 's' and 'p' are provided, then
-    # return that specific value. Else return the entire
-    # configuration.
-    def config(self, s=None, p=None, v=None):
-
-        # Return config instance and cache for future reference:
-        def _get_config_instance(self):
-            try:
-                return self._config
-            except AttributeError:
-                path = Util.concat_paths(self.path, "/.emu/config")
-                self._config = EmuConfigParser(path)
-                return self._config
-
-        config = _get_config_instance(self)
-
-        # Option 1 of 3: Set a new property value.
-        if s and p and v:
-            config.set_string(s, p, v)
-
-        # Option 2 of 3: Get a property value.
-        if s and p:
-            return config.get_string(s, p)
-
-        # Option 3 of 3: Return the EmuConfigParser.
-        else:
-            return config
-
-
-    # max_snapshots() - Get/Set the max number of snapshots for a sink
-    #
-    def max_snapshots(self, n=None):
-        s, p = "Snapshots", "max-number"
-
-        if n:
-            # Option 1 of 2: Set the maximum number of snapshots.
-            self.config(s=s, p=p, n=n)
-        else:
-            # Option 2 of 2: Get the maximum number of snapshots.
-            try:
-                return int(self.config(s=s, p=p))
-            except:
-                print ("Error retrieving max number of snapshots '{0}'!"
-                       .format(Util.colourise(self.config(s, p), Colours.ERROR)))
-                sys.exit(1)
+    def config(self):
+        try:
+            return self._config
+        except AttributeError:
+            path = Util.concat_paths(self.path, "/.emu/config")
+            self._config = SinkConfig(path)
+            return self._config
 
 
     def push(self, force=False, ignore_errors=False, archive=True,
              owner=False, dry_run=False, verbose=False):
 
         # Get the checksum algorithm from the sink config:
-        checksum_program = self.config(s="Snapshots", p="checksum")
+        checksum_program = self.config().checksum_program()
 
         # Remove old snapshots first:
         i = len(self.snapshots())
-        while i >= self.max_snapshots():
+        while i >= self.config().max_snapshots():
             self.snapshots()[0].destroy(dry_run=dry_run, force=force,
                                         verbose=verbose)
             if dry_run:
@@ -346,7 +307,7 @@ class Sink:
                 i = len(self.snapshots())
 
         Util.printf("pushing snapshot ({0} of {1})"
-                    .format(len(self.snapshots()) + 1, self.max_snapshots()),
+                    .format(len(self.snapshots()) + 1, self.config().max_snapshots()),
                     prefix=self.name, colour=Colours.OK)
         Snapshot.create(self, force=force, ignore_errors=ignore_errors,
                         archive=archive, owner=owner, dry_run=dry_run,
@@ -982,7 +943,7 @@ class Snapshot:
             node.set("Sink",     "sink",          id.sink_name)
             node.set("Sink",     "path",          sink.path)
             node.set("Sink",     "snapshot-no",   len(sink.snapshots()) + 1)
-            node.set("Sink",     "max-snapshots", sink.max_snapshots())
+            node.set("Sink",     "max-snapshots", sink.config().max_snapshots())
             node.add_section("Emu")
             node.set("Emu",      "emu-version",   Emu.version)
             node.set("Emu",      "user",          getpass.getuser())
@@ -1200,11 +1161,35 @@ class EmuConfigParser(ConfigParser.ConfigParser):
             sys.exit(1)
 
 
+    # get_int() - Fetch an integer configuration property
+    #
+    def get_int(self, section, prop):
+        try:
+            value = self.get_string(section, prop)
+            return int(value)
+        except ValueError:
+            print ("fatal: Value '{0}' for configuration property '{0}:{1}' "
+                   "in file '{2}' is not an integer"
+                   .format(value, section, prop, self.path))
+            sys.exit(1)
+
     # set_string() - Set a string configuration property
     #
     def set_string(self, section, prop, value):
-        self.set(section, prop, value)
+        self.set(section, prop, str(value))
         self.flush()
+
+
+    # set_int() - Set an integer configuration property
+    #
+    def set_int(self, section, prop, n):
+        try:
+            self.set(section, prop, int(n))
+            self.flush()
+        except ValueError:
+            print ("fatal: Value '{0}' for configuration property '{0}:{1}' "
+                   "in file '{2}' is not an integer"
+                   .format(n, section, prop, self.path))
 
 
 ###########################
@@ -1248,6 +1233,40 @@ class EmuConfig(EmuConfigParser):
     @staticmethod
     def instance():
         return EmuConfig(os.path.expanduser("~/.emuconfig"))
+
+
+#############################
+# Sink configuration parser #
+#############################
+class SinkConfig(EmuConfigParser):
+
+    def __init__(self, path):
+        EmuConfigParser.__init__(self, path)
+
+    def max_snapshots(self, n=None):
+        s, p = "Snapshots", "max-number"
+
+        if n != None:
+            # Option 1 of 2: Set the maximum number of snapshots.
+            self.set_int(s, p, n)
+        else:
+            # Option 2 of 2: Get the maximum number of snapshots.
+            return self.get_int(s, p)
+
+
+    def checksum_program(self, program=None):
+        s, p = "Snapshots", "checksum"
+
+        if program != None:
+            # Option 1 of 2: Set the checksum program.
+            regex = r"(md5|sha1)sum"
+            if not re.search(regex, program.lower()):
+                print ("fatal: Unsupported checkum program '{0}'"
+                       .format(program))
+            self.set_string(s, p, program.lower())
+        else:
+            # Option 2 of 2: Get the checksum program.
+            return self.get_string(s, p)
 
 
 ##############################################
