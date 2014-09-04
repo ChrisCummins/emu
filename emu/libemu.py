@@ -717,6 +717,9 @@ class Snapshot:
     def __repr__(self):
         return str(self.id)
 
+    def __hash__(self):
+        return hash(self.id)
+
     def __eq__(self, other):
         return self.id == other.id
 
@@ -921,6 +924,12 @@ class SnapshotID:
 
     def __repr__(self):
         return self.sink_name + ":" + self.id
+
+    def __key__(self):
+        return (self.sink_name, self.id)
+
+    def __hash__(self):
+        return hash(self.__key__())
 
 # Snapshot IDs can be compared using the standard operators. Snapshots
 # are given priority based on their timestamp, so a more recent
