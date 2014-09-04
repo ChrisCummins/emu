@@ -292,9 +292,6 @@ class Sink:
     def push(self, force=False, ignore_errors=False, archive=True,
              owner=False, dry_run=False, verbose=False):
 
-        # Get the checksum algorithm from the sink config:
-        checksum_program = self.config().checksum_program()
-
         # Remove old snapshots first:
         i = len(self.snapshots())
         while i >= self.config().max_snapshots():
@@ -310,7 +307,8 @@ class Sink:
                     prefix=self.name, colour=Colours.OK)
         Snapshot.create(self, force=force, ignore_errors=ignore_errors,
                         archive=archive, owner=owner, dry_run=dry_run,
-                        checksum_program=checksum_program, verbose=verbose)
+                        checksum_program=self.config().checksum_program(),
+                        verbose=verbose)
 
         return 0
 
