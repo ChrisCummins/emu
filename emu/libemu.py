@@ -1302,7 +1302,7 @@ class Node(EmuConfigParser):
         if value != None:
             self.set_string(s, p, value)
         else:
-            self.get_string(s, p)
+            return self.get_string(s, p)
 
 
 ##############################################
