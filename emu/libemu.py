@@ -1191,8 +1191,7 @@ class EmuConfigParser(ConfigParser.ConfigParser):
 
 
     def set_checksum_program(self, section, prop, value):
-        self.set(Util.verify_checksum_program(value))
-        self.flush()
+        self.set_string(Util.verify_checksum_program(value))
 
 
 ###########################
