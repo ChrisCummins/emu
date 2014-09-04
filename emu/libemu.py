@@ -2220,8 +2220,8 @@ class EmuParser(OptionParser):
                             snapshots.append(head.nth_child(n_index,
                                                             error=True))
                     elif accept_sink_names:
-                        # If there's no ID then match all snapshots (in reverse)
-                        snapshots += sink.snapshots()[::-1]
+                        # If there's no ID then match all snapshots
+                        snapshots += sink.snapshots()
                     else:
                         raise InvalidSnapshotIDError(arg)
 
@@ -2268,6 +2268,13 @@ class EmuParser(OptionParser):
                     raise InvalidArgsError("One or more snapshots must be "
                                            "specified using "
                                            "<sink>:<snapshot>")
+
+                # Cast to set and back to remove duplicates:
+                snapshots = list(set(snapshots))
+
+                # Sort the snapshots into reverse chronological order:
+                snapshots.sort()
+                snapshots.reverse()
 
                 self._snapshots = snapshots
                 return self._snapshots
