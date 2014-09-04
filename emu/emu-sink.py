@@ -68,7 +68,7 @@ def main(argv, argc):
 
                 print "Location:        {0}".format(sink.path)
                 print "No of snapshots: {0}".format(len(snapshots))
-                print "Max snapshots:   {0}".format(sink.config().max_snapshots())
+                print "Max snapshots:   {0}".format(sink.config.max_snapshots())
                 print "Head:            {0}".format(head_id)
                 print "Device:          {0}".format(device)
 

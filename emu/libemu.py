@@ -213,6 +213,9 @@ class Sink:
         Util.readable(Util.concat_paths(self.path, "/.emu/trees/"), error=err_cb)
         Util.readable(Util.concat_paths(self.path, "/.emu/HEAD"),   error=err_cb)
 
+        config_path = Util.concat_paths(self.path, "/.emu/config")
+        self.config = SinkConfig(config_path)
+
 
     # snapshots() - Return a list of all snapshots
     #
@@ -278,28 +281,17 @@ class Sink:
                 return None
 
 
-    # config() - Get the SinkConfig instance
-    #
-    def config(self):
-        try:
-            return self._config
-        except AttributeError:
-            path = Util.concat_paths(self.path, "/.emu/config")
-            self._config = SinkConfig(path)
-            return self._config
-
-
     def push(self, force=False, ignore_errors=False, archive=True,
              owner=False, dry_run=False, verbose=False):
 
         # We fetch the checksum problem first to ensure that if
         # there's any problems with the config, they are discovered
         # now:
-        checksum_program = self.config().checksum_program()
+        checksum_program = self.config.checksum_program()
 
         # Remove old snapshots first:
         i = len(self.snapshots())
-        while i >= self.config().max_snapshots():
+        while i >= self.config.max_snapshots():
             self.snapshots()[0].destroy(dry_run=dry_run, force=force,
                                         verbose=verbose)
             if dry_run:
@@ -308,7 +300,7 @@ class Sink:
                 i = len(self.snapshots())
 
         Util.printf("pushing snapshot ({0} of {1})"
-                    .format(len(self.snapshots()) + 1, self.config().max_snapshots()),
+                    .format(len(self.snapshots()) + 1, self.config.max_snapshots()),
                     prefix=self.name, colour=Colours.OK)
         Snapshot.create(self, force=force, ignore_errors=ignore_errors,
                         archive=archive, owner=owner, dry_run=dry_run,
@@ -881,7 +873,7 @@ class Snapshot:
             node.set("Sink",     "sink",          id.sink_name)
             node.set("Sink",     "path",          sink.path)
             node.set("Sink",     "snapshot-no",   len(sink.snapshots()) + 1)
-            node.set("Sink",     "max-snapshots", sink.config().max_snapshots())
+            node.set("Sink",     "max-snapshots", sink.config.max_snapshots())
             node.add_section("Emu")
             node.set("Emu",      "emu-version",   Emu.version)
             node.set("Emu",      "user",          getpass.getuser())
