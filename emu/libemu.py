@@ -1741,10 +1741,14 @@ class Util:
 
     # colourise() - Colourise a string
     #
-    # Returns the given string wrapped in colour escape codes.
+    # Returns the given string wrapped in colour escape codes, if this
+    # property is enabled in the global configuration file.
     @staticmethod
     def colourise(string, colour):
-        return colour + str(string) + Colours.RESET
+        if EmuConfig.instance().use_colour():
+            return colour + str(string) + Colours.RESET
+        else:
+            return str(string)
 
 
     @staticmethod
