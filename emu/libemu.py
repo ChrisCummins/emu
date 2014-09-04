@@ -212,7 +212,6 @@ class Sink:
         Util.readable(Util.concat_paths(self.path, "/.emu/nodes/"), error=err_cb)
         Util.readable(Util.concat_paths(self.path, "/.emu/trees/"), error=err_cb)
         Util.readable(Util.concat_paths(self.path, "/.emu/HEAD"),   error=err_cb)
-        Util.readable(Util.concat_paths(self.path, "/.emu/config"), error=err_cb)
 
 
     # snapshots() - Return a list of all snapshots
