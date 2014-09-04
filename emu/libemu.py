@@ -1285,7 +1285,7 @@ class Node(EmuConfigParser):
 
 
     def checksum_program(self, value=None):
-        s, p = "Snapshots", "checksum"
+        s, p = "Snapshot", "checksum"
 
         if value != None:
             self.set_checksum_program(s, p, value)
