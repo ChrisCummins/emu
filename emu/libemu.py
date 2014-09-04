@@ -640,9 +640,9 @@ class Snapshot:
 
     # parent() - Get/set snapshot's parent
     #
-    def parent(self, parent=None, delete=False):
-        if parent:
-            self.node.parent(value=parent.id.id)
+    def parent(self, value=None, delete=False):
+        if value != None:
+            self.node.parent(value=value.id.id)
         elif delete:
             self.node.parent(value="")
         else:
