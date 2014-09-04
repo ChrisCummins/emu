@@ -67,10 +67,11 @@ def main(argv, argc):
 
     # Determine whether we need to print sink names or not:
     print_sink_names = False
-    current_sink = snapshots[0].sink
-    for snapshot in snapshots[:options.limit]:
-        if snapshot.sink != current_sink:
-            print_sink_names = True
+    if not options.short:
+        current_sink = snapshots[0].sink
+        for snapshot in snapshots[:options.limit]:
+            if snapshot.sink != current_sink:
+                print_sink_names = True
 
     # Print logs:
     current_sink = None
@@ -82,29 +83,29 @@ def main(argv, argc):
         # Print sink names when required:
         if print_sink_names and snapshot.sink != current_sink:
             current_sink = snapshot.sink
-            # Add blank line in short log output:
-            if i > 1 and options.short:
-                print
             print Util.colourise("{0}:".format(current_sink.name),
                                  Colours.INFO)
+
         # Log:
         id = Util.colourise(snapshot.id.id, Colours.SNAPSHOT)
         if options.short:
-            print "{0}  {1}".format(id, snapshot.node.name())
+            s = "{0}  {1}".format(snapshot.id, snapshot.node.name())
         else:
             s = "snapshot       {0}".format(id)
 
-            # Print cached status, if available:
-            if snapshot.node.has_status():
-                status = snapshot.node.status()
-                s += " ("
-                if status:
-                    s += Util.colourise("ok", Colours.OK)
-                else:
-                    s += Util.colourise("bad", Colours.ERROR)
-                s += ")"
-            print s
+        # Print cached status, if available:
+        if snapshot.node.has_status():
+            status = snapshot.node.status()
+            s += " ("
+            if status:
+                s += Util.colourise("ok", Colours.OK)
+            else:
+                s += Util.colourise("bad", Colours.ERROR)
+            s += ")"
 
+        print s
+
+        if not options.short:
             print_dict(snapshot.node.section("Snapshot"))
             print_dict(snapshot.node.section("Tree"))
             if options.verbose:
