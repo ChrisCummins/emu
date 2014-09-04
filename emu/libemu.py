@@ -1151,37 +1151,22 @@ class Emu:
             return Emu.versionstr()
 
 
-###########################
-# Global Emu config class #
-###########################
-class EmuConfig(ConfigParser.ConfigParser):
+#######################################
+# Standardised emu config file parser #
+#######################################
+class EmuConfigParser(ConfigParser.ConfigParser):
 
-    def _create(self, path):
-
-        # Populate config with default values:
-        self.add_section("general")
-        self.set("general", "colour", "true")
-
-        # Write config settings to file:
-        with open(path, "wb") as cfg_file:
-            self.write(cfg_file)
-
-
-    def __init__(self):
+    def __init__(self, path):
         ConfigParser.ConfigParser.__init__(self)
 
-        # TODO: We may want to add the ability to override the path to
-        # the config path through an environment variable:
-        self.path = os.path.expanduser("~/.emuconfig")
-        file_exists = Util.readable(self.path)
+        self.path = path
 
-        # The first time the user invokes emu, there won't be a config
-        # file, so we create one. Otherwise, we simply read the
-        # existing file:
-        if file_exists:
-            self.read(self.path)
-        else:
-            self._create(self.path)
+        file_exists = Util.readable(self.path)
+        if not file_exists:
+            print "fatal: Config file '{0}' not found".format(self.path)
+            sys.exit(1)
+
+        self.read(self.path)
 
 
     # get_bool() - Fetch a boolean configuration property
@@ -1198,10 +1183,40 @@ class EmuConfig(ConfigParser.ConfigParser):
                 print ("Boolean configuration property '{0}' is neither "
                        "\"true\" or \"false\"!".format(prop))
                 sys.exit(1)
-        except:
-            print ("fatal: Error retrieving config property '{0}' in section "
-                   "'{1}' in '{2}'".format(prop, section, self.path))
+        except Exception as e:
+            print ("fatal: No property '{0}:{1}' in config file '{2}'"
+                   .format(section, prop, self.path))
             sys.exit(1)
+
+
+###########################
+# Global Emu config class #
+###########################
+class EmuConfig(EmuConfigParser):
+
+    @staticmethod
+    def _create(path):
+        cfg = ConfigParser.ConfigParser()
+
+        # Populate config with default values:
+        cfg.add_section("general")
+        cfg.set("general", "colour", "true")
+
+        # Write config settings to file:
+        with open(path, "wb") as cfg_file:
+            cfg.write(cfg_file)
+
+
+    def __init__(self, path):
+
+        file_exists = Util.readable(path)
+
+        # The first time the user invokes emu, there won't be a config
+        # file, so we create one:
+        if not file_exists:
+            EmuConfig._create(path)
+
+        EmuConfigParser.__init__(self, path)
 
 
     # use_colour() - Return True is UI should use colour
@@ -1214,7 +1229,7 @@ class EmuConfig(ConfigParser.ConfigParser):
     # order to require only one disk read per process.
     @staticmethod
     def instance():
-        return EmuConfig()
+        return EmuConfig(os.path.expanduser("~/.emuconfig"))
 
 
 ##############################################
