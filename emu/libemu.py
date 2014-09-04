@@ -286,31 +286,28 @@ class Sink:
     # return that specific value. Else return the entire
     # configuration.
     def config(self, s=None, p=None, v=None):
-        path = Util.concat_paths(self.path, "/.emu/config")
+
+        # Return config instance and cache for future reference:
+        def _get_config_instance(self):
+            try:
+                return self._config
+            except AttributeError:
+                path = Util.concat_paths(self.path, "/.emu/config")
+                self._config = EmuConfigParser(path)
+                return self._config
+
+        config = _get_config_instance(self)
 
         # Option 1 of 3: Set a new property value.
         if s and p and v:
-            config = self.config()
-            config.set(s, p, v)
-            with open(path, "wb") as config_file:
-                config.write(config_file)
+            config.set_string(s, p, v)
 
         # Option 2 of 3: Get a property value.
         if s and p:
-            try:
-                return self.config().get(s, p)
-            except:
-                print ("Error retrieving config property '{0}' in section "
-                       "'{1}' of '{2}'".format(Util.colourise(p, Colours.ERROR),
-                                               Util.colourise(s, Colours.ERROR),
-                                               path))
-                sys.exit(1)
+            return config.get_string(s, p)
 
-        # Option 3 of 3: Return the ConfigParser.
+        # Option 3 of 3: Return the EmuConfigParser.
         else:
-            Util.readable(path, error=True)
-            config = ConfigParser.ConfigParser()
-            config.read(path)
             return config
 
 
