@@ -1169,24 +1169,45 @@ class EmuConfigParser(ConfigParser.ConfigParser):
         self.read(self.path)
 
 
-    # get_bool() - Fetch a boolean configuration property
+    # flush() - Write config properties to disk
     #
-    def get_bool(self, section, prop):
-        try:
-            value = self.get(section, prop)
+    def flush(self):
+        with open(self.path, "wb") as config_file:
+            self.write(config_file)
 
-            if value.lower() == "true":
-                return True
-            elif value.lower() == "false":
-                return False
-            else:
-                print ("Boolean configuration property '{0}' is neither "
-                       "\"true\" or \"false\"!".format(prop))
-                sys.exit(1)
+
+    # get_string() - Fetch a string configuration property
+    #
+    def get_string(self, section, prop):
+        try:
+            return self.get(section, prop)
         except Exception as e:
             print ("fatal: No property '{0}:{1}' in config file '{2}'"
                    .format(section, prop, self.path))
             sys.exit(1)
+
+
+    # get_bool() - Fetch a boolean configuration property
+    #
+    def get_bool(self, section, prop):
+        value = self.get_string(section, prop)
+
+        if value.lower() == "true":
+            return True
+        elif value.lower() == "false":
+            return False
+        else:
+            print ("Boolean configuration property '{0}:{1}' in config file "
+                   "'{2}' is neither \"true\" or \"false\""
+                   .format(section, prop, self.path))
+            sys.exit(1)
+
+
+    # set_string() - Set a string configuration property
+    #
+    def set_string(self, section, prop, value):
+        self.set(section, prop, value)
+        self.flush()
 
 
 ###########################
