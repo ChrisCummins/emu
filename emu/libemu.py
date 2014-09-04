@@ -1230,6 +1230,19 @@ class EmuConfig(EmuConfigParser):
         return self.get_bool("general", "colour")
 
 
+    # default_source() - Return the default source directory
+    #
+    def default_source(self):
+        s, p = "general", "default-source"
+
+        if self.has_option(s, p):
+            return self.get_string(s, p)
+        else:
+            # Add an empty value if non-existent:
+            self.set_string(s, p, "")
+            return None
+
+
     # TODO: The Emu config class should use a singleton pattern in
     # order to require only one disk read per process.
     @staticmethod
@@ -2036,8 +2049,13 @@ class EmuParser(OptionParser):
 
             # If not, then get the parent directory and repeat:
             new_source_dir = Util.par_dir(source_dir)
+
+            # If the parent and current directories are equal (i.e. we
+            # have hit the root of the filesystem), then revert to the
+            # default emu source dir from config:
             if new_source_dir == source_dir:
                 return None
+
             source_dir = new_source_dir
 
     def __init__(self):
