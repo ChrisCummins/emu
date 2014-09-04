@@ -1151,6 +1151,72 @@ class Emu:
             return Emu.versionstr()
 
 
+###########################
+# Global Emu config class #
+###########################
+class EmuConfig(ConfigParser.ConfigParser):
+
+    def _create(self, path):
+
+        # Populate config with default values:
+        self.add_section("general")
+        self.set("general", "colour", "true")
+
+        # Write config settings to file:
+        with open(path, "wb") as cfg_file:
+            self.write(cfg_file)
+
+
+    def __init__(self):
+        ConfigParser.ConfigParser.__init__(self)
+
+        # TODO: We may want to add the ability to override the path to
+        # the config path through an environment variable:
+        self.path = os.path.expanduser("~/.emuconfig")
+        file_exists = Util.readable(self.path)
+
+        # The first time the user invokes emu, there won't be a config
+        # file, so we create one. Otherwise, we simply read the
+        # existing file:
+        if file_exists:
+            self.read(self.path)
+        else:
+            self._create(self.path)
+
+
+    # get_bool() - Fetch a boolean configuration property
+    #
+    def get_bool(self, section, prop):
+        try:
+            value = self.get(section, prop)
+
+            if value.lower() == "true":
+                return True
+            elif value.lower() == "false":
+                return False
+            else:
+                print ("Boolean configuration property '{0}' is neither "
+                       "\"true\" or \"false\"!".format(prop))
+                sys.exit(1)
+        except:
+            print ("fatal: Error retrieving config property '{0}' in section "
+                   "'{1}' in '{2}'".format(prop, section, self.path))
+            sys.exit(1)
+
+
+    # use_colour() - Return True is UI should use colour
+    #
+    def use_colour(self):
+        return self.get_bool("general", "colour")
+
+
+    # TODO: The Emu config class should use a singleton pattern in
+    # order to require only one disk read per process.
+    @staticmethod
+    def instance():
+        return EmuConfig()
+
+
 ##############################################
 # Utility static class with helper functions #
 ##############################################
