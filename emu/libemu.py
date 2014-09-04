@@ -1273,11 +1273,15 @@ class SinkConfig(EmuConfigParser):
         s, p = "Snapshots", "checksum"
 
         if value != None:
-            # Option 1 of 2: Set the checksum program.
-            return self.set_checksum_program(s, p, value)
-        else:
-            # Option 2 of 2: Get the checksum program.
+            # Option 1 of 3: Set the checksum program.
+            self.set_checksum_program(s, p, value)
+        elif self.has_option(s, p):
+            # Option 2 of 3: Get the checksum program.
             return self.get_checksum_program(s, p)
+        else:
+            # Option 3 of 3: Set default and recurse.
+            self.set_checksum_program(s, p, "sha1sum")
+            return self.checksum_program()
 
 
 ########################
