@@ -1158,6 +1158,22 @@ class EmuConfigParser(ConfigParser.ConfigParser):
             sys.exit(1)
 
 
+    # get_status() - Fetch a clean/dirty status configuration property
+    #
+    def get_status(self, section, prop):
+        value = self.get_string(section, prop)
+
+        if value.lower() == "clean":
+            return True
+        elif value.lower() == "dirty":
+            return False
+        else:
+            print ("Configuration property '{0}:{1}' in config file "
+                   "'{2}' is neither \"clean\" or \"dirty\""
+                   .format(section, prop, self.path))
+            sys.exit(1)
+
+
     # get_int() - Fetch an integer configuration property
     #
     def get_int(self, section, prop):
