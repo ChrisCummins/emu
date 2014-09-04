@@ -292,6 +292,11 @@ class Sink:
     def push(self, force=False, ignore_errors=False, archive=True,
              owner=False, dry_run=False, verbose=False):
 
+        # We fetch the checksum problem first to ensure that if
+        # there's any problems with the config, they are discovered
+        # now:
+        checksum_program = self.config().checksum_program()
+
         # Remove old snapshots first:
         i = len(self.snapshots())
         while i >= self.config().max_snapshots():
@@ -307,7 +312,7 @@ class Sink:
                     prefix=self.name, colour=Colours.OK)
         Snapshot.create(self, force=force, ignore_errors=ignore_errors,
                         archive=archive, owner=owner, dry_run=dry_run,
-                        checksum_program=self.config().checksum_program(),
+                        checksum_program=checksum_program,
                         verbose=verbose)
 
         return 0
@@ -1130,6 +1135,11 @@ class EmuConfigParser(ConfigParser.ConfigParser):
         with open(self.path, "wb") as config_file:
             self.write(config_file)
 
+    # section() - Retrieve section items as dictionary
+    #
+    def section(self, section):
+        return dict(self.items(section))
+
 
     # get_string() - Fetch a string configuration property
     #
@@ -1156,6 +1166,14 @@ class EmuConfigParser(ConfigParser.ConfigParser):
                    "'{2}' is neither \"true\" or \"false\""
                    .format(section, prop, self.path))
             sys.exit(1)
+
+
+    # get_checksum_program() - Retrieve a checksum configuration property
+    #
+    def get_checksum_program(self, section, prop):
+        value = self.get_string(section, prop)
+
+        return Util.verify_checksum_program(value)
 
 
     # get_status() - Fetch a clean/dirty status configuration property
@@ -1192,6 +1210,28 @@ class EmuConfigParser(ConfigParser.ConfigParser):
         self.set(section, prop, str(value))
         self.flush()
 
+    # set_bool() - Set a boolean configuration property
+    #
+    def set_bool(self, section, prop, value):
+        if value:
+            self.set(section, prop, "true")
+        else:
+            self.set(section, prop, "false")
+        self.flush()
+
+    # set_status() - Set a clean/dirty status
+    #
+    def set_status(self, section, prop, value):
+        if value:
+            self.set(section, prop, "clean")
+        else:
+            self.set(section, prop, "dirty")
+        self.flush()
+
+    # set_checksum_program() - Set a checksum program property
+    def set_checksum_program(self, section, prop, value):
+        self.set(Util.verify_checksum_program(value))
+        self.flush()
 
     # set_int() - Set an integer configuration property
     #
@@ -1265,6 +1305,17 @@ class SinkConfig(EmuConfigParser):
         else:
             # Option 2 of 2: Get the maximum number of snapshots.
             return self.get_int(s, p)
+
+
+    def checksum_program(self, value=None):
+        s, p = "Snapshots", "checksum"
+
+        if value != None:
+            # Option 1 of 2: Set the checksum program.
+            return self.set_checksum_program(s, p, value)
+        else:
+            # Option 2 of 2: Get the checksum program.
+            return self.get_checksum_program(s, p)
 
 
     def checksum_program(self, program=None):
@@ -1785,6 +1836,17 @@ class Util:
             if n_index:
                 tilde += str(n_index)
         return tilde
+
+
+    @staticmethod
+    def verify_checksum_program(program):
+        regex = r"^(md5|sha1)sum$"
+        if re.search(regex, program.lower()):
+            return program
+        else:
+            print ("fatal: Invalid checkum program '{0}'"
+                   .format(Util.colourise(program, Colours.ERROR)))
+            sys.exit(1)
 
 
     # printf() - Format and print a message
