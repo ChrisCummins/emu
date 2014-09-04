@@ -85,26 +85,26 @@ def main(argv, argc):
         # Log:
         id = Util.colourise(snapshot.id.id, Colours.SNAPSHOT)
         if options.short:
-            print "{0}  {1}".format(id, snapshot.node(s="Snapshot", p="name"))
+            print "{0}  {1}".format(id, snapshot.node.name())
         else:
             s = "snapshot       {0}".format(id)
 
             # Print cached status, if available:
-            status = snapshot.node(s="Tree", p="Status")
-            if status:
+            if snapshot.node.has_status():
+                status = snapshot.node.status()
                 s += " ("
-                if status == "CLEAN":
+                if status:
                     s += Util.colourise("ok", Colours.OK)
                 else:
                     s += Util.colourise("bad", Colours.ERROR)
                 s += ")"
             print s
 
-            print_dict(snapshot.node("Snapshot"))
-            print_dict(snapshot.node("Tree"))
+            print_dict(snapshot.node.section("Snapshot"))
+            print_dict(snapshot.node.section("Tree"))
             if options.verbose:
-                print_dict(snapshot.node("Sink"))
-                print_dict(snapshot.node("Emu"))
+                print_dict(snapshot.node.section("Sink"))
+                print_dict(snapshot.node.section("Emu"))
             if i < no_of_snapshots:
                 print
 

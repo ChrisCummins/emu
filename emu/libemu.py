@@ -555,10 +555,16 @@ class Sink:
 class Snapshot:
 
     def __init__(self, id, sink):
+
+        tree_path = Util.concat_paths(sink.path, "/.emu/trees/", id.id)
+        node_path = Util.concat_paths(sink.path, "/.emu/nodes/", id.id)
+
         self.id = id
-        self.tree = Util.concat_paths(sink.path, "/.emu/trees/", id.id)
         self.sink = sink
-        self.name = self.node("Snapshot", "name")
+
+        self.tree = tree_path
+        self.node = Node(node_path)
+        self.name = self.node.name()
 
         def err_cb(e):
             print "Non-existent or malformed snapshot '{0}'".format(self.id)
@@ -587,92 +593,22 @@ class Snapshot:
     # present), rather than computing a new status.
     def verify(self, use_cache=False):
 
-        if use_cache:
-            # Retrieve the status from the cache:
-            status = self.node(s="Tree", p="Status")
+        if use_cache and self.node.has_status():
+            return self.node.status()
 
-            # If there is a cached status, then return
-            # that. Otherwise, compute a new status by verifying:
-            if status:
-                if status == "CLEAN":
-                    clean = True
-                else:
-                    clean = False
-            else:
-                return self.verify()
-
-            return clean
         else:
-
-            # To verify a node, we first get the checksum algorithm
-            # from the node (with a fallback to sha1sum):
-            program = self.node(s="Snapshot", p="checksum")
-            if not program:
-                program = "sha1sum"
 
             # We compute a new checksum and compare that against the
             # ID:
+            program = self.node.checksum_program()
             clean = Checksum(self.tree, program=program).get() == self.id.checksum
-
-            if clean:
-                status = "CLEAN"
-            else:
-                status = "DIRTY"
 
             # Update the node with status and last-verified info:
             date = EmuDate()
-            self.node(s="Tree", p="Status", v=status)
-            self.node(s="Tree", p="Last-Verified", v=date)
+            self.node.status(value=clean)
+            self.node.last_verified(value=date)
 
             return clean
-
-
-    # node() - Fetch snapshot node data from file
-    #
-    def node(self, s=None, p=None, v=None):
-        path = "{0}/.emu/nodes/{1}".format(self.sink.path, self.id.id)
-        Util.writable(path, error=True)
-
-        if s and p and v != None: # Set new value for property
-
-            node = self.node()
-            # Set the property value. If the section does not exist,
-            # then create it:
-            try:
-                node.set(s, p, v)
-            except ConfigParser.NoSectionError:
-                node.add_section(s)
-                node.set(s, p, v)
-
-            with open(path, "wb") as node_file:
-                node.write(node_file)
-
-        elif s and p:     # Get property value
-
-            try:
-                node = self.node()
-                return node.get(s, p)
-            except:
-                return None
-
-        elif s:
-
-            try:
-                node = self.node()
-                return dict(node.items(s))
-            except ConfigParser.Error:
-                return {}
-
-        else:
-
-            try:
-                node = ConfigParser.ConfigParser()
-                node.read(path)
-                return node
-            except:
-                print ("Failed to read node file '{0}'"
-                       .format(Util.colourise(path, Colours.ERROR)))
-                sys.exit(1)
 
 
     # nth_child() - Return the nth child of snapshot
@@ -714,11 +650,11 @@ class Snapshot:
     #
     def parent(self, parent=None, delete=False):
         if parent:
-            self.node(s="Snapshot", p="parent", v=parent.id.id)
+            self.node.parent(value=parent.id.id)
         elif delete:
-            self.node(s="Snapshot", p="parent", v="")
+            self.node.parent(value="")
         else:
-            parent_id = self.node(s="Snapshot", p="parent")
+            parent_id = self.node.parent()
 
             if parent_id:
                 return Snapshot(SnapshotID(self.sink.name, parent_id), self.sink)
@@ -1318,19 +1254,63 @@ class SinkConfig(EmuConfigParser):
             return self.get_checksum_program(s, p)
 
 
-    def checksum_program(self, program=None):
+########################
+# Snapshot Node Parser #
+########################
+class Node(EmuConfigParser):
+
+    def __init__(self, path):
+        EmuConfigParser.__init__(self, path)
+
+
+    def name(self):
+        s, p ="Snapshot", "name"
+        return self.get_string(s, p)
+
+
+    def has_status(self):
+        s, p = "Tree", "Status"
+        return self.has_option(s, p)
+
+
+    def status(self, value=None):
+        s, p = "Tree", "Status"
+
+        if value != None:
+            self.set_status(s, p, value)
+        elif self.has_option(s, p):
+            return self.get_status(s, p)
+        else:
+            return False
+
+
+    def checksum_program(self, value=None):
         s, p = "Snapshots", "checksum"
 
-        if program != None:
-            # Option 1 of 2: Set the checksum program.
-            regex = r"(md5|sha1)sum"
-            if not re.search(regex, program.lower()):
-                print ("fatal: Unsupported checkum program '{0}'"
-                       .format(program))
-            self.set_string(s, p, program.lower())
+        if value != None:
+            self.set_checksum_program(s, p, value)
+        elif self.has_option(s, p):
+            return self.get_checksum_program(s, p)
         else:
-            # Option 2 of 2: Get the checksum program.
-            return self.get_string(s, p)
+            return "sha1sum"
+
+
+    def last_verified(self, value=None):
+        s, p ="Tree", "Last-Verified"
+
+        if value != None:
+            self.set_string(s, p, value)
+        else:
+            self.get_string(s, p)
+
+
+    def parent(self, value=None):
+        s, p = "Snapshot", "parent"
+
+        if value != None:
+            self.set_string(s, p, value)
+        else:
+            self.get_string(s, p)
 
 
 ##############################################
