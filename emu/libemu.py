@@ -565,9 +565,9 @@ class Snapshot:
             sys.exit(1)
 
         # Sanity checks:
-        Util.readable("{0}/{1}".format(self.sink.path, self.name),
+        Util.readable(Util.concat_paths(self.sink.path, "/", self.name),
                       error=err_cb)
-        Util.readable("{0}/.emu/trees/{1}".format(self.sink.path, self.id.id),
+        Util.readable(Util.concat_paths(self.sink.path, "/.emu/trees/", self.id.id),
                       error=err_cb)
 
 
