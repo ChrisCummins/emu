@@ -2132,7 +2132,7 @@ class EmuParser(OptionParser):
         except AttributeError:
             try:
 
-                self._snapshots = []
+                snapshots = []
                 args = self.args()
 
                 # Check first if we're only accepting a single arg:
@@ -2202,17 +2202,17 @@ class EmuParser(OptionParser):
                         # If there's an ID, then match it:
                         id = SnapshotID(sink_match, id_match)
                         snapshot = Util.get_snapshot_by_id(id, sink.snapshots())
-                        self._snapshots.append(snapshot.nth_child(n_index,
-                                                                  error=True))
+                        snapshots.append(snapshot.nth_child(n_index,
+                                                            error=True))
                     elif head_match:
                         # Calculate the HEAD index and traverse:
                         head = sink.head()
                         if head:
-                            self._snapshots.append(head.nth_child(n_index,
-                                                                  error=True))
+                            snapshots.append(head.nth_child(n_index,
+                                                            error=True))
                     elif accept_sink_names:
                         # If there's no ID then match all snapshots (in reverse)
-                        self._snapshots += sink.snapshots()[::-1]
+                        snapshots += sink.snapshots()[::-1]
                     else:
                         raise InvalidSnapshotIDError(arg)
 
@@ -2239,15 +2239,15 @@ class EmuParser(OptionParser):
                         # We start from the indicated node and work
                         # back, stopping if/when we reach the
                         # terminating snapshot.
-                        b_head = self._snapshots[-1]
+                        b_head = snapshots[-1]
                         if not (t_snapshot and t_snapshot == b_head):
                             n = b_head.parent()
                             while n:
-                                self._snapshots.append(n)
+                                snapshots.append(n)
                                 if t_snapshot and n == t_snapshot:
                                     break
                                 n = n.parent()
-                        b_tail = self._snapshots[-1]
+                        b_tail = snapshots[-1]
 
                         # If the last snapshot doesn't match the
                         # terminating snapshot, then we were unable to
@@ -2255,11 +2255,12 @@ class EmuParser(OptionParser):
                         if t_snapshot and t_snapshot != b_tail:
                             raise InvalidBranchError(b_head, b_tail)
 
-                if require and not len(self._snapshots):
+                if require and not len(snapshots):
                     raise InvalidArgsError("One or more snapshots must be "
                                            "specified using "
                                            "<sink>:<snapshot>")
 
+                self._snapshots = snapshots
                 return self._snapshots
 
             except (InvalidArgsError,
