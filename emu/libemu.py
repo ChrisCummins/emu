@@ -932,8 +932,7 @@ class SnapshotID:
         return hash(self.__key__())
 
 # Snapshot IDs can be compared using the standard operators. Snapshots
-# are given priority based on their timestamp, so a more recent
-# snapshot will be > an older snapshot.
+# are first sorted alphabetically by sink, then chronologically by timestamp.
 
     def __eq__(self, other):
         return self.id == other.id and self.sink_name == other.sink_name
@@ -942,8 +941,18 @@ class SnapshotID:
         return not self.__eq__(other)
 
     def __gt__(self, other):
-        date, other_date = int(self.timestamp, 16), int(other.timestamp, 16)
-        return date > other_date
+        # If snapshots have same sink, sort chronologically:
+        if self.sink_name == other.sink_name:
+            date, other_date = int(self.timestamp, 16), int(other.timestamp, 16)
+            return date > other_date
+        # Else sort alphabetically:
+        else:
+            sinks = [self.sink_name, other.sink_name]
+            sinks.sort()
+            if sinks[0] == self.sink_name:
+                return True
+            else:
+                return False
 
     def __ge__(self, other):
         return self.__gt__(other) or self.__eq__(other)
