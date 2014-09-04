@@ -1084,10 +1084,26 @@ class EmuConfigParser(ConfigParser.ConfigParser):
         with open(self.path, "wb") as config_file:
             self.write(config_file)
 
-    # section() - Retrieve section items as dictionary
+    # section() - Set/get items as dictionary
     #
-    def section(self, section):
-        return dict(self.items(section))
+    def section(self, section, value=None):
+        # Set a new section:
+        if value != None:
+            if self.has_section(section):
+                self.remove_section()
+            self.add_section(section)
+
+            for prop, value in values:
+                self.add(section, prop, value)
+
+        # Get section:
+        else:
+            if self.has_section(section):
+                return dict(self.items(section))
+            else:
+                # Else add this section and recurse:
+                self.add_section(section)
+                return self.section(section)
 
 
     def get_string(self, section, prop):
@@ -1097,6 +1113,7 @@ class EmuConfigParser(ConfigParser.ConfigParser):
             print ("fatal: No property '{0}:{1}' in config file '{2}'"
                    .format(section, prop, self.path))
             sys.exit(1)
+
 
     def set_string(self, section, prop, value):
         self.set(section, prop, str(value))
