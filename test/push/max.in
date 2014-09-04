@@ -19,8 +19,10 @@ emu push
 emu push
 emu push
 emu push
+emu push
+emu push
 
-assert_strings_match "$(sed -n 's/max number = \?\(.*\)/\1/ip' ../test-sink/.emu/config)" "$(ls ../test-sink/.emu/nodes | wc -l)"
-assert_strings_match "$(sed -n 's/max number = \?\(.*\)/\1/ip' ../test-sink/.emu/config)" "$(ls ../test-sink/.emu/trees | wc -l)"
+assert_strings_match "$(sed -n 's/max-number = \?\(.*\)/\1/ip' ../test-sink/.emu/config)" "$(ls ../test-sink/.emu/nodes | wc -l)"
+assert_strings_match "$(sed -n 's/max-number = \?\(.*\)/\1/ip' ../test-sink/.emu/config)" "$(ls ../test-sink/.emu/trees | wc -l)"
 
 test_teardown
