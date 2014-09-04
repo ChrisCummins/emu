@@ -193,11 +193,9 @@ AS_IF([test "x$enable_tests" = xyes],
               test/push/no-sink
               test/push/max
               test/push/dry-run
-              test/push/force
               test/push/push
               test/push/verbose
               test/push/excludes
-              test/push/mutex
               test/log/no-sink
               test/log/sinks
               test/log/log
