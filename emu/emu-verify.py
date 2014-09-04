@@ -41,9 +41,6 @@ def main(argv, argc):
     snapshots = parser.parse_snapshots(Source(options.source_dir))
     status = 0
 
-    # Reverse so that newest is first
-    snapshots.reverse()
-
     if not len(snapshots):
         print "No snapshots to verify!"
         status = 1
