@@ -1090,8 +1090,6 @@ class EmuConfigParser(ConfigParser.ConfigParser):
         return dict(self.items(section))
 
 
-    # get_string() - Fetch a string configuration property
-    #
     def get_string(self, section, prop):
         try:
             return self.get(section, prop)
@@ -1100,9 +1098,11 @@ class EmuConfigParser(ConfigParser.ConfigParser):
                    .format(section, prop, self.path))
             sys.exit(1)
 
+    def set_string(self, section, prop, value):
+        self.set(section, prop, str(value))
+        self.flush()
 
-    # get_bool() - Fetch a boolean configuration property
-    #
+
     def get_bool(self, section, prop):
         value = self.get_string(section, prop)
 
@@ -1117,16 +1117,35 @@ class EmuConfigParser(ConfigParser.ConfigParser):
             sys.exit(1)
 
 
-    # get_checksum_program() - Retrieve a checksum configuration property
-    #
-    def get_checksum_program(self, section, prop):
-        value = self.get_string(section, prop)
+    def set_bool(self, section, prop, value):
+        if value:
+            self.set(section, prop, "true")
+        else:
+            self.set(section, prop, "false")
+        self.flush()
 
-        return Util.verify_checksum_program(value)
+
+    def get_int(self, section, prop):
+        try:
+            value = self.get_string(section, prop)
+            return int(value)
+        except ValueError:
+            print ("fatal: Value '{0}' for configuration property '{0}:{1}' "
+                   "in file '{2}' is not an integer"
+                   .format(value, section, prop, self.path))
+            sys.exit(1)
 
 
-    # get_status() - Fetch a clean/dirty status configuration property
-    #
+    def set_int(self, section, prop, n):
+        try:
+            self.set(section, prop, int(n))
+            self.flush()
+        except ValueError:
+            print ("fatal: Value '{0}' for configuration property '{0}:{1}' "
+                   "in file '{2}' is not an integer"
+                   .format(n, section, prop, self.path))
+
+
     def get_status(self, section, prop):
         value = self.get_string(section, prop)
 
@@ -1141,35 +1160,6 @@ class EmuConfigParser(ConfigParser.ConfigParser):
             sys.exit(1)
 
 
-    # get_int() - Fetch an integer configuration property
-    #
-    def get_int(self, section, prop):
-        try:
-            value = self.get_string(section, prop)
-            return int(value)
-        except ValueError:
-            print ("fatal: Value '{0}' for configuration property '{0}:{1}' "
-                   "in file '{2}' is not an integer"
-                   .format(value, section, prop, self.path))
-            sys.exit(1)
-
-    # set_string() - Set a string configuration property
-    #
-    def set_string(self, section, prop, value):
-        self.set(section, prop, str(value))
-        self.flush()
-
-    # set_bool() - Set a boolean configuration property
-    #
-    def set_bool(self, section, prop, value):
-        if value:
-            self.set(section, prop, "true")
-        else:
-            self.set(section, prop, "false")
-        self.flush()
-
-    # set_status() - Set a clean/dirty status
-    #
     def set_status(self, section, prop, value):
         if value:
             self.set(section, prop, "clean")
@@ -1177,21 +1167,15 @@ class EmuConfigParser(ConfigParser.ConfigParser):
             self.set(section, prop, "dirty")
         self.flush()
 
-    # set_checksum_program() - Set a checksum program property
+
+    def get_checksum_program(self, section, prop):
+        value = self.get_string(section, prop)
+        return Util.verify_checksum_program(value)
+
+
     def set_checksum_program(self, section, prop, value):
         self.set(Util.verify_checksum_program(value))
         self.flush()
-
-    # set_int() - Set an integer configuration property
-    #
-    def set_int(self, section, prop, n):
-        try:
-            self.set(section, prop, int(n))
-            self.flush()
-        except ValueError:
-            print ("fatal: Value '{0}' for configuration property '{0}:{1}' "
-                   "in file '{2}' is not an integer"
-                   .format(n, section, prop, self.path))
 
 
 ###########################
