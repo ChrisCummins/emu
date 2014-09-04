@@ -921,7 +921,7 @@ class SnapshotID:
         return not self.__eq__(other)
 
     def __gt__(self, other):
-        date, other_date = int(self.timestamp), int(other.timestamp)
+        date, other_date = int(self.timestamp, 16), int(other.timestamp, 16)
         return date > other_date
 
     def __ge__(self, other):
