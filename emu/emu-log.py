@@ -78,8 +78,13 @@ def main(argv, argc):
     i = 0
     for snapshot in snapshots[:options.limit]:
         i += 1
+
+        # Print sink names when required:
         if print_sink_names and snapshot.sink != current_sink:
             current_sink = snapshot.sink
+            # Add blank line in short log output:
+            if i > 1 and options.short:
+                print
             print Util.colourise("{0}:".format(current_sink.name),
                                  Colours.INFO)
         # Log:
