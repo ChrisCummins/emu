@@ -581,9 +581,10 @@ class Snapshot:
     #   Status: (CLEAN|DIRTY)
     #   Last-Verified: <timestamp>
     #
-    # If "use_cache" is True, then fetch the status from the node (if
-    # present), rather than computing a new status.
-    def verify(self, use_cache=False):
+    # If "cache_results" is true, then update nodes with verification
+    # results. If "use_cached" is True, then retrieve these values
+    # from the node (if present).
+    def verify(self, cache_results=True, use_cached=False):
 
         if use_cached and self.node.has_status():
             return self.node.status()
@@ -593,21 +594,23 @@ class Snapshot:
             # We compute a new checksum and compare that against the
             # ID:
             program = self.node.checksum_program()
-            clean = Checksum(self.tree, program=program).get() == self.id.checksum
+            worker_thread = Checksum(self.tree, program=program)
+            clean = worker_thread.get() == self.id.checksum
 
             # Update the node with status and last-verified info:
-            date = EmuDate()
-            self.node.status(value=clean)
-            self.node.last_verified(value=date)
+            if cache_results:
+                date = EmuDate()
+                self.node.status(value=clean)
+                self.node.last_verified(value=date)
 
             return clean
 
 
-    # nth_child() - Return the nth child of snapshot
+    # nth_parent() - Return the nth parent of snapshot
     #
-    # Traverse each snapshot's until we have travelled 'n' nodes from
-    # the starting point.
-    def nth_child(self, n, truncate=False, error=False):
+    # Traverse each snapshot's parent until we have travelled 'n'
+    # nodes from the starting point.
+    def nth_parent(self, n, truncate=False, error=False):
         parent = self.parent()
 
         try:
