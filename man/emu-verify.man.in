@@ -20,7 +20,7 @@ generate the snapshot ID. The results of verification are cached in
 the snapshot node.
 .SH OPTIONS
 .TP
-\-\-cached
+\-\-use-cached
 Use cached values from a previous verification where available,
 instead of computing new checksums.
 .TP

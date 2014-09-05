@@ -585,7 +585,7 @@ class Snapshot:
     # present), rather than computing a new status.
     def verify(self, use_cache=False):
 
-        if use_cache and self.node.has_status():
+        if use_cached and self.node.has_status():
             return self.node.status()
 
         else:

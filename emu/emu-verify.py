@@ -34,7 +34,8 @@ from libemu import EmuParser, Source, Colours, Util
 
 def main(argv, argc):
     parser = EmuParser()
-    parser.add_option("--cached", action="store_true", dest="cached",
+    parser.add_option("--use-cached", action="store_true", dest="use_cached",
+                      default=False)
                       default=False)
     (options, args) = parser.parse_args()
 
@@ -46,7 +47,7 @@ def main(argv, argc):
         status = 1
 
     for snapshot in snapshots:
-        if snapshot.verify(use_cache=options.cached):
+        if snapshot.verify(use_cached=options.use_cached):
             print snapshot, Util.colourise("ok", Colours.OK)
         else:
             status = 2
