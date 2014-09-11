@@ -610,15 +610,15 @@ class Snapshot:
     #
     # Traverse each snapshot's parent until we have travelled 'n'
     # nodes from the starting point.
-    def nth_child(self, n, truncate=False, error=False):
+    def nth_parent(self, n, truncate=False, error=False):
         parent = self.parent()
 
         try:
 
             if n > 0:
                 if parent:
-                    return parent.nth_child(n - 1, truncate=truncate,
-                                            error=error)
+                    return parent.nth_parent(n - 1, truncate=truncate,
+                                             error=error)
                 elif not truncate:
                     id = SnapshotID(self.sink.name,
                                     self.id.id + Util.n_index_to_tilde(n))
@@ -639,6 +639,25 @@ class Snapshot:
                     sys.exit(1)
             else:
                 raise e
+
+
+    # branch() - Return every snapshot in branch as array
+    #
+    # Traverse each snapshot's parent, returning an ordered array
+    # starting the current snapshot (self), and each successive
+    # parent snapshot.
+    def branch(self):
+        branch = [self]
+
+        current = self
+        next = self.parent()
+
+        while next:
+            branch.append(next)
+            current = next
+            next = next.parent()
+
+        return branch
 
 
     # parent() - Get/set snapshot's parent
