@@ -281,6 +281,19 @@ class Sink:
                 return None
 
 
+    # tail() - Return the oldest snapshot in the current branch
+    #
+    # Traverse each snapshot's parent until we reach a null pointer,
+    # starting from the HEAD.
+    def tail(self):
+        head = self.head()
+
+        if head:
+            return head.branch()[-1]
+        else:
+            return None
+
+
     def push(self, force=False, ignore_errors=False, archive=True,
              owner=False, dry_run=False, verbose=False):
 
