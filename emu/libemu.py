@@ -1037,7 +1037,7 @@ class Emu:
     #
     # Version and copyright information:
     #
-    version = Version(0, 1, 43, dirty=False)
+    version = Version(0, 1, 43, dirty=True)
     copyright = { "start": 2012, "end": 2014, "authors": ["Chris Cummins"]}
 
     #
