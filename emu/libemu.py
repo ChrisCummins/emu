@@ -696,7 +696,7 @@ class Snapshot:
             parent = snapshot.parent()
             if parent and parent.id == self.id:
                 if new_parent:
-                    snapshot.parent(parent=new_parent)
+                    snapshot.parent(value=new_parent)
                 else:
                     snapshot.parent(delete=True)
 
