@@ -2297,11 +2297,14 @@ class EmuParser(OptionParser):
                         # create a branch history.
                         if t_snapshot and t_snapshot != b_tail:
                             raise InvalidBranchError(b_head, b_tail)
-
+                # We don't need to proceed if there are no snapshots:
                 if require and not len(snapshots):
-                    raise InvalidArgsError("One or more snapshots must be "
-                                           "specified using "
-                                           "<sink>:<snapshot>")
+                    if len(args) > 0:
+                        raise InvalidArgsError("No snapshots found.")
+                    else:
+                        raise InvalidArgsError("One or more snapshots must be "
+                                               "specified using "
+                                               "<sink>:<snapshot>")
 
                 # Cast to set and back to remove duplicates:
                 snapshots = list(set(snapshots))
