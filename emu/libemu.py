@@ -610,7 +610,7 @@ class Snapshot:
     #
     # Traverse each snapshot's parent until we have travelled 'n'
     # nodes from the starting point.
-    def nth_parent(self, n, truncate=False, error=False):
+    def nth_child(self, n, truncate=False, error=False):
         parent = self.parent()
 
         try:
