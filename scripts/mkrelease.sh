@@ -124,9 +124,9 @@ make_development_version_commit() {
 push_to_remotes() {
     for remote in $@; do
         echo "Pushing branch $remote/master"
-        git push $remote master
+        git push $remote master >/dev/null
         echo "Pushing tag $remote/$new_version"
-        git push $remote $new_version
+        git push $remote $new_version >/dev/null
     done
 }
 
