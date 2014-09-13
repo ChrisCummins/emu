@@ -673,6 +673,45 @@ class Snapshot:
         return branch
 
 
+    # nth_child() - Return the nth child of snapshot
+    #
+    # Traverse each snapshot's child until we have travelled 'n' nodes
+    # from the starting point.
+    def nth_child(self, n, truncate=False, error=False):
+        head = self.sink.head()
+
+        if not head:
+            id = SnapshotID(self.sink.name, "HEAD")
+            raise SnapshotNotFoundError(id)
+
+        branch = head.branch()
+
+        # Iterate over snapshots in order to get the index of self:
+        index_of_self = None
+        i = 0
+        for snapshot in branch:
+            if snapshot == self:
+                index_of_self = i
+                break
+            else:
+                i += 1
+
+        try:
+            if index_of_self == None:
+                # If we have no "index_of_self", then the snapshot is not
+                # in the branch:
+                raise SnapshotNotFoundError(self.id)
+
+            if n >= len(branch):
+                # Out of range check:
+                raise IndexError
+
+            return branch[index_of_self - n]
+        except IndexError:
+            id = SnapshotID(self.sink.name, "TAIL~{0}".format(n))
+            raise SnapshotNotFoundError(id)
+
+
     # parent() - Get/set snapshot's parent
     #
     def parent(self, value=None, delete=False):
