@@ -795,23 +795,37 @@ class Snapshot:
         return hash(self.id)
 
     def __eq__(self, other):
-        return self.id == other.id
+        try:
+            return self.id == other.id
+        except AttributeError:
+            return False
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __gt__(self, other):
-        return self.id > other.id
+        try:
+            return self.id > other.id
+        except AttributeError:
+            return False
 
     def __ge__(self, other):
-        return self.id >= other.id
+        try:
+            return self.id >= other.id
+        except AttributeError:
+            return False
 
     def __lt__(self, other):
-        return self.id < other.id
+        try:
+            return self.id < other.id
+        except AttributeError:
+            return False
 
     def __le__(self, other):
-        return self.id <= other.id
-
+        try:
+            return self.id <= other.id
+        except AttributeError:
+            return False
 
     # create() - Create a new snapshot
     #
@@ -1009,7 +1023,10 @@ class SnapshotID:
 # are first sorted alphabetically by sink, then chronologically by timestamp.
 
     def __eq__(self, other):
-        return self.id == other.id and self.sink_name == other.sink_name
+        if other.id:
+            return self.id == other.id and self.sink_name == other.sink_name
+        else:
+            return False
 
     def __ne__(self, other):
         return not self.__eq__(other)
