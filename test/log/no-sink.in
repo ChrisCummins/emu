@@ -8,7 +8,7 @@ assert_fail "emu log"
 
 emu sink -v add origin ../test-sink
 
-emu log origin
-assert fail "emu log abc"
+assert_fail "emu log origin"
+assert_fail "emu log abc"
 
 test_teardown

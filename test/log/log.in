@@ -5,6 +5,6 @@ cd $EMU_TEST_DIR/test-source
 emu init -v
 
 emu sink -v add origin ../test-sink
-emu log origin
+assert_fail "emu log origin"
 
 test_teardown
