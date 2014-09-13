@@ -2228,6 +2228,105 @@ class EmuParser(OptionParser):
                     raise e
 
 
+    @staticmethod
+    def _parse_snapshot_id(string, sink):
+        regex = (r"((?P<id>[a-f0-9]{40})|"
+                 "(?P<head>HEAD)|"
+                 "(?P<tail>TAIL))"
+                 "(?P<n_index>~([0-9]+)?)?")
+
+        match = re.match(regex, string)
+
+        if not match:
+            raise InvalidSnapshotIDError(arg)
+
+        # Regex components:
+        id_match = match.group("id")
+        head_match = match.group("head")
+        tail_match = match.group("tail")
+        n_index_match = match.group("n_index")
+
+        # Resolve tilde index notation:
+        n_index = 0
+        if n_index_match:
+            n_index = Util.tilde_to_n_index(n_index_match)
+
+        # Match snapshot identifier:
+        if id_match:
+            # If there's an ID, then match it:
+            id = SnapshotID(sink.name, id_match)
+            snapshot = Util.get_snapshot_by_id(id, sink.snapshots())
+            return snapshot.nth_parent(n_index, error=True)
+
+        elif head_match:
+            # Calculate the HEAD index and traverse:
+            head = sink.head()
+            if head:
+                return head.nth_parent(n_index, error=True)
+
+        elif tail_match:
+            # Calculate the TAIL index and traverse
+            tail = sink.tail()
+
+            if tail:
+                return tail.nth_child(n_index, error=True)
+
+        else:
+            raise InvalidSnapshotIDError(arg)
+
+
+    @staticmethod
+    def _parse_arg(arg, source, accept_sink_names=True):
+        #_parse_snapshot_id(string, sink)
+
+        regex = (r"^(?P<sink>[a-zA-Z]+)"
+                 "(:(?P<src>([a-f0-9]{40}|HEAD|TAIL)(~[0-9]*)?)"
+                 "(?P<branch>.."
+                 "(?P<dst>([a-f0-9]{40}|HEAD|TAIL)(~[0-9]*)?)?)?)?")
+
+        match = re.match(regex, arg)
+
+        if not match:
+            raise InvalidSnapshotIDError(arg)
+
+        # Regex components:
+        sink_match = match.group("sink")
+        src_match = match.group("src")
+        branch_match = match.group("branch")
+        dst_match = match.group("dst")
+
+        sink = Util.get_sink_by_name(sink_match, source.sinks())
+
+        src = EmuParser._parse_snapshot_id(src_match, sink)
+        dst = None
+        if dst_match:
+            dst = EmuParser._parse_snapshot_id(dst_match, sink)
+
+        snapshots = [src]
+
+        # If we have a ".." suffix to indicate branch notation, then
+        # we start from the indicated node and work back, creating a
+        # branch history.
+        if branch_match:
+
+            # We start from the indicated node and work back, stopping
+            # if/when we reach the terminating snapshot.
+            node = src.parent()
+            while node and node != dst:
+                snapshots.append(node)
+                node = node.parent()
+
+            # If the last snapshot doesn't match the terminating
+            # snapshot, then we were unable to create a branch
+            # history.
+            if dst and snapshots[-1].parent() != dst:
+                raise InvalidBranchError(src, dst)
+
+        if dst:
+            snapshots.append(dst)
+
+        return snapshots
+
     # parse_snapshots() - Parse the arguments for snapshot identifiers
     #
     # Parses the command line arguments and searches for snapshot IDs,
@@ -2268,106 +2367,8 @@ class EmuParser(OptionParser):
 
                 # Iterate over each arg, resolving to snapshot(s):
                 for arg in args:
-                    # Regular expression for snapshot syntax, matching:
-                    #
-                    #    <sink>(:<id>(~(<n>))(..(<id>(~(<n>)))))
-                    #
-                    # Examples:
-                    #
-                    #   origin
-                    #   origin:HEAD
-                    #   origin:HEAD~
-                    #   origin:HEAD~21
-                    #   origin:53fc7fa0da39a3ee5e6b4b0d3255bfef95601890~
-                    #   origin:HEAD..
-                    #   origin:HEAD..53fc7fa0da39a3ee5e6b4b0d3255bfef95601890~
-                    #
-                    regex = (r"^(?P<sink>[a-zA-Z]+)((:?)|"
-                             "(:((?P<id>[a-f0-9]{40})|"
-                             "(?P<head>HEAD))"
-                             "(?P<index>~([0-9]+)?)?"
-                             "(?P<branch>\.\."
-                             "(((?P<t_id>[a-f0-9]{40})|"
-                             "(?P<t_head>HEAD))"
-                             "(?P<t_index>~([0-9]+)?)?)?)?))?$")
-                    match = re.match(regex, arg)
+                    snapshots += self._parse_arg(arg, source, accept_sink_names=accept_sink_names)
 
-                    if not match:
-                        raise InvalidSnapshotIDError(arg)
-
-                    # Regex components:
-                    sink_match = match.group("sink")
-                    id_match = match.group("id")
-                    head_match = match.group("head")
-                    index_match = match.group("index")
-                    branch_match = match.group("branch")
-                    t_id_match = match.group("t_id")
-                    t_head_match = match.group("t_head")
-                    t_index_match = match.group("t_index")
-
-                    sink = Util.get_sink_by_name(sink_match, source.sinks())
-
-                    # Resolve tilde index notation:
-                    n_index = 0
-                    if index_match:
-                        n_index = Util.tilde_to_n_index(index_match)
-
-                    if id_match:
-                        # If there's an ID, then match it:
-                        id = SnapshotID(sink_match, id_match)
-                        snapshot = Util.get_snapshot_by_id(id, sink.snapshots())
-                        snapshots.append(snapshot.nth_child(n_index,
-                                                            error=True))
-                    elif head_match:
-                        # Calculate the HEAD index and traverse:
-                        head = sink.head()
-                        if head:
-                            snapshots.append(head.nth_child(n_index,
-                                                            error=True))
-                    elif accept_sink_names:
-                        # If there's no ID then match all snapshots
-                        snapshots += sink.snapshots()
-                    else:
-                        raise InvalidSnapshotIDError(arg)
-
-                    # If we have a ".." suffix to indicate branch
-                    # notation, then we start from the indicated node
-                    # and work back, creating a branch history.
-                    if branch_match:
-                        t_n_index = 0
-                        if t_index_match:
-                            t_n_index = Util.tilde_to_n_index(t_index_match)
-
-                        if t_id_match:
-                            id = SnapshotID(sink_match, t_id_match)
-                            t_snapshot = Util.get_snapshot_by_id(id, sink.snapshots()).nth_child(t_n_index, error=True)
-
-                        elif t_head_match:
-                            head = sink.head()
-                            if head:
-                                t_snapshot = head.nth_child(t_n_index, error=True)
-
-                        else:
-                            t_snapshot = None
-
-                        # We start from the indicated node and work
-                        # back, stopping if/when we reach the
-                        # terminating snapshot.
-                        b_head = snapshots[-1]
-                        if not (t_snapshot and t_snapshot == b_head):
-                            n = b_head.parent()
-                            while n:
-                                snapshots.append(n)
-                                if t_snapshot and n == t_snapshot:
-                                    break
-                                n = n.parent()
-                        b_tail = snapshots[-1]
-
-                        # If the last snapshot doesn't match the
-                        # terminating snapshot, then we were unable to
-                        # create a branch history.
-                        if t_snapshot and t_snapshot != b_tail:
-                            raise InvalidBranchError(b_head, b_tail)
                 # We don't need to proceed if there are no snapshots:
                 if require and not len(snapshots):
                     if len(args) > 0:
