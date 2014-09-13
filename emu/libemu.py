@@ -2314,12 +2314,21 @@ class EmuParser(OptionParser):
 
         sink = Util.get_sink_by_name(sink_match, source.sinks())
 
-        src = EmuParser._parse_snapshot_id(src_match, sink)
-        dst = None
+        snapshots = []
+        src, dst = None, None
+
+        if src_match:
+            src = EmuParser._parse_snapshot_id(src_match, sink)
+            snapshots.append(src)
+        elif accept_sink_names:
+            return sink.snapshots()
+        else:
+            raise InvalidArgsError("One or more snapshots must be "
+                                   "specified using "
+                                   "<sink>:<snapshot>")
+
         if dst_match:
             dst = EmuParser._parse_snapshot_id(dst_match, sink)
-
-        snapshots = [src]
 
         # If we have a ".." suffix to indicate branch notation, then
         # we start from the indicated node and work back, creating a
