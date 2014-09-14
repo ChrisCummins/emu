@@ -41,6 +41,10 @@ main() {
 
     set -e
 
+    echo -n "Uninstalling existing version... "
+    sudo make uninstall &>/dev/null
+    echo "done"
+
     cd "$(get_project_root)"
     echo -n "Pulling latest upstream changes... "
     git pull >/dev/null
@@ -49,10 +53,6 @@ main() {
     echo -n "Getting latest stable version... "
     local latest_stable_release=$(git describe --abbrev=0 --tags)
     echo $latest_stable_release
-
-    echo -n "Uninstalling existing version... "
-    sudo make uninstall >/dev/null
-    echo "done"
 
     echo -n "Cleaning source repository... "
     git clean -xfd >/dev/null
