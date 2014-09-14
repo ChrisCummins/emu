@@ -47,6 +47,7 @@ main() {
 
     cd "$(get_project_root)"
     echo -n "Pulling latest upstream changes... "
+    git checkout master &>/dev/null
     git pull &>/dev/null
     echo "done"
 
