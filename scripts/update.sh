@@ -59,12 +59,14 @@ main() {
     git clean -xfd &>/dev/null
     echo "done"
 
-    echo "Configuring build..."
+    echo -n "Configuring build... "
     ./autogen.sh &>/dev/null
     ./configure &>/dev/null
+    echo "done"
 
-    echo "Building latest version..."
+    echo -n "Building latest version... "
     make &>/dev/null
+    echo "done"
 
     echo -n "Installing latest version... "
     sudo make install &>/dev/null
