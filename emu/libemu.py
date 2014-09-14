@@ -322,42 +322,28 @@ class Sink:
 
         return 0
 
-    # squash() - Delete every snapshot except 'snapshot'
+    # squash() - Merge multiple snapshots
     #
-    def squash(self, snapshot, dry_run=False, force=False, verbose=False):
-        no_of_snapshots = len(self.snapshots())
+    def squash(self, snapshots, dry_run=False, force=False, verbose=False):
+
+        # Sanity check to ensure that target snapshots are all from
+        # this sink:
+        for snapshot in snapshots:
+            if snapshot.sink != self:
+                print "fatal: Cannot merge snapshots across multiple sinks."
+                sys.exit(1)
 
         # Return if we have nothing to do:
-        if no_of_snapshots < 2:
+        if len(snapshots) < 2:
             Util.printf("nothing to squash",
                         prefix=self.name, colour=Colours.OK)
             return
 
-        for other in self.snapshots():
-            if other.id != snapshot.id:
-                other.destroy(dry_run=dry_run, force=force, verbose=verbose)
-
-        # Set new HEAD:
-        if not dry_run:
-            self.head(head=snapshot, dry_run=dry_run)
-
-
-    # merge() - Merge every snapshot into a single new snapshot
-    #
-    def merge(self, dry_run=False, force=False, verbose=False):
-        no_of_snapshots = len(self.snapshots())
-
-        # Return if we have nothing to do:
-        if no_of_snapshots < 2:
-            Util.printf("nothing to merge",
-                        prefix=self.name, colour=Colours.OK)
-            return
-
-        # Merge all snapshots into staging area:
-        for snapshot in self.snapshots():
+        # Merge target snapshots into staging area:
+        for snapshot in snapshots:
             link_dests = []
-            for other in self.snapshots()[-20:]:
-                if other.id != snapshot.id:
+            for other in snapshots[-20:]:
+                if other != snapshot:
                     link_dests.append(other.tree)
 
             Util.printf("merging snapshot {0}"
@@ -370,17 +356,22 @@ class Sink:
                        error=True, verbose=verbose, quiet=not verbose)
 
         # Check that merge was successful:
-        Util.exists(Util.concat_paths(self.path, "/.emu/trees/new"), error=True)
-        Util.printf("merged {0} snapshots".format(no_of_snapshots),
+        if not dry_run:
+            Util.exists(Util.concat_paths(self.path, "/.emu/trees/new"), error=True)
+
+        Util.printf("merged {0} snapshots".format(len(snapshots)),
                     prefix=self.name, colour=Colours.OK)
 
         # Then destroy all of the merged snapshots:
-        for snapshot in self.snapshots():
+        for snapshot in snapshots:
             snapshot.destroy(dry_run=dry_run, force=force, verbose=verbose)
 
         # Now create a snapshot from merging tree:
-        Snapshot.create(self, resume=True, force=force,
-                        dry_run=dry_run, verbose=verbose)
+        snapshot = Snapshot.create(self, resume=True, force=force,
+                                   dry_run=dry_run, verbose=verbose)
+
+        # Set new HEAD:
+        self.head(head=snapshot, dry_run=dry_run)
 
 
     # destroy() - Remove a sink from source

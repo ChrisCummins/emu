@@ -1,20 +1,16 @@
 .TH emu-squash @MANSECTION@ @DATE@ "version @EMU_VERSION@" "Emu Manual"
 .SH NAME
-emu\-squash \- Squash sink into single snapshot
+emu\-squash \- Merge snapshots
 .SH SYNOPSIS
 .B emu squash
-[<options>] <sink>:<snapshot>
+[<options>] <sink>:<snapshot> ...
 .SH DESCRIPTION
-Deletes every snapshot from a sink except the given argument,
-reducing the sink to a single snapshot.
+Merge multiple snapshots into a new head snapshot.
 .PP
 The format for specifying the snapshot to preserve is in the form
 <sink>:<snapshot>. The <snapshot> value is the 40 digit snapshot ID,
 and can be obtained from 'emu log'.
 .SH OPTIONS
-.TP
-\-m \-\-merge
-Merge every snapshot in the sink together into a new snapshot.
 .TP
 \-d \-\-dry-run
 Perform a trial run with no changes made.

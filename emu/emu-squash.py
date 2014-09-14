@@ -34,27 +34,20 @@ from libemu import Source
 
 def main(argv, argc):
     parser = EmuParser()
-    parser.add_option("-m", "--merge", action="store_true",
-                      dest="merge", default=False)
     parser.add_option("-d", "--dry-run", action="store_true",
                       dest="dry_run", default=False)
     parser.add_option("-f", "--force", action="store_true",
                       dest="force", default=False)
     (options, args) = parser.parse_args()
     source = Source(options.source_dir)
-    snapshot = parser.parse_snapshots(source,
-                                      accept_sink_names=False,
-                                      accept_no_args=False,
-                                      single_arg=True,
-                                      require=True)[0]
-    sink = snapshot.sink
+    snapshots = parser.parse_snapshots(source,
+                                       accept_sink_names=False,
+                                       accept_no_args=False,
+                                       require=True)
+    sink = snapshots[0].sink
 
-    if options.merge:
-        sink.merge(dry_run=options.dry_run, force=options.force,
-                   verbose=options.verbose)
-    else:
-        sink.squash(snapshot, dry_run=options.dry_run,
-                    force=options.force, verbose=options.verbose)
+    sink.squash(snapshots, dry_run=options.dry_run,
+                force=options.force, verbose=options.verbose)
 
     return 0
 
