@@ -64,11 +64,11 @@ main() {
     ./configure &>/dev/null
     echo "done"
 
-    echo -n "Building latest version... "
+    echo -n "Building release $latest_stable_release... "
     make &>/dev/null
     echo "done"
 
-    echo -n "Installing latest version... "
+    echo -n "Installing build $latest_stable_release... "
     sudo make install &>/dev/null
     echo "done"
 
