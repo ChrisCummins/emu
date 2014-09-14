@@ -39,6 +39,8 @@ main() {
         fi
     done
 
+    set -e
+
     cd "$(get_project_root)"
     echo -n "Pulling latest upstream changes... "
     git pull >/dev/null
