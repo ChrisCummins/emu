@@ -47,7 +47,7 @@ main() {
 
     cd "$(get_project_root)"
     echo -n "Pulling latest upstream changes... "
-    git pull >/dev/null
+    git pull &>/dev/null
     echo "done"
 
     echo -n "Getting latest stable version... "
@@ -55,16 +55,18 @@ main() {
     echo $latest_stable_release
 
     echo -n "Cleaning source repository... "
-    git clean -xfd >/dev/null
+    git clean -xfd &>/dev/null
     echo "done"
 
+    echo "Configuring build..."
+    ./autogen.sh &>/dev/null
+    ./configure &>/dev/null
+
     echo "Building latest version..."
-    ./autogen.sh
-    ./configure
-    make
+    make &>/dev/null
 
     echo -n "Installing latest version... "
-    sudo make install >/dev/null
+    sudo make install &>/dev/null
     echo "done"
 
     echo "Running test suite..."
