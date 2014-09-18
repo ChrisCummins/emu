@@ -75,7 +75,7 @@ dnl --program-transform-name options
 AC_ARG_PROGRAM
 
 dnl Fairly arbitrary, older versions might work too.
-AM_INIT_AUTOMAKE([1.11 -Wall foreign no-define])
+AM_INIT_AUTOMAKE([1.11 -Wall foreign no-define -Wno-portability])
 AM_SILENT_RULES([yes])
 
 
