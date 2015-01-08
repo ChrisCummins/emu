@@ -41,6 +41,7 @@ dnl   3.3.     Export project variables
 dnl
 dnl   4.     Build requirements
 dnl   4.1.     Do we have the required python binaries?
+dnl   4.2.     Do we have rsync?
 dnl
 dnl   5.     Project configuration
 dnl   5.1      Are we generating the man pages?
@@ -148,6 +149,18 @@ AS_IF([test "x$PYTHON_2_7" != x],
        AC_MSG_ERROR([Required python binary not found.])])
 AC_SUBST([HAVE_PYTHON_2_7],[$HAVE_PYTHON_2_7])
 AM_CONDITIONAL([HAVE_PYTHON_2_7],[test "x$HAVE_PYTHON_2_7" = xyes])
+
+
+dnl     ============================================================
+dnl     4.2. Do we have rsync?
+dnl     ============================================================
+AC_CHECK_PROG([RSYNC],[rsync],[rsync])
+AS_IF([test "x$RSYNC" != x],
+      [HAVE_RSYNC=yes],
+      [HAVE_RSYNC=no
+       AC_MSG_ERROR([Required package 'rsync' not found.])])
+AC_SUBST([HAVE_RSYNC],[$HAVE_RSYNC])
+AM_CONDITIONAL([HAVE_RSYNC],[test "x$HAVE_RSYNC" = xyes])
 
 
 dnl ================================================================
