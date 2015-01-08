@@ -1760,7 +1760,7 @@ class Util:
         return process
 
 
-    # rsync() - Execute rsync file transfer
+    # rsync() - Execute rsync file transfer and return elapsed time
     #
     # The 'archive', 'update', 'dry_run', 'link_dest', 'delete', and
     # 'delete_excluded' arguments correspond to their respective rsync
@@ -1835,8 +1835,15 @@ class Util:
         # Add source and destination operands after flags:
         rsync_flags += [src, dst]
 
-        return Util.p_exec(rsync_flags, stdout=stdout, stderr=stderr,
-                           wait=wait, error=error, verbose=verbose)
+        # Record file transfer start time.
+        start_time = time.time()
+
+        # Perform rsync.
+        Util.p_exec(rsync_flags, stdout=stdout, stderr=stderr,
+                    wait=wait, error=error, verbose=verbose)
+
+        # Return elapsed rsync time.
+        return time.time() - start_time
 
 
     # read() - Return the contents of a file
