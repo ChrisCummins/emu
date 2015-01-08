@@ -140,7 +140,7 @@ AC_PROG_MAKE_SET
 
 
 dnl     ============================================================
-dnl     4.1. Do we the required python binaries?
+dnl     4.1. Do we have the required python binaries?
 dnl     ============================================================
 AC_CHECK_PROG([PYTHON_2_7],[python2.7],[python2.7])
 AS_IF([test "x$PYTHON_2_7" != x],
