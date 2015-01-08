@@ -913,6 +913,9 @@ class Snapshot:
                        delete=True, delete_excluded=True,
                        error=rsync_error, verbose=verbose)
 
+            Util.printf("File transfer complete, creating snapshot.",
+                        prefix=sink.name, colour=Colours.INFO)
+
         # Assert that we have a staging area to work with:
         if not dry_run:
             Util.readable(staging_area, error=err_cb)
