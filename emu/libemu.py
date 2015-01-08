@@ -906,15 +906,19 @@ class Snapshot:
                 link_dests.append(snapshot.tree)
 
             # Perform file transfer:
-            Util.rsync(Util.concat_paths(source.path, "/"), staging_area,
-                       archive=archive, owner=owner,
-                       dry_run=dry_run, link_dest=link_dests,
-                       exclude=exclude, exclude_from=exclude_from,
-                       delete=True, delete_excluded=True,
-                       error=rsync_error, verbose=verbose)
+            transfer_time = Util.rsync(Util.concat_paths(source.path, "/"),
+                                       staging_area, archive=archive,
+                                       owner=owner, dry_run=dry_run,
+                                       link_dest=link_dests, exclude=exclude,
+                                       exclude_from=exclude_from, delete=True,
+                                       delete_excluded=True, error=rsync_error,
+                                       verbose=verbose)
 
-            Util.printf("File transfer complete, creating snapshot.",
-                        prefix=sink.name, colour=Colours.INFO)
+            # Print "transfer complete" message:
+            if transfer_time > 10:
+                Util.printf(("File transfer complete ({time:.2f}s), "
+                             "creating snapshot.".format(time=transfer_time)),
+                            prefix=sink.name, colour=Colours.INFO)
 
         # Assert that we have a staging area to work with:
         if not dry_run:
