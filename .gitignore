@@ -1,24 +1,3 @@
-# Temporary and backup files.
-[#]*[#]
-.[#]*
-*~
-
-# Release tarballs.
-emu-*.tar.gz
-
-# Autotools files.
-/aclocal.m4
-/autom4te.cache/
-/autoscan.log
-/build/*
-/config.log
-/config.status
-/config.summary
-/configure
-/configure.scan
-Makefile
-Makefile.in
-
 # Tests output.
 test.log
 
