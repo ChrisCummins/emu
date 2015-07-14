@@ -20,6 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import re
 import os
 
 from optparse import OptionParser
@@ -33,37 +34,143 @@ from . import SnapshotNotFoundError
 from . import Util
 
 
+def _get_source_dir():
+    """
+    Attempt to determine the source directory, by iterating up the
+    directory tree, starting from the current working
+    directory. If no source is found, fail.
+    """
+    base_source_dir = os.getcwd()
+    source_dir = base_source_dir
+    while True:
+        # Check if emu directory exists in current directory:
+        emu_dir = Util.concat_paths(source_dir, "/.emu")
+        is_source = Util.readable(emu_dir)
+        if is_source:
+            return source_dir
+
+        # If not, then get the parent directory and repeat:
+        new_source_dir = Util.par_dir(source_dir)
+
+        # If the parent and current directories are equal (i.e. we
+        # have hit the root of the filesystem), then revert to the
+        # default emu source dir from config:
+        if new_source_dir == source_dir:
+            return None
+
+        source_dir = new_source_dir
+
+def _parse_snapshot_id(string, sink):
+    regex = (r"((?P<id>[a-f0-9]{40})|"
+             "(?P<head>HEAD)|"
+             "(?P<tail>TAIL))"
+             "(?P<n_index>~([0-9]+)?)?")
+
+    match = re.match(regex, string)
+
+    if not match:
+        raise InvalidSnapshotIDError(arg)
+
+    # Regex components:
+    id_match = match.group("id")
+    head_match = match.group("head")
+    tail_match = match.group("tail")
+    n_index_match = match.group("n_index")
+
+    # Resolve tilde index notation:
+    n_index = 0
+    if n_index_match:
+        n_index = Util.tilde_to_n_index(n_index_match)
+
+    # Match snapshot identifier:
+    if id_match:
+        # If there's an ID, then match it:
+        id = SnapshotID(sink.name, id_match)
+        snapshot = Util.get_snapshot_by_id(id, sink.snapshots())
+        return snapshot.nth_parent(n_index, error=True)
+
+    elif head_match:
+        # Calculate the HEAD index and traverse:
+        head = sink.head()
+        if head:
+            return head.nth_parent(n_index, error=True)
+
+    elif tail_match:
+        # Calculate the TAIL index and traverse
+        tail = sink.tail()
+
+        if tail:
+            return tail.nth_child(n_index, error=True)
+
+    else:
+        raise InvalidSnapshotIDError(arg)
+
+
+def _parse_arg(arg, source, accept_sink_names=True):
+    #_parse_snapshot_id(string, sink)
+
+    regex = (r"^(?P<sink>[a-zA-Z]+)"
+             "(:(?P<src>([a-f0-9]{40}|HEAD|TAIL)(~[0-9]*)?)"
+             "(?P<branch>.."
+             "(?P<dst>([a-f0-9]{40}|HEAD|TAIL)(~[0-9]*)?)?)?)?")
+
+    match = re.match(regex, arg)
+
+    if not match:
+        raise InvalidSnapshotIDError(arg)
+
+    # Regex components:
+    sink_match = match.group("sink")
+    src_match = match.group("src")
+    branch_match = match.group("branch")
+    dst_match = match.group("dst")
+
+    sink = Util.get_sink_by_name(sink_match, source.sinks())
+
+    snapshots = []
+    src, dst = None, None
+
+    if src_match:
+        src = _parse_snapshot_id(src_match, sink)
+        snapshots.append(src)
+    elif accept_sink_names:
+        return sink.snapshots()
+    else:
+        raise InvalidArgsError("One or more snapshots must be "
+                               "specified using "
+                               "<sink>:<snapshot>")
+
+    if dst_match:
+        dst = _parse_snapshot_id(dst_match, sink)
+
+    # If we have a ".." suffix to indicate branch notation, then
+    # we start from the indicated node and work back, creating a
+    # branch history.
+    if branch_match:
+
+        # We start from the indicated node and work back, stopping
+        # if/when we reach the terminating snapshot.
+        node = src.parent()
+        while node and node != dst:
+            snapshots.append(node)
+            node = node.parent()
+
+        # If the last snapshot doesn't match the terminating
+        # snapshot, then we were unable to create a branch
+        # history.
+        if dst and snapshots[-1].parent() != dst:
+            raise InvalidBranchError(src, dst)
+
+    if dst:
+        snapshots.append(dst)
+
+    return snapshots
+
+
 class Parser(OptionParser):
     """
     Command line option parser.
     """
-
-    @staticmethod
-    def _get_source_dir():
-        """
-        Attempt to determine the source directory, by iterating up the
-        directory tree, starting from the current working
-        directory. If no source is found, fail.
-        """
-        base_source_dir = os.getcwd()
-        source_dir = base_source_dir
-        while True:
-            # Check if emu directory exists in current directory:
-            emu_dir = Util.concat_paths(source_dir, "/.emu")
-            is_source = Util.readable(emu_dir)
-            if is_source:
-                return source_dir
-
-            # If not, then get the parent directory and repeat:
-            new_source_dir = Util.par_dir(source_dir)
-
-            # If the parent and current directories are equal (i.e. we
-            # have hit the root of the filesystem), then revert to the
-            # default emu source dir from config:
-            if new_source_dir == source_dir:
-                return None
-
-            source_dir = new_source_dir
 
     def __init__(self):
         # Instantiate superclass
@@ -75,7 +182,7 @@ class Parser(OptionParser):
 
         # Set default parser arguments:
         self.add_option("-S", "--source-dir", action="store", type="string",
-                        dest="source_dir", default=self._get_source_dir())
+                        dest="source_dir", default=_get_source_dir())
         self.add_option("--version", action="callback",
                         callback=Util.version_and_quit)
         self.add_option("-v", "--verbose", action="store_true",
@@ -149,113 +256,6 @@ class Parser(OptionParser):
                 else:
                     raise e
 
-    @staticmethod
-    def _parse_snapshot_id(string, sink):
-        regex = (r"((?P<id>[a-f0-9]{40})|"
-                 "(?P<head>HEAD)|"
-                 "(?P<tail>TAIL))"
-                 "(?P<n_index>~([0-9]+)?)?")
-
-        match = re.match(regex, string)
-
-        if not match:
-            raise InvalidSnapshotIDError(arg)
-
-        # Regex components:
-        id_match = match.group("id")
-        head_match = match.group("head")
-        tail_match = match.group("tail")
-        n_index_match = match.group("n_index")
-
-        # Resolve tilde index notation:
-        n_index = 0
-        if n_index_match:
-            n_index = Util.tilde_to_n_index(n_index_match)
-
-        # Match snapshot identifier:
-        if id_match:
-            # If there's an ID, then match it:
-            id = SnapshotID(sink.name, id_match)
-            snapshot = Util.get_snapshot_by_id(id, sink.snapshots())
-            return snapshot.nth_parent(n_index, error=True)
-
-        elif head_match:
-            # Calculate the HEAD index and traverse:
-            head = sink.head()
-            if head:
-                return head.nth_parent(n_index, error=True)
-
-        elif tail_match:
-            # Calculate the TAIL index and traverse
-            tail = sink.tail()
-
-            if tail:
-                return tail.nth_child(n_index, error=True)
-
-        else:
-            raise InvalidSnapshotIDError(arg)
-
-    @staticmethod
-    def _parse_arg(arg, source, accept_sink_names=True):
-        #_parse_snapshot_id(string, sink)
-
-        regex = (r"^(?P<sink>[a-zA-Z]+)"
-                 "(:(?P<src>([a-f0-9]{40}|HEAD|TAIL)(~[0-9]*)?)"
-                 "(?P<branch>.."
-                 "(?P<dst>([a-f0-9]{40}|HEAD|TAIL)(~[0-9]*)?)?)?)?")
-
-        match = re.match(regex, arg)
-
-        if not match:
-            raise InvalidSnapshotIDError(arg)
-
-        # Regex components:
-        sink_match = match.group("sink")
-        src_match = match.group("src")
-        branch_match = match.group("branch")
-        dst_match = match.group("dst")
-
-        sink = Util.get_sink_by_name(sink_match, source.sinks())
-
-        snapshots = []
-        src, dst = None, None
-
-        if src_match:
-            src = Parser._parse_snapshot_id(src_match, sink)
-            snapshots.append(src)
-        elif accept_sink_names:
-            return sink.snapshots()
-        else:
-            raise InvalidArgsError("One or more snapshots must be "
-                                   "specified using "
-                                   "<sink>:<snapshot>")
-
-        if dst_match:
-            dst = Parser._parse_snapshot_id(dst_match, sink)
-
-        # If we have a ".." suffix to indicate branch notation, then
-        # we start from the indicated node and work back, creating a
-        # branch history.
-        if branch_match:
-
-            # We start from the indicated node and work back, stopping
-            # if/when we reach the terminating snapshot.
-            node = src.parent()
-            while node and node != dst:
-                snapshots.append(node)
-                node = node.parent()
-
-            # If the last snapshot doesn't match the terminating
-            # snapshot, then we were unable to create a branch
-            # history.
-            if dst and snapshots[-1].parent() != dst:
-                raise InvalidBranchError(src, dst)
-
-        if dst:
-            snapshots.append(dst)
-
-        return snapshots
-
     def parse_snapshots(self, source, accept_sink_names=True,
                         accept_no_args=True, single_arg=False,
                         require=False, error=True):
@@ -297,7 +297,7 @@ class Parser(OptionParser):
 
                 # Iterate over each arg, resolving to snapshot(s):
                 for arg in args:
-                    snapshots += self._parse_arg(
+                    snapshots += _parse_arg(
                         arg, source, accept_sink_names=accept_sink_names
                     )
 
