@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 #
-# Copyright 2014 Chris Cummins.
+# Copyright 2015 Chris Cummins.
 #
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation files
@@ -22,14 +22,11 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
 import os
 import sys
 import subprocess
 
-# Resolve and import Libemu
-sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
-from libemu import Util, Emu, EmuParser, Source, Sink, SinkNotFoundError, Colours
+from emu import *
 
 def main(argv, argc):
     parser = EmuParser()

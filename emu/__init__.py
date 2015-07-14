@@ -1,6 +1,4 @@
-#!/usr/bin/env python2.7
-#
-# Copyright 2014 Chris Cummins.
+# Copyright 2015 Chris Cummins.
 #
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation files
@@ -35,6 +33,7 @@ import getpass
 import ConfigParser
 from optparse import OptionParser
 from datetime import datetime
+from pkg_resources import resource_filename
 
 
 ####################
@@ -1124,12 +1123,12 @@ class Emu:
     # Version and copyright information:
     #
     version = Version(0, 1, 51, dirty=True)
-    copyright = { "start": 2012, "end": 2014, "authors": ["Chris Cummins"]}
+    copyright = { "start": 2012, "end": 2015, "authors": ["Chris Cummins"]}
 
     #
     # Template paths:
     #
-    templates = sys.path[0] + "/../share/emu/templates"
+    templates = resource_filename(__name__, "templates/")
     source_templates = os.path.abspath(templates + "/source-templates")
     sink_templates = os.path.abspath(templates + "/sink-templates")
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 #
-# Copyright 2014 Chris Cummins.
+# Copyright 2015 Chris Cummins.
 #
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation files
@@ -26,28 +26,20 @@ import re
 import sys
 import os
 
-# Resolve and import libemu:
-sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
-from libemu import EmuParser
-from libemu import Source
+from emu import *
 
 
 def main(argv, argc):
     parser = EmuParser()
-    parser.add_option("-d", "--dry-run", action="store_true",
-                      dest="dry_run", default=False)
-    parser.add_option("-f", "--force", action="store_true",
-                      dest="force", default=False)
     (options, args) = parser.parse_args()
-    source = Source(options.source_dir)
-    snapshots = parser.parse_snapshots(source,
+
+    snapshots = parser.parse_snapshots(Source(options.source_dir),
                                        accept_sink_names=False,
                                        accept_no_args=False,
                                        require=True)
-    sink = snapshots[0].sink
 
-    sink.squash(snapshots, dry_run=options.dry_run,
-                force=options.force, verbose=options.verbose)
+    for snapshot in snapshots:
+        snapshot.destroy(verbose=options.verbose)
 
     return 0
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 #
-# Copyright 2014 Chris Cummins.
+# Copyright 2015 Chris Cummins.
 #
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation files
@@ -22,14 +22,11 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
+import re
 import sys
 import os
 
-# Resolve and import Libemu
-sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
-from libemu import EmuParser
-from libemu import Source
+from emu import *
 
 
 def main(argv, argc):
@@ -38,16 +35,32 @@ def main(argv, argc):
                       dest="dry_run", default=False)
     parser.add_option("-f", "--force", action="store_true",
                       dest="force", default=False)
+    parser.add_option("-i", "--ignore-errors", action="store_true",
+                      dest="ignore_errors", default=False)
+    parser.add_option("--no-archive", action="store_true",
+                      dest="no_archive", default=False)
+    parser.add_option("--no-owner", action="store_true",
+                      dest="no_owner", default=False)
     (options, args) = parser.parse_args()
 
     source = Source(options.source_dir)
-    snapshot = parser.parse_snapshots(source, accept_sink_names=False,
-                                      single_arg=True)[0]
+    sinks = parser.parse_sinks(source)
 
-    source.checkout(snapshot, dry_run=options.dry_run,
-                    force=options.force, verbose=options.verbose)
+    # Fail if source has no sinks:
+    if not len(sinks):
+        print "Source has no sinks!"
+        sys.exit(1)
 
-    return 0
+    status = 0
+    for sink in sinks:
+        status ^= sink.push(force=options.force,
+                            ignore_errors=options.ignore_errors,
+                            archive=not options.no_archive,
+                            owner=not options.no_owner,
+                            dry_run=options.dry_run,
+                            verbose=options.verbose)
+
+    return status
 
 
 if __name__ == "__main__":
