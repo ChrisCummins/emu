@@ -10,8 +10,6 @@ data in proprietary file formats, nor does it hide anything from the user, with
 its simplicity making it incredibly fast. See the HOW IT WORKS section below for
 a detailed description.
 
-The file INSTALL in this directory contains installation instructions.
-
 REQUIREMENTS
 --------------------------------------------------------------------------------
 Emu has very few run time dependencies, and should run out-of-the-box on most
@@ -20,15 +18,15 @@ suport emu, it is recommended that the test suite be ran after installation.
 
 INSTALLATION
 --------------------------------------------------------------------------------
-Emu uses a standard configure, make, install routine. Simply execute this
-command from the base project directory:
+Emu uses python setuptools to automate installation. Simply execute
+this command from the base project directory:
 
-    ./autogen.sh && ./configure && make && sudo make install
+    sudo python2 ./setup.py install
 
-It is recommended that the test suite by ran. Note that this must be performed
-_after_ installation:
+It is recommended that users run the test suite. Note that this must
+be performed _after_ installation:
 
-    make test
+    sudo python2 ./setup.py test
 
 BACKGROUND
 --------------------------------------------------------------------------------
