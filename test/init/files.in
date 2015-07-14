@@ -1,9 +1,0 @@
-set -eu
-test_setup
-cd $EMU_TEST_DIR/test-source
-
-emu init
-assert_files_match .emu/config @prefix@/share/emu/templates/source-templates/config
-assert_files_match .emu/excludes @prefix@/share/emu/templates/source-templates/excludes
-
-test_teardown
