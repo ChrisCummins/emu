@@ -27,10 +27,11 @@ import sys
 import os
 
 from emu import *
+from emu.parser import Parser
 
 
 def main(argv, argc):
-    parser = EmuParser()
+    parser = Parser()
     parser.add_option("-d", "--dry-run", action="store_true",
                       dest="dry_run", default=False)
     parser.add_option("-f", "--force", action="store_true",

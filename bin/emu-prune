@@ -27,10 +27,11 @@ import sys
 import os
 
 from emu import *
+from emu.parser import Parser
 
 
 def main(argv, argc):
-    parser = EmuParser()
+    parser = Parser()
     (options, args) = parser.parse_args()
 
     snapshots = parser.parse_snapshots(Source(options.source_dir),

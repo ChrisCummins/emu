@@ -27,10 +27,11 @@ import sys
 import os
 
 from emu import *
+from emu.parser import Parser
 
 
 def main(argv, argc):
-    parser = EmuParser()
+    parser = Parser()
     parser.add_option("--dont-cache", action="store_true", dest="dont_cache",
                       default=False)
     parser.add_option("--use-cached", action="store_true", dest="use_cached",

@@ -30,6 +30,7 @@ import tempfile
 from sys import exit
 
 from emu import *
+from emu.parser import Parser
 
 
 def print_dict(d):
@@ -40,7 +41,7 @@ def print_dict(d):
                            d[prop]))
 
 def main(argv, argc):
-    parser = EmuParser()
+    parser = Parser()
     parser.add_option("-n", "--limit", action="store", type="int",
                       dest="limit", default=0)
     parser.add_option("-s", "--short-log", action="store_true", dest="short",
