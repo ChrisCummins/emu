@@ -146,7 +146,7 @@ do_mkrelease() {
     set_new_version "$new_version"
     make_version_bump_commit "$new_version"
     make_development_version_commit "$new_version"
-    push_to_remotes "mary origin"
+    push_to_remotes "origin"
 }
 
 # Given a version string in the form <major>.<minor>.<micro>, verify
