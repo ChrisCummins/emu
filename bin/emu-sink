@@ -22,13 +22,11 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
 import os
 import sys
 import subprocess
 
-import emu as libemu
-from libemu import Util, Emu, EmuParser, Source, Sink, SinkNotFoundError, Colours
+from emu import *
 
 def main(argv, argc):
     parser = EmuParser()

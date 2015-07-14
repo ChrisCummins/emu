@@ -1,5 +1,3 @@
-#!/usr/bin/env python2.7
-#
 # Copyright 2015 Chris Cummins.
 #
 # Permission is hereby granted, free of charge, to any person
@@ -35,6 +33,7 @@ import getpass
 import ConfigParser
 from optparse import OptionParser
 from datetime import datetime
+from pkg_resources import resource_filename
 
 
 ####################
@@ -1129,7 +1128,7 @@ class Emu:
     #
     # Template paths:
     #
-    templates = sys.path[0] + "/../share/emu/templates"
+    templates = resource_filename(__name__, "templates/")
     source_templates = os.path.abspath(templates + "/source-templates")
     sink_templates = os.path.abspath(templates + "/sink-templates")
 

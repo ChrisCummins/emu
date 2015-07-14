@@ -1,5 +1,4 @@
 SUBDIRS = 				\
-	emu				\
 	man				\
 	templates			\
 	$(NULL)
@@ -26,7 +25,6 @@ todo:
 
 help:
 	@echo 'Build targets:'
-	@echo '  all        - Build emu'
 	@echo '  install    - Install package'
 	@echo '  uninstall  - Uninstall package'
 	@echo ''

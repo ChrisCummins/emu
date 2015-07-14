@@ -26,29 +26,33 @@ import re
 import sys
 import os
 
-import emu as libemu
-from libemu import EmuParser
-from libemu import Source
+from emu import *
 
 
 def main(argv, argc):
     parser = EmuParser()
-    parser.add_option("-d", "--dry-run", action="store_true",
-                      dest="dry_run", default=False)
-    parser.add_option("-f", "--force", action="store_true",
-                      dest="force", default=False)
+    parser.add_option("--dont-cache", action="store_true", dest="dont_cache",
+                      default=False)
+    parser.add_option("--use-cached", action="store_true", dest="use_cached",
+                      default=False)
     (options, args) = parser.parse_args()
-    source = Source(options.source_dir)
-    snapshots = parser.parse_snapshots(source,
-                                       accept_sink_names=False,
-                                       accept_no_args=False,
-                                       require=True)
-    sink = snapshots[0].sink
 
-    sink.squash(snapshots, dry_run=options.dry_run,
-                force=options.force, verbose=options.verbose)
+    snapshots = parser.parse_snapshots(Source(options.source_dir))
+    status = 0
 
-    return 0
+    if not len(snapshots):
+        print "No snapshots to verify!"
+        status = 1
+
+    for snapshot in snapshots:
+        if snapshot.verify(cache_results=not options.dont_cache,
+                           use_cached=options.use_cached):
+            print snapshot, Util.colourise("ok", Colours.OK)
+        else:
+            status = 2
+            print snapshot, Util.colourise("bad", Colours.ERROR)
+
+    return status
 
 
 if __name__ == "__main__":

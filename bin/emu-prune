@@ -22,14 +22,11 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
 import re
 import sys
 import os
 
-import emu as libemu
-from libemu import EmuParser
-from libemu import Source
+from emu import *
 
 
 def main(argv, argc):

@@ -22,39 +22,48 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
-import os
+import re
 import sys
-from sys import exit
+import os
 
-import emu as libemu
-from libemu import Util, Emu, EmuParser, Source, SourceCreateError
+from emu import *
+
 
 def main(argv, argc):
     parser = EmuParser()
-    parser.add_option("-S", "--source-dir", action="store", type="string",
-                      dest="source_dir", default=os.getcwd())
-    parser.add_option("-t", "--template-dir", action="store", type="string",
-                      dest="template_dir", default=Emu.source_templates)
-    parser.add_option("-f", "--force", action="store_true", dest="force",
-                      default=False)
+    parser.add_option("-d", "--dry-run", action="store_true",
+                      dest="dry_run", default=False)
+    parser.add_option("-f", "--force", action="store_true",
+                      dest="force", default=False)
+    parser.add_option("-i", "--ignore-errors", action="store_true",
+                      dest="ignore_errors", default=False)
+    parser.add_option("--no-archive", action="store_true",
+                      dest="no_archive", default=False)
+    parser.add_option("--no-owner", action="store_true",
+                      dest="no_owner", default=False)
     (options, args) = parser.parse_args()
 
-    # Fail if no read/write permissions
-    Util.readable(options.source_dir, error=True)
-    Util.writable(options.source_dir, error=True)
+    source = Source(options.source_dir)
+    sinks = parser.parse_sinks(source)
 
-    # Perform initialisation
-    try:
-        Source.create(options.source_dir, options.template_dir,
-                      verbose=options.verbose, force=options.force)
-        return 0
-    except SourceCreateError as e:
-        print e
-        return 1
+    # Fail if source has no sinks:
+    if not len(sinks):
+        print "Source has no sinks!"
+        sys.exit(1)
+
+    status = 0
+    for sink in sinks:
+        status ^= sink.push(force=options.force,
+                            ignore_errors=options.ignore_errors,
+                            archive=not options.no_archive,
+                            owner=not options.no_owner,
+                            dry_run=options.dry_run,
+                            verbose=options.verbose)
+
+    return status
 
 
 if __name__ == "__main__":
     argv = sys.argv[1:]
     ret = main(argv, len(argv))
-    exit(ret)
+    sys.exit(ret)

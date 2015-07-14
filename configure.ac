@@ -69,7 +69,7 @@ dnl ================================================================
 m4_define([author],[chrisc.101@gmail.com])
 
 AC_INIT([emu],[emu_version],[chrisc.101@gmail.com])
-AC_CONFIG_SRCDIR([emu/libemu.py])
+AC_CONFIG_SRCDIR([emu/__init__.py])
 AC_CONFIG_AUX_DIR([build])
 
 dnl Support for --program-prefix, --program-suffix and
@@ -245,7 +245,6 @@ AS_IF([test "x$enable_tests" = xyes],
 
 AC_CONFIG_FILES([
         Makefile
-        emu/Makefile
         man/Makefile
         templates/Makefile])
 

@@ -22,7 +22,6 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
 import os
 import re
 import subprocess
@@ -30,8 +29,8 @@ import sys
 import tempfile
 from sys import exit
 
-import emu as libemu
-from libemu import EmuParser, Util, Colours, Source
+from emu import *
+
 
 def print_dict(d):
     for prop in d:

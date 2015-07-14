@@ -22,42 +22,52 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
-import re
 import sys
 import os
 
-import emu as libemu
-from libemu import EmuParser, Source, Colours, Util
+from emu import *
+
+
+def get_script_path(name):
+    script_name = "emu-" + name
+    script_path = sys.path[0] + "/" + script_name
+    script_exists = Util.exists(script_path)
+    if not script_exists:
+        print "'{0}' is not an emu command. See 'emu help'".format(Util.colourise(name, Colours.ERROR))
+        sys.exit(1)
+    return script_path
 
 
 def main(argv, argc):
-    parser = EmuParser()
-    parser.add_option("--dont-cache", action="store_true", dest="dont_cache",
-                      default=False)
-    parser.add_option("--use-cached", action="store_true", dest="use_cached",
-                      default=False)
-    (options, args) = parser.parse_args()
+    # Go to man page if help arg or no args
+    if (not argc or
+        argv[0] == "-h" or
+        argv[0] == "--help"):
+        return os.system("man emu")
 
-    snapshots = parser.parse_snapshots(Source(options.source_dir))
-    status = 0
+    # emu help [command] handling
+    if (argv[0] == "help"):
+        if argc > 1:
+            get_script_path(argv[1])
+            return os.system("man emu-" + argv[1])
+        return os.system("man emu")
 
-    if not len(snapshots):
-        print "No snapshots to verify!"
-        status = 1
+    if argv[0] == "--version" or argv[0] == "version":
+        Util.version_and_quit()
 
-    for snapshot in snapshots:
-        if snapshot.verify(cache_results=not options.dont_cache,
-                           use_cached=options.use_cached):
-            print snapshot, Util.colourise("ok", Colours.OK)
-        else:
-            status = 2
-            print snapshot, Util.colourise("bad", Colours.ERROR)
+    # Assemble script path and arguments
+    script_path = get_script_path(argv[0])
+    command = script_path + ' ' + ' '.join(argv[1:])
+    return os.system(command)
 
-    return status
+    # Assemble script path and arguments
+    command = script_path + ' ' + ' '.join(argv[1:])
+
+    ret = os.system(command)
+    return ret
 
 
 if __name__ == "__main__":
     argv = sys.argv[1:]
     ret = main(argv, len(argv))
-    sys.exit(ret)
+    sys.exit(int(ret % 255))

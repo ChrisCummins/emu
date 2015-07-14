@@ -22,50 +22,42 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
-import re
-import sys
 import os
+import re
+import subprocess
+import sys
+import tempfile
+from sys import exit
 
-import emu as libemu
-from libemu import EmuParser, Source
+from emu import *
 
 
 def main(argv, argc):
     parser = EmuParser()
     parser.add_option("-d", "--dry-run", action="store_true",
                       dest="dry_run", default=False)
-    parser.add_option("-f", "--force", action="store_true",
-                      dest="force", default=False)
-    parser.add_option("-i", "--ignore-errors", action="store_true",
-                      dest="ignore_errors", default=False)
-    parser.add_option("--no-archive", action="store_true",
-                      dest="no_archive", default=False)
-    parser.add_option("--no-owner", action="store_true",
-                      dest="no_owner", default=False)
+    parser.add_option("-r", "--recursive", action="store_true",
+                      dest="recursive", default=False)
     (options, args) = parser.parse_args()
 
     source = Source(options.source_dir)
-    sinks = parser.parse_sinks(source)
 
-    # Fail if source has no sinks:
-    if not len(sinks):
-        print "Source has no sinks!"
-        sys.exit(1)
+    if len(args):
+        for arg in args:
+            try:
+                sink = Util.get_sink_by_name(arg, source.sinks())
+                sink.clean(verbose=options.verbose, dry_run=options.dry_run)
+            except SinkNotFoundError as e:
+                print e
+                sys.exit(1)
+    else:
+        source.clean(recursive=options.recursive, verbose=options.verbose,
+                     dry_run=options.dry_run)
 
-    status = 0
-    for sink in sinks:
-        status ^= sink.push(force=options.force,
-                            ignore_errors=options.ignore_errors,
-                            archive=not options.no_archive,
-                            owner=not options.no_owner,
-                            dry_run=options.dry_run,
-                            verbose=options.verbose)
-
-    return status
+    return 0
 
 
 if __name__ == "__main__":
     argv = sys.argv[1:]
     ret = main(argv, len(argv))
-    sys.exit(ret)
+    exit(ret)
