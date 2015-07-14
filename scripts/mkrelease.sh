@@ -14,7 +14,7 @@ usage() {
 #     @return The absolute path to the project root directory
 get_project_root() {
     while [[ "$(pwd)" != "/" ]]; do
-        if test -f configure.ac; then
+        if test -f README; then
             pwd
             return
         fi
@@ -55,12 +55,8 @@ get_micro() {
 #     @return Current version string, e.g. '0.1.4'
 get_current_version() {
     cd "$(get_project_root)"
-
-    local major=$(grep 'm4_define(\s*\[emu_major_version\]' configure.ac | grep -oE '[0-9]+' | tail -n+2)
-    local minor=$(grep 'm4_define(\s*\[emu_minor_version\]' configure.ac | grep -oE '[0-9]+' | tail -n+2)
-    local micro=$(grep 'm4_define(\s*\[emu_micro_version\]' configure.ac | grep -oE '[0-9]+' | tail -n+2)
-
-    echo "$major.$minor.$micro"
+    grep 'README for emu version ' README \
+        | sed 's/README for emu version //'
 }
 
 # Replace the project version with a new one.
@@ -75,20 +71,24 @@ set_new_version() {
 
     cd "$(get_project_root)"
 
-    echo "Setting new version... configure.ac"
-    test -f configure.ac || { echo "fatal: 'configure.ac' not found!"; exit 3; }
-    sed -r -i 's/(.*m4_define\(\s*\[emu_major_version\],\s*\[)[0-9]+(\].*)/\1'"$major"'\2/' configure.ac
-    sed -r -i 's/(.*m4_define\(\s*\[emu_minor_version\],\s*\[)[0-9]+(\].*)/\1'"$minor"'\2/' configure.ac
-    sed -r -i 's/(.*m4_define\(\s*\[emu_micro_version\],\s*\[)[0-9]+(\].*)/\1'"$micro"'\2/' configure.ac
-
     echo "Setting new version... README"
     test -f README || { echo "fatal: 'README' not found!"; exit 3; }
     sed -r -i 's/(\s*README for emu version )([0-9\.]+)/\1'"$major.$minor.$micro"'/' README
     sed -r -i 's/(\s*This directory contains version )([0-9\.]+)/\1'"$major.$minor.$micro"'/' README
 
-    echo "Setting new version... emu/libemu.py"
-    test -f emu/libemu.py || { echo "fatal: 'emu/libemu.py' not found!"; exit 3; }
-    sed -r -i 's/(\s*version\s*=\s*Version\(\s*)([0-9]+)(,\s*)([0-9]+)(,\s*)([0-9]+)(,\s*)dirty(\s*=\s*)True/\1'"$major"'\3'"$minor"'\5'"$micro"'\7dirty\8False/' emu/libemu.py
+    echo "Setting new version... setup.py"
+    test -f setup.py || { echo "fatal: 'setup.py' not found!"; exit 3; }
+    sed -r -i 's/(version=")([0-9\.]+)/\1'"$major.$minor.$micro"'/' setup.py
+
+    echo "Setting new version... emu/__init__.py"
+    test -f emu/__init__.py || { echo "fatal: 'emu/__init__.py' not found!"; exit 3; }
+    sed -r -i 's/(\s*version\s*=\s*Version\(\s*)([0-9]+)(,\s*)([0-9]+)(,\s*)([0-9]+)(,\s*)dirty(\s*=\s*)True/\1'"$major"'\3'"$minor"'\5'"$micro"'\7dirty\8False/' emu/__init__.py
+
+    echo "Updating manpage headers..."
+    for f in $(find man -type f); do
+        echo "    $f"
+        sed -ri 's/^(.TH emu 1 ).*/\1'"$(date +'%B %d, %Y')"' "version '$major.$minor.$micro'" "Emu Manual"/' $f
+    done
 }
 
 # Make the git version bump commit.
@@ -100,9 +100,10 @@ make_version_bump_commit() {
     cd "$(get_project_root)"
 
     echo "Creating version bump commit... '$new_version'"
-    git add configure.ac
+    git add setup.py
     git add README
-    git add emu/libemu.py
+    git add emu/__init__.py
+    git add man
     git commit --allow-empty -m "Bump release version for '$new_version'" >/dev/null
     git tag $new_version -a -m "Release $new_version"
 }
@@ -113,9 +114,9 @@ make_development_version_commit() {
     cd "$(get_project_root)"
 
     echo "Creating dirty version commit... '$new_version*'"
-    sed -r -i 's/(\s*version\s*=\s*Version\(\s*[0-9]+,\s*[0-9]+,\s*[0-9]+,\s*dirty\s*=\s*)False/\1True/' emu/libemu.py
-    git add emu/libemu.py
-    git commit -m "libemu: Set version dirty flag" >/dev/null
+    sed -r -i 's/(\s*version\s*=\s*Version\(\s*[0-9]+,\s*[0-9]+,\s*[0-9]+,\s*dirty\s*=\s*)False/\1True/' emu/__init__.py
+    git add emu/__init__.py
+    git commit -m "Set version dirty flag" >/dev/null
 }
 
 # Push the version commit and release tag to git remotes.
