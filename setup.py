@@ -40,7 +40,7 @@ class BlackBoxTests(test):
 
 
 setup(name="emu",
-      version="0.1.51",
+      version="0.2.0",
       description=("Fast, incremental, rotating snapshot backups."),
       url="https://github.com/ChrisCummins/emu",
       author="Chris Cummins",

@@ -1,9 +1,9 @@
-README for emu version 0.1.51
+README for emu version 0.2.0
 --------------------------------------------------------------------------------
 Copyright (C) 2012 - 2015 Chris Cummins <chrisc.101@gmail.com>.
 See the end of this file for license conditions.
 
-This directory contains version 0.1.51 of emu, a snapshot backup program. Emu
+This directory contains version 0.2.0 of emu, a snapshot backup program. Emu
 takes advantages of some of the many tools available on *nix systems to
 transparently and simply record snapshots of a directory tree. It does not store
 data in proprietary file formats, nor does it hide anything from the user, with
