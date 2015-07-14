@@ -27,8 +27,7 @@ import re
 import sys
 import os
 
-# Resolve and import Libemu
-sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
+import emu as libemu
 from libemu import EmuParser, Source, Colours, Util
 
 

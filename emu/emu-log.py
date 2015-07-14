@@ -30,8 +30,7 @@ import sys
 import tempfile
 from sys import exit
 
-# Resolve and import Libemu
-sys.path.append(os.path.abspath(sys.path[0] + "/../libexec/emu"))
+import emu as libemu
 from libemu import EmuParser, Util, Colours, Source
 
 def print_dict(d):
