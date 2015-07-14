@@ -24,6 +24,14 @@
 #
 from glob import glob
 from setuptools import setup
+from setuptools.command.test import test
+
+
+class BlackBoxTests(test):
+    def run(self):
+        from subprocess import call
+        call(['./scripts/run-tests.sh',])
+        test.run(self)
 
 
 setup(name="emu",
@@ -64,5 +72,6 @@ setup(name="emu",
           "coverage",
           "nose"
       ],
+      cmdclass = {'test': BlackBoxTests},
       install_requires=[],
       zip_safe=False)
