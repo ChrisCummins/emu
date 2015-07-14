@@ -12,9 +12,12 @@ a detailed description.
 
 REQUIREMENTS
 --------------------------------------------------------------------------------
-Emu has very few run time dependencies, and should run out-of-the-box on most
-GNU/Linux distributions and Mac OSX. If you are unsure that your system will
-suport emu, it is recommended that the test suite be ran after installation.
+Emu requires python 2 and the setuptools package. Most systems will come with
+both of those packaged and perhaps already installed. If not, full installation
+instructions are available from their respective websites:
+
+    https://wiki.python.org/moin/BeginnersGuide/Download
+    https://pypi.python.org/pypi/setuptools
 
 INSTALLATION
 --------------------------------------------------------------------------------
