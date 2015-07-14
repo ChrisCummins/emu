@@ -27,6 +27,11 @@ from setuptools import setup
 from setuptools.command.test import test
 
 
+# Directory to install man pages to.
+man_prefix = "/usr/share/man"
+man_dir = man_prefix + "/man1/"
+
+
 class BlackBoxTests(test):
     def run(self):
         from subprocess import call
@@ -55,6 +60,20 @@ setup(name="emu",
               'templates/source-templates/config'
           ]
       },
+      data_files=[
+          (man_dir, [
+              'man/emu.1',
+              'man/emu-init.1',
+              'man/emu-checkout.1',
+              'man/emu-sink.1',
+              'man/emu-clean.1',
+              'man/emu-push.1',
+              'man/emu-verify.1',
+              'man/emu-squash.1',
+              'man/emu-prune.1',
+              'man/emu-log.1'
+          ])
+      ],
       scripts=[
           'bin/emu-checkout',
           'bin/emu-clean',
