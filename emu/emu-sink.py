@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 #
-# Copyright 2014 Chris Cummins.
+# Copyright 2015 Chris Cummins.
 #
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation files

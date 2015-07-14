@@ -7,7 +7,7 @@ dnl To rebuild the configure script from this, execute command
 dnl     autoconf
 dnl in the directory containing this script.
 dnl
-dnl Copyright 2014 Chris Cummins.
+dnl Copyright 2015 Chris Cummins.
 dnl
 dnl Permission is hereby granted, free of charge, to any person obtaining
 dnl a copy of this software and associated documentation files (the

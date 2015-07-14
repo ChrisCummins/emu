@@ -5,7 +5,7 @@
 # Morris <rgm@gnu.org> and released under the GNU General Public
 # License version 3.
 #
-# Copyright 2014 Chris Cummins.
+# Copyright 2015 Chris Cummins.
 #
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation files
