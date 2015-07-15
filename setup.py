@@ -24,15 +24,15 @@ man_prefix = "/usr/share/man"
 man_dir = man_prefix + "/man1/"
 
 
-class BlackBoxTests(test):
-    def run(self):
-        from subprocess import call
-        call(['./scripts/run-tests.sh',])
-        test.run(self)
+# class BlackBoxTests(test):
+#     def run(self):
+#         from subprocess import call
+#         call(['./scripts/run-tests.sh',])
+#         test.run(self)
 
 
 setup(name="emu",
-      version="0.2.1",
+      version="0.2.2",
       description=("Fast, incremental, rotating snapshot backups."),
       url="https://github.com/ChrisCummins/emu",
       author="Chris Cummins",
@@ -83,6 +83,6 @@ setup(name="emu",
           "coverage",
           "nose"
       ],
-      cmdclass = {'test': BlackBoxTests},
+      #cmdclass = {'test': BlackBoxTests},
       install_requires=[],
       zip_safe=False)
