@@ -477,12 +477,12 @@ class Source:
             exit(1)
 
         # Sanity checks:
-        Util.readable(self.path,                                      error=err_cb)
-        Util.readable(Util.concat_paths(self.path, "/.emu/"),         error=err_cb)
-        Util.readable(Util.concat_paths(self.path, "/.emu/config"),   error=err_cb)
-        Util.readable(Util.concat_paths(self.path, "/.emu/excludes"), error=err_cb)
-        Util.readable(Util.concat_paths(self.path, "/.emu/hooks/"),   error=err_cb)
-        Util.readable(Util.concat_paths(self.path, "/.emu/sinks/"),  error=err_cb)
+        Util.readable(self.path,                                   error=err_cb)
+        Util.readable(os.path.join(self.path, ".emu"),             error=err_cb)
+        Util.readable(os.path.join(self.path, ".emu", "config"),   error=err_cb)
+        Util.readable(os.path.join(self.path, ".emu", "excludes"), error=err_cb)
+        Util.readable(os.path.join(self.path, ".emu", "hooks"),    error=err_cb)
+        Util.readable(os.path.join(self.path, ".emu", "sinks"),    error=err_cb)
 
 
     # checkout() - Restore source to snapshot
@@ -512,14 +512,14 @@ class Source:
 
         sink = snapshot.sink
         exclude = ["/.emu"]
-        exclude_from = [Util.concat_paths(self.path, "/.emu/excludes")]
+        exclude_from = [os.path.join(self.path, ".emu", "excludes")]
 
         self.lock.lock(force=force, verbose=verbose)
         sink.lock.lock(force=force, verbose=verbose)
 
         if not dry_run:
             # Perform file transfer:
-            Util.rsync(Util.concat_paths(snapshot.tree, "/"), self.path,
+            Util.rsync(snapshot.tree + "/", self.path,
                        dry_run=dry_run, exclude=exclude,
                        exclude_from=exclude_from,
                        delete=True, error=err_cb,
@@ -546,7 +546,7 @@ class Source:
 
                 # Generate list of sinks:
                 self._sinks = []
-                for name in Util.ls(Util.concat_paths(self.path, "/.emu/sinks"),
+                for name in Util.ls(os.path.join(self.path, ".emu", "sinks"),
                                     must_exist=True):
                     self._sinks.append(Sink(name, self))
                 return self._sinks
@@ -595,14 +595,13 @@ class Source:
             raise SourceCreateError(sourcedir)
 
         # Create directory structure
-        source_dir = Util.concat_paths(sourcedir, "/.emu")
+        source_dir = os.path.join(sourcedir, ".emu")
         directories = ["/", "/hooks", "/sinks"]
         for d in directories:
             Util.mkdir(source_dir + d, mode=0700, verbose=verbose, error=err_cb)
 
         # Copy template files
-        Util.rsync(Util.concat_paths(template_dir, "/"),
-                   Util.concat_paths(source_dir, "/"),
+        Util.rsync(template_dir + "/", source_dir + "/",
                    error=err_cb, archive=True, update=force,
                    verbose=verbose, quiet=not verbose)
 
@@ -632,19 +631,19 @@ class Sink:
         self.lock = DirectoryLock(self.path)
 
         # Sanity checks:
-        Util.readable(Util.concat_paths(self.path, "/.emu/"),       error=err_cb)
-        Util.readable(Util.concat_paths(self.path, "/.emu/nodes/"), error=err_cb)
-        Util.readable(Util.concat_paths(self.path, "/.emu/trees/"), error=err_cb)
-        Util.readable(Util.concat_paths(self.path, "/.emu/HEAD"),   error=err_cb)
+        Util.readable(os.path.join(self.path, ".emu"),          error=err_cb)
+        Util.readable(os.path.join(self.path, ".emu", "nodes"), error=err_cb)
+        Util.readable(os.path.join(self.path, ".emu", "trees"), error=err_cb)
+        Util.readable(os.path.join(self.path, ".emu", "HEAD"),  error=err_cb)
 
-        config_path = Util.concat_paths(self.path, "/.emu/config")
+        config_path = os.path.join(self.path, ".emu", "config")
         self.config = SinkConfig(config_path)
 
 
     # snapshots() - Return a list of all snapshots
     #
     def snapshots(self):
-        ids = Util.ls(Util.concat_paths(self.path, "/.emu/nodes"), must_exist=True)
+        ids = Util.ls(os.path.join(self.path, ".emu", "nodes"), must_exist=True)
         snapshots = []
         for id in ids:
             snapshots.append(Snapshot(SnapshotID(self.name, id), self))
@@ -657,8 +656,8 @@ class Sink:
     # headless. If 'head' is provided, set this snapshot to be the new
     # head. If 'delete' is True, it deletes the current head.
     def head(self, head=None, dry_run=False, delete=False, error=True):
-        head_pointer = Util.concat_paths(self.path, "/.emu/HEAD")
-        most_recent_link = Util.concat_paths(self.path, "/Most Recent Backup")
+        head_pointer = os.path.join(self.path, ".emu", "HEAD")
+        most_recent_link = os.path.join(self.path, "Most Recent Backup")
 
         # Option 1 of 3: Set a new HEAD pointer.
         if head:
@@ -774,13 +773,16 @@ class Sink:
                         .format(Util.colourise(snapshot.name,
                                                Colours.SNAPSHOT_NEW)),
                         prefix=self.name, colour=Colours.OK)
-            Util.rsync(Util.concat_paths(snapshot.tree, "/"),
-                       Util.concat_paths(self.path, "/.emu/trees/new"),
+            snapshot_dir = snapshot.tree
+            if snapshot_dir[-1] != "/":
+                snapshot_dir += "/"
+            Util.rsync(snapshot_dir,
+                       os.path.join(self.path, ".emu", "trees", "new"),
                        dry_run=dry_run, link_dest=link_dests,
                        error=True, verbose=verbose, quiet=not verbose)
 
         # Check that merge was successful:
-        new_tree = Util.concat_paths(self.path, "/.emu/trees/new")
+        new_tree = os.path.join(self.path, ".emu", "trees", "new")
         if not dry_run and not os.path.exists(new_tree):
             print("Failed to create new tree " + new_tree)
             exit(1)
@@ -835,10 +837,10 @@ class Sink:
                 print("Removed lock '{}'", self.lock.lockpath)
 
         # Check for orphan node files:
-        trees = Util.ls(Util.concat_paths(self.path, "/.emu/trees"))
-        for f in Util.ls(Util.concat_paths(self.path, "/.emu/nodes")):
+        trees = Util.ls(os.path.join(self.path, ".emu", "trees"))
+        for f in Util.ls(os.path.join(self.path, ".emu", "nodes")):
             if f not in trees:
-                path = Util.concat_paths(self.path, "/.emu/nodes/", f)
+                path = os.path.join(self.path, ".emu", "nodes", f)
 
                 if not dry_run:
                     Util.rm(path, must_exist=True)
@@ -846,10 +848,10 @@ class Sink:
                       .format(Util.colourise(path, Colours.RED)))
 
         # Check for orphan trees:
-        nodes = Util.ls(Util.concat_paths(self.path, "/.emu/nodes"))
-        for f in Util.ls(Util.concat_paths(self.path, "/.emu/trees")):
+        nodes = Util.ls(os.path.join(self.path, ".emu", "nodes"))
+        for f in Util.ls(os.path.join(self.path, ".emu", "trees")):
             if f not in nodes:
-                path = Util.concat_paths(self.path, "/.emu/trees/", f)
+                path = os.path.join(self.path, ".emu", "trees", f)
 
                 if not dry_run:
                     Util.rm(path, must_exist=True)
@@ -875,9 +877,9 @@ class Sink:
                     pass
 
         # Check for orphan HEAD:
-        head_pointer = Util.concat_paths(self.path, "/.emu/HEAD")
+        head_pointer = os.path.join(self.path, ".emu", "HEAD")
         pointer = Util.read(head_pointer)
-        head_node = Util.concat_paths(self.path, "/.emu/nodes/", pointer)
+        head_node = os.path.join(self.path, ".emu", "nodes", pointer)
         if not os.path.exists(head_node):
             print("Deleted orphan HEAD '{0}'"
                   .format(Util.colourise(pointer, Colours.RED)))
@@ -943,10 +945,10 @@ class Sink:
         source.lock.lock(force=force, verbose=verbose)
 
         # Create directory structure:
-        emu_dir = Util.concat_paths(path, "/.emu")
-        directories = ["/", "/trees", "/nodes"]
+        emu_dir = os.path.join(path, ".emu")
+        directories = ["", "trees", "nodes"]
         for d in directories:
-            Util.mkdir(Util.concat_paths(emu_dir, d), mode=0700,
+            Util.mkdir(os.path.join(emu_dir, d), mode=0700,
                        verbose=verbose, error=err_cb)
 
         # Ignore rsync errors if required:
@@ -956,13 +958,12 @@ class Sink:
             rsync_error = err_cb
 
         # Copy template files:
-        Util.rsync(Util.concat_paths(template_dir, "/"),
-                   Util.concat_paths(emu_dir, "/"),
+        Util.rsync(template_dir + "/", emu_dir + "/",
                    error=rsync_error, archive=archive, update=force,
                    verbose=verbose, quiet=not verbose)
 
         # Create HEAD:
-        Util.write(Util.concat_paths(emu_dir, "/HEAD"), "", error=err_cb)
+        Util.write(os.path.join(emu_dir, "HEAD"), "", error=err_cb)
 
         # Create pointer:
         Util.write("{0}/.emu/sinks/{1}".format(source.path, name),
@@ -983,8 +984,8 @@ class Snapshot:
 
     def __init__(self, id, sink):
 
-        tree_path = Util.concat_paths(sink.path, "/.emu/trees/", id.id)
-        node_path = Util.concat_paths(sink.path, "/.emu/nodes/", id.id)
+        tree_path = os.path.join(sink.path, ".emu", "trees", id.id)
+        node_path = os.path.join(sink.path, ".emu", "nodes", id.id)
 
         self.id = id
         self.sink = sink
@@ -1000,9 +1001,8 @@ class Snapshot:
             exit(1)
 
         # Sanity checks:
-        Util.readable(Util.concat_paths(self.sink.path, "/", self.name),
-                      error=err_cb)
-        Util.readable(Util.concat_paths(self.sink.path, "/.emu/trees/", self.id.id),
+        Util.readable(os.path.join(self.sink.path, self.name), error=err_cb)
+        Util.readable(os.path.join(self.sink.path, ".emu", "trees", self.id.id),
                       error=err_cb)
 
 
@@ -1173,7 +1173,7 @@ class Snapshot:
             new_head = head.parent()
 
             # Remove old "Most Recent Backup" link:
-            Util.rm(Util.concat_paths(sink.path, "/Most Recent Backup"),
+            Util.rm(os.path.join(sink.path, "Most Recent Backup"),
                     verbose=verbose)
 
             if new_head:
@@ -1194,7 +1194,7 @@ class Snapshot:
                     snapshot.parent(delete=True)
 
         # Delete snapshot files:
-        Util.rm(Util.concat_paths(sink.path, "/", self.name),
+        Util.rm(os.path.join(sink.path, self.name),
                 must_exist=True, error=True, verbose=verbose)
         Util.rm(self.tree, must_exist=True, error=True, verbose=verbose)
         Util.rm("{0}/.emu/nodes/{1}".format(sink.path, self.id.id),
@@ -1316,9 +1316,9 @@ class Snapshot:
             exit(1)
 
         source = sink.source
-        staging_area = Util.concat_paths(sink.path, "/.emu/trees/new")
+        staging_area = os.path.join(sink.path, ".emu", "trees", "new")
         exclude = ["/.emu"]
-        exclude_from = [Util.concat_paths(source.path, "/.emu/excludes")]
+        exclude_from = [os.path.join(source.path, ".emu", "excludes")]
         link_dests = []
 
         source.lock.lock(force=force, verbose=verbose)
@@ -1337,7 +1337,7 @@ class Snapshot:
                 link_dests.append(snapshot.tree)
 
             # Perform file transfer:
-            transfer_time = Util.rsync(Util.concat_paths(source.path, "/"),
+            transfer_time = Util.rsync(source.path + "/",
                                        staging_area, archive=archive,
                                        owner=owner, dry_run=dry_run,
                                        link_dest=link_dests, exclude=exclude,
@@ -1370,8 +1370,8 @@ class Snapshot:
 
         (id, date) = _get_unique_id(checksum)
         name = date.snapshotfmt()
-        tree = Util.concat_paths(sink.path, "/.emu/trees/", id.id)
-        name_link = Util.concat_paths(sink.path, "/", name)
+        tree = os.path.join(sink.path, ".emu", "trees", id.id)
+        name_link = os.path.join(sink.path, name)
 
         if not dry_run:
             # Move tree into position
@@ -2092,22 +2092,6 @@ class Util:
     @staticmethod
     def par_dir(path):
         return os.path.abspath(os.path.join(path, os.pardir))
-
-
-    # concat_paths() - Concatenate a set of paths
-    #
-    # Joins a set of paths into a single one.
-    @staticmethod
-    def concat_paths(*paths):
-        s = ""
-        for path in paths:
-            # Don't create paths with two forward slashes: "//".
-            if (len(s) and len(path) and
-                s[-1] == "/" and path[0] == "/"):
-                s += path[1:]
-            else:
-                s += path
-        return s
 
 
     # p_exec() - Execute a child subprocess
