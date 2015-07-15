@@ -55,6 +55,14 @@ class TestEmu(TestCase):
             # than relying on this search to fail.
             emu.find_source_dir("not-a-directory")
 
+    # isprocess()
+    def test_isprocess(self):
+        self._test(True, emu.isprocess(0))
+        self._test(True, emu.isprocess(os.getpid()))
+        # We hope there aren't this many processes running!
+        self._test(False, emu.isprocess(10000000))
+        self._test(False, emu.isprocess(10000001))
+
 
 if __name__ == '__main__':
     main()

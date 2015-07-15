@@ -146,6 +146,27 @@ def find_source_dir(dirpath, barriers=[]):
         raise SourceNotFoundError(dirpath)
 
 
+def isprocess(pid, error=False):
+    """
+    Check that a process is running.
+
+    Arguments:
+
+        pid (int): Process ID to check.
+
+    Returns:
+
+        True if the process is running, else false.
+    """
+    try:
+        # Don't worry folks, no processes are harmed in the making of
+        # this system call:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
 def _parse_snapshot_id(string, sink):
     regex = (r"((?P<id>[a-f0-9]{40})|"
              "(?P<head>HEAD)|"
@@ -1831,32 +1852,6 @@ class Node(EmuConfigParser):
 # Utility static class with helper functions #
 ##############################################
 class Util:
-    # process_exists() - Check that a process is running
-    #
-    # If 'error' is True and 'pid' is not running, then exit fatally
-    # with error code. If 'error' is a callback function, then execute
-    # it on no process existing.
-    @staticmethod
-    def process_exists(pid, error=False):
-        try:
-            os.kill(pid, 0)
-            return True
-        except Exception:
-            if error and not exists:
-                e = ("Process '{0}' not running!"
-                     .format(Util.colourise(pid, Colours.ERROR)))
-                if error:
-                    if hasattr(error, '__call__'):
-                        # Execute error callback if provided
-                        error(e)
-                    else:
-                        # Else fatal error
-                        print e
-                        sys.exit(1)
-                else:
-                    return False
-
-
     # exists() - Check that a path exists
     #
     # If 'error' is True and 'path' does not exist, then exit fatally
@@ -2666,7 +2661,6 @@ class SourceNotFoundError(Error):
         stopdir (str): The directory in which we stopped searching for
           a source.
     """
-
     def __init__(self, stopdir):
         """
         Create a source not found error.
@@ -2676,7 +2670,7 @@ class SourceNotFoundError(Error):
             stopdir (str): The directory at which we stopped searching
               for a source.
         """
-        self.stopdir = stopdir
+        self.stopdir = path.abspath(stopdir)
 
     def __repr__(self):
         return "Not an emu source (or any parent up to {})".format(self.stopdir)
@@ -2703,7 +2697,7 @@ class LockfileError(Error):
         string += ("Lock was claimed by process {0} at {1}.\n"
                    .format(Util.colourise(pid, Colours.INFO),
                            Util.colourise(timestamp, Colours.INFO)))
-        if Util.process_exists(pid):
+        if isprocess(pid):
             string += "It looks like the process is still running."
         else:
             string += "It looks like the process is no longer running.\n"
