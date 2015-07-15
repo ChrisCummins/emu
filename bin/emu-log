@@ -25,7 +25,6 @@ import tempfile
 from sys import exit
 
 from emu import *
-from emu.parser import Parser
 
 
 def print_dict(d):

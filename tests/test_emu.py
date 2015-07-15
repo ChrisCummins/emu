@@ -21,40 +21,39 @@ import os
 from os import path
 
 import emu
-from emu import parser
 
 
-class TestDatabase(TestCase):
+class TestEmu(TestCase):
 
     # isroot()
     def test_isroot(self):
-        self._test(False, parser.isroot(os.getcwd()))
-        self._test(False, parser.isroot("."))
-        self._test(True, parser.isroot("/usr/.."))
-        self._test(True, parser.isroot("/"))
+        self._test(False, emu.isroot(os.getcwd()))
+        self._test(False, emu.isroot("."))
+        self._test(True, emu.isroot("/usr/.."))
+        self._test(True, emu.isroot("/"))
 
     # issource()
     def test_issource(self):
-        self._test(False, parser.issource(os.getcwd()))
-        self._test(False, parser.issource("."))
-        self._test(False, parser.issource("not-a-directory"))
-        self._test(True, parser.issource("tests/data/source"))
-        self._test(False, parser.issource("tests/data/sink"))
+        self._test(False, emu.issource(os.getcwd()))
+        self._test(False, emu.issource("."))
+        self._test(False, emu.issource("not-a-directory"))
+        self._test(True, emu.issource("tests/data/source"))
+        self._test(False, emu.issource("tests/data/sink"))
 
     # find_source_dir()
     def test_find_source_dir(self):
         self._test(path.join(path.abspath("tests/data/source")),
-                   parser.find_source_dir("tests/data/source"))
+                   emu.find_source_dir("tests/data/source"))
         self._test(path.join(path.abspath("tests/data/source")),
-                   parser.find_source_dir("tests/data/source/directory"))
-        with self.assertRaises(parser.SourceNotFoundError):
-            parser.find_source_dir("tests/data/sink",
-                                   barriers=[os.getcwd()])
+                   emu.find_source_dir("tests/data/source/directory"))
+        with self.assertRaises(emu.SourceNotFoundError):
+            emu.find_source_dir("tests/data/sink",
+                                barriers=[os.getcwd()])
             # We expect the search to fail if we give it a bad
             # path. However note that it is intended that the user
             # asserts that a path is good at the calling site, rather
             # than relying on this search to fail.
-            parser.find_source_dir("not-a-directory")
+            emu.find_source_dir("not-a-directory")
 
 
 if __name__ == '__main__':

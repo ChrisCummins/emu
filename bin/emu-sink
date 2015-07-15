@@ -22,7 +22,6 @@ import sys
 import subprocess
 
 from emu import *
-from emu.parser import Parser
 
 
 def main(argv, argc):

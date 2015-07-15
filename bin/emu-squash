@@ -22,7 +22,6 @@ import sys
 import os
 
 from emu import *
-from emu.parser import Parser
 
 
 def main(argv, argc):
