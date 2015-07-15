@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with emu.  If not, see <http://www.gnu.org/licenses/>.
 #
+from __future__ import print_function
+
 import sys
 import os
 
@@ -28,7 +30,8 @@ def get_script_path(name):
     script_path = sys.path[0] + "/" + script_name
     script_exists = os.path.exists(script_path)
     if not script_exists:
-        print "'{0}' is not an emu command. See 'emu help'".format(Util.colourise(name, Colours.ERROR))
+        print("'{0}' is not an emu command. See 'emu help'"
+              .format(Util.colourise(name, Colours.ERROR)))
         sys.exit(1)
     return script_path
 

@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with emu.  If not, see <http://www.gnu.org/licenses/>.
 #
+from __future__ import print_function
+
 import os
 import re
 import subprocess
@@ -30,9 +32,9 @@ from emu import *
 def print_dict(d):
     for prop in d:
         if not re.match("^(snapshot|status)$", prop):
-            print ("{:<14} {:<50}"
-                   .format(" ".join(prop.split("-")).capitalize() + ":",
-                           d[prop]))
+            print("{:<14} {:<50}"
+                  .format(" ".join(prop.split("-")).capitalize() + ":",
+                          d[prop]))
 
 def main(argv, argc):
     parser = Parser()
@@ -71,8 +73,8 @@ def main(argv, argc):
         # Print sink names when required:
         if print_sink_names and snapshot.sink != current_sink:
             current_sink = snapshot.sink
-            print Util.colourise("{0}:".format(current_sink.name),
-                                 Colours.INFO)
+            print(Util.colourise("{0}:".format(current_sink.name),
+                                 Colours.INFO))
 
         # Log:
         id = Util.colourise(snapshot.id.id, Colours.SNAPSHOT)
@@ -91,7 +93,7 @@ def main(argv, argc):
                 s += Util.colourise("bad", Colours.ERROR)
             s += ")"
 
-        print s
+        print(s)
 
         if not options.short:
             print_dict(snapshot.node.section("Snapshot"))

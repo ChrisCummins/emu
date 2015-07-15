@@ -14,6 +14,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with emu.  If not, see <http://www.gnu.org/licenses/>.
+from __future__ import print_function
+
 import calendar
 import time
 import os
@@ -360,7 +362,7 @@ class Parser(OptionParser):
                         error(e)
                     else:
                         # Else fatal error:
-                        print e
+                        print(e)
                         sys.exit(1)
                 else:
                     raise e
@@ -396,7 +398,7 @@ class Parser(OptionParser):
                         error(e)
                     else:
                         # Else fatal error:
-                        print e
+                        print(e)
                         sys.exit(1)
 
                 # If no args are given, generate a list of all sink names:
@@ -438,7 +440,7 @@ class Parser(OptionParser):
                         error(e)
                     else:
                         # Else fatal error:
-                        print e
+                        print(e)
                         sys.exit(1)
                 else:
                     raise e
@@ -451,7 +453,7 @@ class Source:
 
     def __init__(self, path):
         if not path:
-            print "fatal: Not an emu source (or any parent directory)"
+            print("fatal: Not an emu source (or any parent directory)")
             sys.exit(1)
 
         self.path = path
@@ -461,7 +463,7 @@ class Source:
             s = "fatal: Malformed emu source"
             if e:
                 s += ". {0}".format(e)
-            print s
+            print(s)
             sys.exit(1)
 
         # Sanity checks:
@@ -482,7 +484,7 @@ class Source:
             Util.printf("Woops! Something went wrong.",
                         prefix=sink.name, colour=Colours.ERROR)
             if e:
-                print e
+                print(e)
 
             try:
                 sink.lock.unlock(force=force, verbose=True)
@@ -496,7 +498,7 @@ class Source:
 
             sys.exit(1)
 
-        print "Checking out {0}".format(snapshot.id)
+        print("Checking out {0}".format(snapshot.id))
 
         sink = snapshot.sink
         exclude = ["/.emu"]
@@ -519,8 +521,8 @@ class Source:
         sink.lock.unlock(force=force, verbose=verbose)
         self.lock.unlock(force=force, verbose=verbose)
 
-        print ("Source restored from {0}"
-               .format(Util.colourise(snapshot.name, Colours.SNAPSHOT_NEW)))
+        print("Source restored from {0}"
+              .format(Util.colourise(snapshot.name, Colours.SNAPSHOT_NEW)))
 
 
     # sinks() - Get a source's sinks
@@ -540,7 +542,7 @@ class Source:
                 return self._sinks
 
             except SinkNotFoundError as e:
-                print e
+                print(e)
                 sys.exit(1)
 
 
@@ -548,7 +550,7 @@ class Source:
     #
     def clean(self, dry_run=False, verbose=False, recursive=False):
         if verbose:
-            print "Cleaning source at '{0}'...".format(self.path)
+            print("Cleaning source at '{0}'...".format(self.path))
 
         Util.rm(self.lock.path, dry_run=dry_run, verbose=True)
 
@@ -557,7 +559,7 @@ class Source:
             for sink in self.sinks():
                 sink.clean(dry_run=dry_run, verbose=verbose)
 
-        print "Source is clean."
+        print("Source is clean.")
 
     def __repr__(self):
         return self.path
@@ -590,7 +592,7 @@ class Source:
                    error=err_cb, archive=True, update=force,
                    verbose=verbose, quiet=not verbose)
 
-        print "Initialised source at '{0}'".format(sourcedir)
+        print("Initialised source at '{0}'".format(sourcedir))
 
         return Source(sourcedir)
 
@@ -603,9 +605,9 @@ class Sink:
     def __init__(self, name, source):
 
         def err_cb(e):
-            print "Non-existent or malformed emu sink."
+            print("Non-existent or malformed emu sink.")
             if e:
-                print e
+                print(e)
             sys.exit(1)
 
         self.name = name
@@ -738,7 +740,7 @@ class Sink:
         # this sink:
         for snapshot in snapshots:
             if snapshot.sink != self:
-                print "fatal: Cannot merge snapshots across multiple sinks."
+                print("fatal: Cannot merge snapshots across multiple sinks.")
                 sys.exit(1)
 
         # Return if we have nothing to do:
@@ -798,8 +800,8 @@ class Sink:
         Util.rm("{0}/.emu/sinks/{1}".format(source.path, self.name),
                 must_exist=True, error=True, verbose=verbose)
 
-        print "Removed sink {0}".format(Util.colourise(self.name,
-                                                        Colours.RED))
+        print("Removed sink {0}".format(Util.colourise(self.name,
+                                                       Colours.RED)))
 
         self.lock.unlock(force=force, verbose=verbose)
         source.lock.unlock(force=force, verbose=verbose)
@@ -809,8 +811,8 @@ class Sink:
     #
     def clean(self, dry_run=False, verbose=False):
         if verbose:
-            print ("Cleaning sink {0} at '{1}'..."
-                   .format(Util.colourise(self.name, Colours.BLUE), self.path))
+            print("Cleaning sink {0} at '{1}'..."
+                  .format(Util.colourise(self.name, Colours.BLUE), self.path))
 
         Util.rm(self.lock.path, dry_run=dry_run, verbose=True)
 
@@ -822,8 +824,8 @@ class Sink:
 
                 if not dry_run:
                     Util.rm(path, must_exist=True)
-                print ("Deleted orphan node file '{0}'"
-                       .format(Util.colourise(path, Colours.RED)))
+                print("Deleted orphan node file '{0}'"
+                      .format(Util.colourise(path, Colours.RED)))
 
         # Check for orphan trees:
         nodes = Util.ls(Util.concat_paths(self.path, "/.emu/nodes"))
@@ -833,8 +835,8 @@ class Sink:
 
                 if not dry_run:
                     Util.rm(path, must_exist=True)
-                print ("Deleted orphan tree '{0}'"
-                       .format(Util.colourise(path, Colours.RED)))
+                print("Deleted orphan tree '{0}'"
+                      .format(Util.colourise(path, Colours.RED)))
 
         # Delete broken symlinks in sink:
         for f in Util.ls(self.path):
@@ -849,8 +851,8 @@ class Sink:
                     if not os.path.exists(dst):
                         if not dry_run:
                             os.unlink(path)
-                        print ("Deleted broken symlink '{0}'"
-                               .format(Util.colourise(path, Colours.RED)))
+                        print("Deleted broken symlink '{0}'"
+                              .format(Util.colourise(path, Colours.RED)))
                 except Exception as e:
                     pass
 
@@ -859,12 +861,12 @@ class Sink:
         pointer = Util.read(head_pointer)
         head_node = Util.concat_paths(self.path, "/.emu/nodes/", pointer)
         if not os.path.exists(head_node):
-            print ("Deleted orphan HEAD '{0}'"
-                   .format(Util.colourise(pointer, Colours.RED)))
+            print("Deleted orphan HEAD '{0}'"
+                  .format(Util.colourise(pointer, Colours.RED)))
             self.head(delete=True, dry_run=dry_run)
 
-        print ("Sink {0} is clean."
-               .format(Util.colourise(self.name, Colours.BLUE)))
+        print("Sink {0} is clean."
+              .format(Util.colourise(self.name, Colours.BLUE)))
 
 
     def __str__(self):
@@ -882,7 +884,7 @@ class Sink:
         # Tidy up in case of error:
         def err_cb(e):
             if e:
-                print e
+                print(e)
             try:
                 Util.rm(emu_dir, verbose=False)
             except Exception:
@@ -950,8 +952,8 @@ class Sink:
 
         source.lock.unlock(force=force, verbose=verbose)
 
-        print ("Initialised sink {0} "
-               "at '{1}'").format(Util.colourise(name, Colours.INFO), path)
+        print(("Initialised sink {0} "
+               "at '{1}'").format(Util.colourise(name, Colours.INFO), path))
 
         return Sink(name, source)
 
@@ -974,9 +976,9 @@ class Snapshot:
         self.name = self.node.name()
 
         def err_cb(e):
-            print "Non-existent or malformed snapshot '{0}'".format(self.id)
+            print("Non-existent or malformed snapshot '{0}'".format(self.id))
             if e:
-                print e
+                print(e)
             sys.exit(1)
 
         # Sanity checks:
@@ -1050,7 +1052,7 @@ class Snapshot:
                     error(e)
                 else:
                     # Else fatal error:
-                    print e
+                    print(e)
                     sys.exit(1)
             else:
                 raise e
@@ -1260,7 +1262,7 @@ class Snapshot:
             Util.printf("Woops! Something went wrong.",
                         prefix=sink.name, colour=Colours.ERROR)
             if e:
-                print e
+                print(e)
 
             # Tidy up any intermediate files which may have been created:
             try:
@@ -1581,7 +1583,7 @@ class EmuConfigParser(ConfigParser.ConfigParser):
 
         file_exists = Util.readable(self.path)
         if not file_exists:
-            print "fatal: Config file '{0}' not found".format(self.path)
+            print("fatal: Config file '{0}' not found".format(self.path))
             sys.exit(1)
 
         self.read(self.path)
@@ -1619,8 +1621,8 @@ class EmuConfigParser(ConfigParser.ConfigParser):
         try:
             return self.get(section, prop)
         except Exception as e:
-            print ("fatal: No property '{0}:{1}' in config file '{2}'"
-                   .format(section, prop, self.path))
+            print("fatal: No property '{0}:{1}' in config file '{2}'"
+                  .format(section, prop, self.path))
             sys.exit(1)
 
 
@@ -1637,9 +1639,9 @@ class EmuConfigParser(ConfigParser.ConfigParser):
         elif value.lower() == "false":
             return False
         else:
-            print ("Boolean configuration property '{0}:{1}' in config file "
-                   "'{2}' is neither \"true\" or \"false\""
-                   .format(section, prop, self.path))
+            print("Boolean configuration property '{0}:{1}' in config file "
+                  "'{2}' is neither \"true\" or \"false\""
+                  .format(section, prop, self.path))
             sys.exit(1)
 
 
@@ -1656,9 +1658,9 @@ class EmuConfigParser(ConfigParser.ConfigParser):
             value = self.get_string(section, prop)
             return int(value)
         except ValueError:
-            print ("fatal: Value '{0}' for configuration property '{0}:{1}' "
-                   "in file '{2}' is not an integer"
-                   .format(value, section, prop, self.path))
+            print("fatal: Value '{0}' for configuration property '{0}:{1}' "
+                  "in file '{2}' is not an integer"
+                  .format(value, section, prop, self.path))
             sys.exit(1)
 
 
@@ -1667,9 +1669,9 @@ class EmuConfigParser(ConfigParser.ConfigParser):
             self.set(section, prop, int(n))
             self.flush()
         except ValueError:
-            print ("fatal: Value '{0}' for configuration property '{0}:{1}' "
-                   "in file '{2}' is not an integer"
-                   .format(n, section, prop, self.path))
+            print("fatal: Value '{0}' for configuration property '{0}:{1}' "
+                  "in file '{2}' is not an integer"
+                  .format(n, section, prop, self.path))
 
 
     def get_status(self, section, prop):
@@ -1680,9 +1682,9 @@ class EmuConfigParser(ConfigParser.ConfigParser):
         elif value.lower() == "dirty":
             return False
         else:
-            print ("Configuration property '{0}:{1}' in config file "
-                   "'{2}' is neither \"clean\" or \"dirty\""
-                   .format(section, prop, self.path))
+            print("Configuration property '{0}:{1}' in config file "
+                  "'{2}' is neither \"clean\" or \"dirty\""
+                  .format(section, prop, self.path))
             sys.exit(1)
 
 
@@ -1875,7 +1877,7 @@ class Util:
                 error(e)
             else:
                 # Else fatal error
-                print e
+                print(e)
                 sys.exit(1)
         return read_permission
 
@@ -1899,7 +1901,7 @@ class Util:
                 error(e)
             else:
                 # Else fatal error
-                print e
+                print(e)
                 sys.exit(1)
         return write_permission
 
@@ -1933,7 +1935,7 @@ class Util:
                         os.remove(path)
 
                 if verbose:
-                    print "Deleted {0} '{1}'".format(type, path)
+                    print("Deleted {0} '{1}'".format(type, path))
                 return True
 
             # Failed to remove path:
@@ -1943,8 +1945,8 @@ class Util:
                     error(e)
                 elif error:
                     # Fatal error if required
-                    print ("Failed to delete '{0}'."
-                           .format(Util.colourise(path, Colours.ERROR)))
+                    print("Failed to delete '{0}'."
+                          .format(Util.colourise(path, Colours.ERROR)))
                     sys.exit(1)
                 else:
                     return False
@@ -1987,7 +1989,7 @@ class Util:
                 shutil.move(src, dst)
 
                 if verbose:
-                    print "Moved '{0}' -> '{1}'".format(src, dst)
+                    print("Moved '{0}' -> '{1}'".format(src, dst))
 
                 return True
             except Exception as e:
@@ -1997,7 +1999,7 @@ class Util:
                     error(e)
                 elif error:
                     # Fatal error if required
-                    print "Failed to move '{0}' to '{1}'.".format(src, dst)
+                    print("Failed to move '{0}' to '{1}'.".format(src, dst))
                     sys.exit(1)
                 else:
                     return False
@@ -2019,7 +2021,7 @@ class Util:
             os.symlink(src, dst)
 
             if verbose:
-                print "Link '{0}' -> '{1}'".format(src, dst)
+                print("Link '{0}' -> '{1}'".format(src, dst))
 
         except Exception as e:
             # Error in operation:
@@ -2028,7 +2030,7 @@ class Util:
                 error(e)
             elif error:
                 # Fatal error if required
-                print "Failed to move '{0}' to '{1}'.".format(src, dst)
+                print("Failed to move '{0}' to '{1}'.".format(src, dst))
                 sys.exit(1)
 
 
@@ -2049,8 +2051,8 @@ class Util:
                 os.makedirs(path, mode)
 
                 if verbose:
-                    print ("Created directory '{0}' with mode 0{1:o}"
-                           .format(path, mode))
+                    print("Created directory '{0}' with mode 0{1:o}"
+                          .format(path, mode))
 
                 return True
             except Exception as e:
@@ -2060,7 +2062,7 @@ class Util:
                     error(e)
                 elif error:
                     # Fatal error if required
-                    print "Failed to create directory '{0}'.".format(path)
+                    print("Failed to create directory '{0}'.".format(path))
                     sys.exit(1)
                 else:
                     return False
@@ -2106,7 +2108,7 @@ class Util:
             args = shlex.split(args)
 
         if verbose:
-            print "Executing '{0}'.".format(" ".join(args))
+            print("Executing '{0}'.".format(" ".join(args)))
 
         process = subprocess.Popen(args, stdin=stdin, stdout=stdout,
                                    stderr=stderr)
@@ -2124,7 +2126,7 @@ class Util:
                 error(e)
             elif error:
                 # Fatal error if required
-                print e
+                print(e)
                 sys.exit(1)
 
         return process
@@ -2236,8 +2238,8 @@ class Util:
                     error(e)
                 else:
                     # Else fatal error:
-                    print ("Failed to read '{0}'"
-                           .format(Util.colourise(path, Colours.ERROR)))
+                    print("Failed to read '{0}'"
+                          .format(Util.colourise(path, Colours.ERROR)))
                     sys.exit(1)
             else:
                 raise e
@@ -2263,8 +2265,8 @@ class Util:
                     error(e)
                 else:
                     # Else fatal error:
-                    print "Failed to write '{0}'".format(Util.colourise(path,
-                                                                        Colours.ERROR))
+                    print("Failed to write '{0}'"
+                          .format(Util.colourise(path, Colours.ERROR)))
                     sys.exit(1)
             else:
                 raise e
@@ -2325,8 +2327,8 @@ class Util:
         if re.search(regex, program.lower()):
             return program
         else:
-            print ("fatal: Invalid checkum program '{0}'"
-                   .format(Util.colourise(program, Colours.ERROR)))
+            print("fatal: Invalid checkum program '{0}'"
+                  .format(Util.colourise(program, Colours.ERROR)))
             sys.exit(1)
 
 
@@ -2344,7 +2346,7 @@ class Util:
 
             prefix = "{0}: ".format(prefix)
 
-        print str(prefix) + msg
+        print(str(prefix) + msg)
 
 
     # colourise() - Colourise a string
@@ -2361,7 +2363,7 @@ class Util:
 
     @staticmethod
     def version_and_quit(*data):
-        print Emu.versionstr()
+        print(Emu.versionstr())
         sys.exit(0)
 
 
@@ -2397,7 +2399,7 @@ class Lockfile:
     #
     def lock(self, force=False, error=True, verbose=False):
         if verbose:
-            print "Writing lockfile '{0}'".format(self.path)
+            print("Writing lockfile '{0}'".format(self.path))
 
         if os.path.exists(self.path) and not force:
             # Error state, lock exists:
@@ -2409,7 +2411,7 @@ class Lockfile:
                     error(e)
                 else:
                     # Else fatal error:
-                    print e
+                    print(e)
                     sys.exit(1)
             else:
                 raise e
@@ -2424,7 +2426,7 @@ class Lockfile:
     #
     def unlock(self, force=False, error=True, verbose=False):
         if verbose:
-            print "Removing lockfile '{0}'".format(self.path)
+            print("Removing lockfile '{0}'".format(self.path))
 
         exists = os.path.exists(self.path)
         if exists:
@@ -2447,7 +2449,7 @@ class Lockfile:
                     error(e)
                 else:
                     # Else fatal error:
-                    print e
+                    print(e)
                     sys.exit(1)
             else:
                 raise e
@@ -2513,7 +2515,7 @@ class Checksum():
         self.start = time.time()
 
         if self.verbose:
-            print "Creating {0} checksum worker thread...".format(program)
+            print("Creating {0} checksum worker thread...".format(program))
 
         # Record the starting working directory:
         cwd = os.getcwd()
@@ -2534,8 +2536,8 @@ class Checksum():
                                            stdin=self.p1.stdout,
                                            stdout=subprocess.PIPE)
             except OSError:
-                print ("Invalid checksum program '{0}'!"
-                       .format(Util.colourise(program, Colours.RED)))
+                print("Invalid checksum program '{0}'!"
+                      .format(Util.colourise(program, Colours.RED)))
                 sys.exit(1)
 
         # Return to previous working directory:
@@ -2548,8 +2550,8 @@ class Checksum():
         (stdout, stderr) = self.p2.communicate()
 
         if self.verbose:
-            print ("Checksum worker thread complete in {0:.1f}s."
-                   .format(time.time() - self.start))
+            print("Checksum worker thread complete in {0:.1f}s."
+                  .format(time.time() - self.start))
 
         return stdout.split()[0][:32]
 
@@ -2561,7 +2563,7 @@ class DiskUsage():
         self.start = time.time()
 
         if self.verbose:
-            print "Creating disk usage worker thread..."
+            print("Creating disk usage worker thread...")
 
         # Create a /dev/null pipe:
         with open(os.devnull, 'w') as devnull:
@@ -2579,8 +2581,8 @@ class DiskUsage():
         (stdout, stderr) = self.p1.communicate()
 
         if self.verbose:
-            print ("Disk usage worker thread complete in {0:.1f}s."
-                   .format(time.time() - self.start))
+            print("Disk usage worker thread complete in {0:.1f}s."
+                  .format(time.time() - self.start))
 
         return stdout.split()[0]
 
@@ -2708,5 +2710,5 @@ class VersionError(Error):
 # anything other than acknowledge the signal, as the err_cb() methods
 # are used for tidying up.
 def _sigint_handler(signum, frame):
-    print "emu: received SIGINT"
+    print("emu: received SIGINT")
 signal.signal(signal.SIGINT, _sigint_handler)

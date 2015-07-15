@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with emu.  If not, see <http://www.gnu.org/licenses/>.
 #
+from __future__ import print_function
+
 import os
 import sys
 from sys import exit
@@ -44,7 +46,7 @@ def main(argv, argc):
                       verbose=options.verbose, force=options.force)
         return 0
     except SourceCreateError as e:
-        print e
+        print(e)
         return 1
 
 

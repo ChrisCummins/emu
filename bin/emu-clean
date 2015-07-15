@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with emu.  If not, see <http://www.gnu.org/licenses/>.
 #
+from __future__ import print_function
+
 import os
 import re
 import subprocess
@@ -43,7 +45,7 @@ def main(argv, argc):
                 sink = Util.get_sink_by_name(arg, source.sinks())
                 sink.clean(verbose=options.verbose, dry_run=options.dry_run)
             except SinkNotFoundError as e:
-                print e
+                print(e)
                 sys.exit(1)
     else:
         source.clean(recursive=options.recursive, verbose=options.verbose,

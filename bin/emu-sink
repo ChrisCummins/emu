@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with emu.  If not, see <http://www.gnu.org/licenses/>.
 #
+from __future__ import print_function
+
 import os
 import sys
 import subprocess
@@ -47,7 +49,7 @@ def main(argv, argc):
     if len(args) < 1:
         # List sinks:
         for sink in source.sinks():
-            print Util.colourise(sink.name, Colours.GREEN)
+            print(Util.colourise(sink.name, Colours.GREEN))
             if options.verbose:
                 snapshots = sink.snapshots()
                 if sink.head():
@@ -59,11 +61,11 @@ def main(argv, argc):
                 device = (subprocess.check_output(command, shell=True)
                           .split("\n")[1].split()[0])
 
-                print "Location:        {0}".format(sink.path)
-                print "No of snapshots: {0}".format(len(snapshots))
-                print "Max snapshots:   {0}".format(sink.config.max_snapshots())
-                print "Head:            {0}".format(head_id)
-                print "Device:          {0}".format(device)
+                print("Location:        {0}".format(sink.path))
+                print("No of snapshots: {0}".format(len(snapshots)))
+                print("Max snapshots:   {0}".format(sink.config.max_snapshots()))
+                print("Head:            {0}".format(head_id))
+                print("Device:          {0}".format(device))
 
     else:
         command = args.pop(0)
@@ -74,7 +76,7 @@ def main(argv, argc):
                 name = args[0]
                 path = args[1]
             else:
-                print "Usage: add <name> <path>"
+                print("Usage: add <name> <path>")
                 sys.exit(1)
 
             Sink.create(source, name, path, options.template_dir,
@@ -85,7 +87,7 @@ def main(argv, argc):
         # Remove sinks:
         elif command == "rm":
             if not len(args):
-                print "Usage: rm <name ...>"
+                print("Usage: rm <name ...>")
                 sys.exit(1)
 
             for arg in args:
@@ -93,13 +95,13 @@ def main(argv, argc):
                     sink = Util.get_sink_by_name(arg, source.sinks())
                     sink.destroy(force=options.force, verbose=options.verbose)
                 except SinkNotFoundError as e:
-                    print e
+                    print(e)
                     sys.exit(1)
 
         # Clean sinks:
         elif command == "clean":
             if not len(args):
-                print "Usage: clean <name ...>"
+                print("Usage: clean <name ...>")
                 sys.exit(1)
 
             for arg in args:
@@ -107,11 +109,11 @@ def main(argv, argc):
                     sink = Util.get_sink_by_name(arg, source.sinks())
                     sink.clean(verbose=options.verbose, dry_run=options.dry_run)
                 except SinkNotFoundError as e:
-                    print e
+                    print(e)
                     sys.exit(1)
 
         else:
-            print "Invalid command. See: emu sink --help"
+            print("Invalid command. See: emu sink --help")
             sys.exit(1)
 
     return 0

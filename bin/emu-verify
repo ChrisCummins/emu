@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with emu.  If not, see <http://www.gnu.org/licenses/>.
 #
+from __future__ import print_function
+
 import re
 import sys
 import os
@@ -36,16 +38,16 @@ def main(argv, argc):
     status = 0
 
     if not len(snapshots):
-        print "No snapshots to verify!"
+        print("No snapshots to verify!")
         status = 1
 
     for snapshot in snapshots:
         if snapshot.verify(cache_results=not options.dont_cache,
                            use_cached=options.use_cached):
-            print snapshot, Util.colourise("ok", Colours.OK)
+            print(snapshot, Util.colourise("ok", Colours.OK))
         else:
             status = 2
-            print snapshot, Util.colourise("bad", Colours.ERROR)
+            print(snapshot, Util.colourise("bad", Colours.ERROR))
 
     return status
 

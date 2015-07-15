@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with emu.  If not, see <http://www.gnu.org/licenses/>.
 #
+from __future__ import print_function
+
 import re
 import sys
 import os
@@ -43,7 +45,7 @@ def main(argv, argc):
 
     # Fail if source has no sinks:
     if not len(sinks):
-        print "Source has no sinks!"
+        print("Source has no sinks!")
         sys.exit(1)
 
     status = 0
