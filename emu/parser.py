@@ -16,6 +16,7 @@
 # along with emu.  If not, see <http://www.gnu.org/licenses/>.
 import re
 import os
+from os import path
 
 from optparse import OptionParser
 
@@ -28,31 +29,154 @@ from . import SnapshotNotFoundError
 from . import Util
 
 
-def _get_source_dir():
+class Error(Exception):
     """
-    Attempt to determine the source directory, by iterating up the
-    directory tree, starting from the current working
-    directory. If no source is found, fail.
+    Base error case.
     """
-    base_source_dir = os.getcwd()
-    source_dir = base_source_dir
-    while True:
-        # Check if emu directory exists in current directory:
-        emu_dir = Util.concat_paths(source_dir, "/.emu")
-        is_source = Util.readable(emu_dir)
-        if is_source:
-            return source_dir
+    pass
 
-        # If not, then get the parent directory and repeat:
-        new_source_dir = Util.par_dir(source_dir)
 
-        # If the parent and current directories are equal (i.e. we
-        # have hit the root of the filesystem), then revert to the
-        # default emu source dir from config:
-        if new_source_dir == source_dir:
-            return None
+class SourceNotFoundError(Error):
+    """
+    Thrown if an emu source is not found.
 
-        source_dir = new_source_dir
+    Attributes:
+
+        stopdir (str): The directory in which we stopped searching for
+          a source.
+    """
+
+    def __init__(self, stopdir):
+        """
+        Create a source not found error.
+
+        Arguments:
+
+            stopdir (str): The directory at which we stopped searching
+              for a source.
+        """
+        self.stopdir = stopdir
+
+    def __repr__(self):
+        return "Not an emu source (or any parent up to {})".format(self.stopdir)
+
+    def __str__(self):
+        return self.__repr__()
+
+
+def isroot(dirpath):
+    """
+    Return whether a directory is the filesystem root.
+
+    Note that this does not check the argument to ensure that it
+    exists.
+
+    Arguments:
+
+        dirpath (str): Path of directory to check.
+
+    Returns:
+
+        bool: True if directory is an emu source, else false.
+    """
+    parent_dir = path.join(dirpath, os.pardir)
+    return path.exists(dirpath) and path.samefile(dirpath, parent_dir)
+
+
+def issource(dirpath):
+    """
+    Return whether a directory is an emu source.
+
+    Note that this does not check the argument to ensure that it
+    exists.
+
+    Arguments:
+
+        dirpath (str): Path of directory to check.
+
+    Returns:
+
+        bool: True if directory is an emu source, else false.
+    """
+    # TODO: Check for the presence of additional files which are known
+    # to exist in an emu dir.
+    emudir = path.join(dirpath, ".emu")
+    sinksdir = path.join(emudir, "sinks")
+    return path.isdir(emudir) and path.isdir(sinksdir)
+
+
+def issubdir(left, right):
+    """
+    Return if a path is a subdirectory of another.
+
+    Arguments:
+
+        left (str): The directory to test.
+        right (str): The alleged parent directory.
+
+    Returns:
+
+        bool: True if left is subdirectory of right, else false.
+    """
+    child_path = path.realpath(left)
+    parent_path = path.realpath(right)
+
+    if len(child_path) < len(parent_path):
+        return False
+
+    for i in range(len(parent_path)):
+        if parent_path[i] != child_path[i]:
+            return False
+
+    return True
+
+
+def can_traverse_up(dirpath, barriers=[]):
+    """
+    Return whether we can traverse up a directory.
+
+    Arguments:
+
+        dirpath (str): Path of directory to check.
+        barriers (list of str, optional): A list of paths which cannot
+          be traversed above.
+
+    Returns:
+
+        bool: True if we can traverse up, else false.
+    """
+    return (path.exists(dirpath) and not isroot(dirpath)
+            and not any(issubdir(dirpath, barrier) for barrier in barriers))
+
+
+def find_source_dir(dirpath, barriers=[]):
+    """
+    Walk up a tree to find a source's root directory.
+
+    Attempt to determine the source directory by iterating up the
+    directory tree starting at a given base.
+
+    Arguments:
+
+        dirpath (str): The path to begin traversing back from.
+        barriers (list of str, optional): A list of paths which cannot
+          be traversed above.
+
+    Returns:
+
+        str: Absolute path to the source directory.
+
+    Raises:
+
+        SourceNotFoundError: If no source is found.
+    """
+    if issource(dirpath):
+        return path.abspath(dirpath)
+    elif can_traverse_up(dirpath, barriers=barriers):
+        return find_source_dir(path.join(dirpath, os.pardir))
+    else:
+        raise SourceNotFoundError(dirpath)
+
 
 def _parse_snapshot_id(string, sink):
     regex = (r"((?P<id>[a-f0-9]{40})|"
@@ -176,7 +300,8 @@ class Parser(OptionParser):
 
         # Set default parser arguments:
         self.add_option("-S", "--source-dir", action="store", type="string",
-                        dest="source_dir", default=_get_source_dir())
+                        dest="source_dir",
+                        default=find_source_dir(os.getcwd()))
         self.add_option("--version", action="callback",
                         callback=Util.version_and_quit)
         self.add_option("-v", "--verbose", action="store_true",

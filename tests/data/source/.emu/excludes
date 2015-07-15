@@ -1,0 +1,64 @@
+#
+## Emu source excludes file.
+#
+
+# System volume information:
+- lost+found
+
+######################
+# Full system backup #
+######################
+
+# Uncomment these lines to ignore device files and mounted shares:
+# - /dev/*
+# - /proc/*
+# - /sys/*
+# - /tmp/*
+# - /run/*
+# - /mnt/*
+# - /media/*
+
+# Uncomment the following line if the source is a virtual machine:
+# - /vmlinuz
+
+# Uncomment the following line to ignore the boot loader:
+# - /boot/*
+# - /initrd.img
+
+# Uncomment the following line to ignore cache files:
+# - /home/*/.cache/*
+# - /var/cache/*
+
+# Uncomment the following lines if you are not interested in
+# preserving binaries:
+# - /bin/*
+# - /home/*/.local/bin/*
+# - /sbin/*
+# - /usr/bin/*
+# - /usr/local/bin/*
+
+# Uncomment the following lines if you are not interested in
+# preserving libraries:
+# - /home/*/.local/lib/*
+# - /lib/*
+# - /usr/lib/*
+# - /usr/local/lib*
+
+# User files:
+
+# Uncomment the following lines if you are a Dropbox user:
+# - /home/*/.dropbox/*
+# - /home/*/.dropbox-master/*
+# - /home/*/Dropbox/*
+
+# The following lines contain application specific local cache and
+# configuration files which you may not be interested in preserving:
+# - /home/*/.cache/google-chrome/*
+# - /home/*/.config/google-chrome/*
+# - /home/*/.local/google-chrome/*
+# - /home/*/.mozilla/*
+# - /home/*/.npm/*
+# - /home/*/.thunderbird/*
+
+
+## User additions:
