@@ -25,7 +25,7 @@ from emu import *
 
 
 def main(argv, argc):
-    parser = Parser()
+    parser = Parser(source_dir_arg=False)
     parser.add_option("-S", "--source-dir", action="store", type="string",
                       dest="source_dir", default=os.getcwd())
     parser.add_option("-t", "--template-dir", action="store", type="string",

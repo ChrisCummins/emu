@@ -258,7 +258,7 @@ class Parser(OptionParser):
     Command line option parser.
     """
 
-    def __init__(self):
+    def __init__(self, source_dir_arg=True):
         # Instantiate superclass
         OptionParser.__init__(self, add_help_option=False)
 
@@ -267,9 +267,10 @@ class Parser(OptionParser):
         self.set_conflict_handler("resolve")
 
         # Set default parser arguments:
-        self.add_option("-S", "--source-dir", action="store", type="string",
-                        dest="source_dir",
-                        default=find_source_dir(os.getcwd()))
+        if source_dir_arg:
+            self.add_option("-S", "--source-dir", action="store", type="string",
+                            dest="source_dir",
+                            default=find_source_dir(os.getcwd()))
         self.add_option("--version", action="callback",
                         callback=Util.version_and_quit)
         self.add_option("-v", "--verbose", action="store_true",
