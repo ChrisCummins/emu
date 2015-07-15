@@ -26,12 +26,23 @@ import signal
 import subprocess
 import sys
 import getpass
-import ConfigParser
+from ConfigParser import ConfigParser as _ConfigParser
 
 from datetime import datetime
 from optparse import OptionParser
 from os import path
 from pkg_resources import resource_filename
+from sys import exit
+
+
+def print_version_and_quit(*data):
+    """
+    Print an emu version message and exit.
+
+    Never returns.
+    """
+    print(Meta.versionstr())
+    exit(0)
 
 
 def isroot(dirpath):
@@ -285,8 +296,7 @@ class Parser(OptionParser):
         # Instantiate superclass
         OptionParser.__init__(self, add_help_option=False)
 
-        # We allow user to override the default handlers by adding
-        # their own:
+        # Allow overriding of default handlers:
         self.set_conflict_handler("resolve")
 
         # Set default parser arguments:
@@ -295,7 +305,7 @@ class Parser(OptionParser):
                             dest="source_dir",
                             default=find_source_dir(os.getcwd()))
         self.add_option("--version", action="callback",
-                        callback=Util.version_and_quit)
+                        callback=print_version_and_quit)
         self.add_option("-v", "--verbose", action="store_true",
                         dest="verbose", default=False)
         self.add_option("-h", "--help", action="callback",
@@ -363,7 +373,7 @@ class Parser(OptionParser):
                     else:
                         # Else fatal error:
                         print(e)
-                        sys.exit(1)
+                        exit(1)
                 else:
                     raise e
 
@@ -399,7 +409,7 @@ class Parser(OptionParser):
                     else:
                         # Else fatal error:
                         print(e)
-                        sys.exit(1)
+                        exit(1)
 
                 # If no args are given, generate a list of all sink names:
                 if accept_no_args and not len(args):
@@ -441,7 +451,7 @@ class Parser(OptionParser):
                     else:
                         # Else fatal error:
                         print(e)
-                        sys.exit(1)
+                        exit(1)
                 else:
                     raise e
 
@@ -454,7 +464,7 @@ class Source:
     def __init__(self, path):
         if not path:
             print("fatal: Not an emu source (or any parent directory)")
-            sys.exit(1)
+            exit(1)
 
         self.path = path
         self.lock = Lockfile(Util.concat_paths(self.path, "/.emu/LOCK"))
@@ -464,7 +474,7 @@ class Source:
             if e:
                 s += ". {0}".format(e)
             print(s)
-            sys.exit(1)
+            exit(1)
 
         # Sanity checks:
         Util.readable(self.path,                                      error=err_cb)
@@ -496,7 +506,7 @@ class Source:
                         .format(Util.colourise(snapshot.id.id, Colours.GREEN)),
                         prefix=sink.name, colour=Colours.ERROR)
 
-            sys.exit(1)
+            exit(1)
 
         print("Checking out {0}".format(snapshot.id))
 
@@ -543,7 +553,7 @@ class Source:
 
             except SinkNotFoundError as e:
                 print(e)
-                sys.exit(1)
+                exit(1)
 
 
     # clean() - Clean up the source
@@ -608,7 +618,7 @@ class Sink:
             print("Non-existent or malformed emu sink.")
             if e:
                 print(e)
-            sys.exit(1)
+            exit(1)
 
         self.name = name
         self.source = source
@@ -741,7 +751,7 @@ class Sink:
         for snapshot in snapshots:
             if snapshot.sink != self:
                 print("fatal: Cannot merge snapshots across multiple sinks.")
-                sys.exit(1)
+                exit(1)
 
         # Return if we have nothing to do:
         if len(snapshots) < 2:
@@ -769,7 +779,7 @@ class Sink:
         new_tree = Util.concat_paths(self.path, "/.emu/trees/new")
         if not dry_run and not os.path.exists(new_tree):
             print("Failed to create new tree " + new_tree)
-            sys.exit(1)
+            exit(1)
 
         Util.printf("merged {0} snapshots".format(len(snapshots)),
                     prefix=self.name, colour=Colours.OK)
@@ -893,7 +903,7 @@ class Sink:
                 source.lock.unlock(force=force, verbose=False)
             except Exception:
                 pass
-            sys.exit(1)
+            exit(1)
 
         # Create sink directory if required:
         Util.mkdir(path, verbose=verbose, error=err_cb)
@@ -979,7 +989,7 @@ class Snapshot:
             print("Non-existent or malformed snapshot '{0}'".format(self.id))
             if e:
                 print(e)
-            sys.exit(1)
+            exit(1)
 
         # Sanity checks:
         Util.readable(Util.concat_paths(self.sink.path, "/", self.name),
@@ -1016,7 +1026,7 @@ class Snapshot:
 
             # Update the node with status and last-verified info:
             if cache_results:
-                date = EmuDate()
+                date = Date()
                 self.node.status(value=clean)
                 self.node.last_verified(value=date)
 
@@ -1053,7 +1063,7 @@ class Snapshot:
                 else:
                     # Else fatal error:
                     print(e)
-                    sys.exit(1)
+                    exit(1)
             else:
                 raise e
 
@@ -1246,7 +1256,7 @@ class Snapshot:
         # this, we need to wait until the timestamp will be different.
         def _get_unique_id(checksum):
             # Generate an ID from date and checksum:
-            date = EmuDate()
+            date = Date()
             id = SnapshotID(sink.name, date.hex() + checksum)
             try:
                 # See if a snapshot with that ID already exists:
@@ -1295,7 +1305,7 @@ class Snapshot:
 
             Util.printf("Failed to create new snapshot!",
                         prefix=sink.name, colour=Colours.ERROR)
-            sys.exit(1)
+            exit(1)
 
         source = sink.source
         staging_area = Util.concat_paths(sink.path, "/.emu/trees/new")
@@ -1373,7 +1383,7 @@ class Snapshot:
         if not dry_run:
             # Create node:
             node_path = "{0}/.emu/nodes/{1}".format(sink.path, id.id)
-            node = ConfigParser.ConfigParser()
+            node = _ConfigParser()
             node.add_section("Snapshot")
             node.set("Snapshot", "snapshot",      id.id)
             node.set("Snapshot", "parent",        head_id)
@@ -1389,7 +1399,7 @@ class Snapshot:
             node.set("Sink",     "snapshot-no",   len(sink.snapshots()) + 1)
             node.set("Sink",     "max-snapshots", sink.config.max_snapshots())
             node.add_section("Emu")
-            node.set("Emu",      "emu-version",   Emu.version)
+            node.set("Emu",      "emu-version",   Meta.version)
             node.set("Emu",      "user",          getpass.getuser())
             node.set("Emu",      "uid",           os.getuid())
             with open(node_path, "wb") as node_file:
@@ -1531,7 +1541,7 @@ class Version:
 ######################
 # Emu metadata class #
 ######################
-class Emu:
+class Meta:
 
     #
     # Version and copyright information:
@@ -1550,41 +1560,41 @@ class Emu:
     @staticmethod
     def versionstr():
         try:
-            return Emu._versionstr
+            return Meta._versionstr
         except AttributeError:
-            version = Emu.version
+            version = Meta.version
 
-            start = Emu.copyright["start"]
-            end = Emu.copyright["end"]
+            start = Meta.copyright["start"]
+            end = Meta.copyright["end"]
             if start != end:
                 copyright = "{0}-{1}".format(start, end)
             else:
                 copyright = end
 
-            authors = ", ".join(Emu.copyright["authors"])
+            authors = ", ".join(Meta.copyright["authors"])
 
             # Create version string:
-            Emu._versionstr = ("emu version {0}\n"
-                               "Copyright (c) {1} {2}"
-                               .format(version, copyright, authors))
+            Meta._versionstr = ("emu version {0}\n"
+                                "Copyright (c) {1} {2}"
+                                .format(version, copyright, authors))
 
-            return Emu.versionstr()
+            return Meta.versionstr()
 
 
 #######################################
 # Standardised emu config file parser #
 #######################################
-class EmuConfigParser(ConfigParser.ConfigParser):
+class ConfigParser(_ConfigParser):
 
     def __init__(self, path):
-        ConfigParser.ConfigParser.__init__(self)
+        _ConfigParser.__init__(self)
 
         self.path = path
 
         file_exists = Util.readable(self.path)
         if not file_exists:
             print("fatal: Config file '{0}' not found".format(self.path))
-            sys.exit(1)
+            exit(1)
 
         self.read(self.path)
 
@@ -1623,7 +1633,7 @@ class EmuConfigParser(ConfigParser.ConfigParser):
         except Exception as e:
             print("fatal: No property '{0}:{1}' in config file '{2}'"
                   .format(section, prop, self.path))
-            sys.exit(1)
+            exit(1)
 
 
     def set_string(self, section, prop, value):
@@ -1642,7 +1652,7 @@ class EmuConfigParser(ConfigParser.ConfigParser):
             print("Boolean configuration property '{0}:{1}' in config file "
                   "'{2}' is neither \"true\" or \"false\""
                   .format(section, prop, self.path))
-            sys.exit(1)
+            exit(1)
 
 
     def set_bool(self, section, prop, value):
@@ -1661,7 +1671,7 @@ class EmuConfigParser(ConfigParser.ConfigParser):
             print("fatal: Value '{0}' for configuration property '{0}:{1}' "
                   "in file '{2}' is not an integer"
                   .format(value, section, prop, self.path))
-            sys.exit(1)
+            exit(1)
 
 
     def set_int(self, section, prop, n):
@@ -1685,7 +1695,7 @@ class EmuConfigParser(ConfigParser.ConfigParser):
             print("Configuration property '{0}:{1}' in config file "
                   "'{2}' is neither \"clean\" or \"dirty\""
                   .format(section, prop, self.path))
-            sys.exit(1)
+            exit(1)
 
 
     def set_status(self, section, prop, value):
@@ -1708,11 +1718,11 @@ class EmuConfigParser(ConfigParser.ConfigParser):
 ###########################
 # Global Emu config class #
 ###########################
-class EmuConfig(EmuConfigParser):
+class UserConfig(ConfigParser):
 
     @staticmethod
     def _create(path):
-        cfg = ConfigParser.ConfigParser()
+        cfg = _ConfigParser()
 
         # Populate config with default values:
         cfg.add_section("general")
@@ -1730,9 +1740,9 @@ class EmuConfig(EmuConfigParser):
         # The first time the user invokes emu, there won't be a config
         # file, so we create one:
         if not file_exists:
-            EmuConfig._create(path)
+            UserConfig._create(path)
 
-        EmuConfigParser.__init__(self, path)
+        ConfigParser.__init__(self, path)
 
 
     # use_colour() - Return True is UI should use colour
@@ -1758,16 +1768,16 @@ class EmuConfig(EmuConfigParser):
     # order to require only one disk read per process.
     @staticmethod
     def instance():
-        return EmuConfig(os.path.expanduser("~/.emuconfig"))
+        return UserConfig(os.path.expanduser("~/.emuconfig"))
 
 
 #############################
 # Sink configuration parser #
 #############################
-class SinkConfig(EmuConfigParser):
+class SinkConfig(ConfigParser):
 
     def __init__(self, path):
-        EmuConfigParser.__init__(self, path)
+        ConfigParser.__init__(self, path)
 
     def max_snapshots(self, n=None):
         s, p = "Snapshots", "max-number"
@@ -1798,10 +1808,10 @@ class SinkConfig(EmuConfigParser):
 ########################
 # Snapshot Node Parser #
 ########################
-class Node(EmuConfigParser):
+class Node(ConfigParser):
 
     def __init__(self, path):
-        EmuConfigParser.__init__(self, path)
+        ConfigParser.__init__(self, path)
 
 
     def name(self):
@@ -1866,7 +1876,7 @@ class Util:
     @staticmethod
     def readable(path, error=False):
         if not os.path.exists(path) and error:
-            sys.exit(1)
+            exit(1)
         read_permission = os.access(path, os.R_OK)
         if error and not read_permission:
             e = ("No read permissions for '{0}'!"
@@ -1878,7 +1888,7 @@ class Util:
             else:
                 # Else fatal error
                 print(e)
-                sys.exit(1)
+                exit(1)
         return read_permission
 
 
@@ -1890,7 +1900,7 @@ class Util:
     @staticmethod
     def writable(path, error=False):
         if not os.path.exists(path) and error:
-            sys.exit(1)
+            exit(1)
         write_permission = os.access(path, os.W_OK)
         if error and not write_permission:
             e = ("No write permissions for '{0}'!"
@@ -1902,7 +1912,7 @@ class Util:
             else:
                 # Else fatal error
                 print(e)
-                sys.exit(1)
+                exit(1)
         return write_permission
 
 
@@ -1947,7 +1957,7 @@ class Util:
                     # Fatal error if required
                     print("Failed to delete '{0}'."
                           .format(Util.colourise(path, Colours.ERROR)))
-                    sys.exit(1)
+                    exit(1)
                 else:
                     return False
 
@@ -2000,7 +2010,7 @@ class Util:
                 elif error:
                     # Fatal error if required
                     print("Failed to move '{0}' to '{1}'.".format(src, dst))
-                    sys.exit(1)
+                    exit(1)
                 else:
                     return False
 
@@ -2031,7 +2041,7 @@ class Util:
             elif error:
                 # Fatal error if required
                 print("Failed to move '{0}' to '{1}'.".format(src, dst))
-                sys.exit(1)
+                exit(1)
 
 
     # mkdir() - Create a directory and all required parents
@@ -2063,7 +2073,7 @@ class Util:
                 elif error:
                     # Fatal error if required
                     print("Failed to create directory '{0}'.".format(path))
-                    sys.exit(1)
+                    exit(1)
                 else:
                     return False
 
@@ -2127,7 +2137,7 @@ class Util:
             elif error:
                 # Fatal error if required
                 print(e)
-                sys.exit(1)
+                exit(1)
 
         return process
 
@@ -2240,7 +2250,7 @@ class Util:
                     # Else fatal error:
                     print("Failed to read '{0}'"
                           .format(Util.colourise(path, Colours.ERROR)))
-                    sys.exit(1)
+                    exit(1)
             else:
                 raise e
 
@@ -2267,7 +2277,7 @@ class Util:
                     # Else fatal error:
                     print("Failed to write '{0}'"
                           .format(Util.colourise(path, Colours.ERROR)))
-                    sys.exit(1)
+                    exit(1)
             else:
                 raise e
 
@@ -2329,7 +2339,7 @@ class Util:
         else:
             print("fatal: Invalid checkum program '{0}'"
                   .format(Util.colourise(program, Colours.ERROR)))
-            sys.exit(1)
+            exit(1)
 
 
     # printf() - Format and print a message
@@ -2355,16 +2365,10 @@ class Util:
     # property is enabled in the global configuration file.
     @staticmethod
     def colourise(string, colour):
-        if EmuConfig.instance().use_colour():
+        if UserConfig.instance().use_colour():
             return colour + str(string) + Colours.RESET
         else:
             return str(string)
-
-
-    @staticmethod
-    def version_and_quit(*data):
-        print(Emu.versionstr())
-        sys.exit(0)
 
 
     @staticmethod
@@ -2374,7 +2378,7 @@ class Util:
         cmd = "man {0}".format(basename)    # Man page invocation
 
         Util.p_exec(cmd, error=True)
-        sys.exit(0)
+        exit(0)
 
 
 ##################
@@ -2412,7 +2416,7 @@ class Lockfile:
                 else:
                     # Else fatal error:
                     print(e)
-                    sys.exit(1)
+                    exit(1)
             else:
                 raise e
         else:
@@ -2450,7 +2454,7 @@ class Lockfile:
                 else:
                     # Else fatal error:
                     print(e)
-                    sys.exit(1)
+                    exit(1)
             else:
                 raise e
 
@@ -2458,7 +2462,7 @@ class Lockfile:
 #############################
 # Date representation class #
 #############################
-class EmuDate:
+class Date:
 
     REPR_FORMAT = "%A %B %d %H:%M:%S %Y"
     SNAPSHOT_FORMAT = "{0}-{1:02d}-{2:02d} {3:02d}.{4:02d}.{5:02d}"
@@ -2538,7 +2542,7 @@ class Checksum():
             except OSError:
                 print("Invalid checksum program '{0}'!"
                       .format(Util.colourise(program, Colours.RED)))
-                sys.exit(1)
+                exit(1)
 
         # Return to previous working directory:
         os.chdir(cwd)
