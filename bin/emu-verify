@@ -44,10 +44,10 @@ def main(argv, argc):
     for snapshot in snapshots:
         if snapshot.verify(cache_results=not options.dont_cache,
                            use_cached=options.use_cached):
-            print(snapshot, Util.colourise("ok", Colours.OK))
+            print(snapshot, colourise("ok", Colours.OK))
         else:
             status = 2
-            print(snapshot, Util.colourise("bad", Colours.ERROR))
+            print(snapshot, colourise("bad", Colours.ERROR))
 
     return status
 

@@ -37,6 +37,19 @@ from sys import exit
 import io
 
 
+def colourise(string, colour):
+    """
+    Colourise a string
+
+    Returns the given string wrapped in colour escape codes, if this
+    property is enabled in the global configuration file.
+    """
+    if UserConfig.instance().use_colour():
+        return colour + str(string) + Colours.RESET
+    else:
+        return str(string)
+
+
 def print_version_and_quit(*data):
     """
     Print an emu version message and exit.
@@ -485,8 +498,8 @@ class Source:
     def checkout(self, snapshot, dry_run=False, force=False):
 
         def err_cb(e):
-            Util.printf("Woops! Something went wrong.",
-                        prefix=sink.name, colour=Colours.ERROR)
+            io.printf("{}: woops! Something went wrong."
+                      .format(colourise(sink.name, Colours.ERROR)))
             if e:
                 io.error(e)
 
@@ -496,10 +509,9 @@ class Source:
             except Exception:
                 pass
 
-            Util.printf("Failed to checkout snapshot {0}!"
-                        .format(Util.colourise(snapshot.id.id, Colours.GREEN)),
-                        prefix=sink.name, colour=Colours.ERROR)
-
+            io.error("{}: failed to checkout snapshot {}!"
+                     .format(colourise(sink.name, Colours.ERROR),
+                             colourise(snapshot.id.id, Colours.GREEN)))
             exit(1)
 
         io.printf("Checking out {0}".format(snapshot.id))
@@ -525,7 +537,7 @@ class Source:
         self.lock.unlock(force=force)
 
         io.printf("Source restored from {0}"
-                  .format(Util.colourise(snapshot.name, Colours.SNAPSHOT_NEW)))
+                  .format(colourise(snapshot.name, Colours.SNAPSHOT_NEW)))
 
 
     # sinks() - Get a source's sinks
@@ -671,8 +683,8 @@ class Sink:
                     Util.rm(most_recent_link, error=error)
                 Util.ln_s(head.name, most_recent_link, error=error)
 
-            Util.printf("HEAD at {0}".format(head.id.id),
-                        prefix=self.name, colour=Colours.OK)
+            io.printf("{}: HEAD at {}".format(colourise(self.name, Colours.OK),
+                                              head.id.id))
 
         # Option 2 of 3: Delete the HEAD pointer, leaving the sink
         #              headless.
@@ -681,8 +693,8 @@ class Sink:
                 Util.rm(most_recent_link, error=error)
                 Util.write(head_pointer, "", error=error)
 
-            Util.printf("now in headless state",
-                        prefix=self.name, colour=Colours.OK)
+            io.printf("{}: now in headless state".format(colourise(self.name,
+                                                                   Colours.OK)))
 
         # Option 3 of 3: Fetch the HEAD snapshot, or None if headless.
         else:
@@ -724,9 +736,12 @@ class Sink:
             else:
                 i = len(self.snapshots())
 
-        Util.printf("pushing snapshot ({0} of {1})"
-                    .format(len(self.snapshots()) + 1, self.config.max_snapshots()),
-                    prefix=self.name, colour=Colours.OK)
+        io.printf("{}: pushing snapshot ({} of {})".format(
+            colourise(self.name, Colours.OK),
+            len(self.snapshots()) + 1,
+            self.config.max_snapshots())
+        )
+
         Snapshot.create(self, force=force, ignore_errors=ignore_errors,
                         archive=archive, owner=owner, dry_run=dry_run,
                         checksum_program=checksum_program)
@@ -745,8 +760,8 @@ class Sink:
 
         # Return if we have nothing to do:
         if len(snapshots) < 2:
-            Util.printf("nothing to squash",
-                        prefix=self.name, colour=Colours.OK)
+            io.printf("{}: nothing to squash"
+                      .format(colourise(self.name, Colours.OK)))
             return
 
         # Merge target snapshots into staging area:
@@ -756,10 +771,10 @@ class Sink:
                 if other != snapshot:
                     link_dests.append(other.tree)
 
-            Util.printf("merging snapshot {0}"
-                        .format(Util.colourise(snapshot.name,
-                                               Colours.SNAPSHOT_NEW)),
-                        prefix=self.name, colour=Colours.OK)
+            io.printf("{}: merging snapshot {}".format(
+                colourise(self.name, Colours.OK),
+                colourise(snapshot.name, Colours.SNAPSHOT_NEW))
+            )
             snapshot_dir = snapshot.tree
             if snapshot_dir[-1] != "/":
                 snapshot_dir += "/"
@@ -773,8 +788,10 @@ class Sink:
         if not dry_run and not os.path.exists(new_tree):
             io.fatal("Failed to create new tree " + new_tree)
 
-        Util.printf("merged {0} snapshots".format(len(snapshots)),
-                    prefix=self.name, colour=Colours.OK)
+        io.printf("{}: merged {} snapshots".format(
+            colourise(self.name, Colours.OK),
+            len(snapshots))
+        )
 
         # Then destroy all of the merged snapshots:
         for snapshot in snapshots:
@@ -802,8 +819,8 @@ class Sink:
         Util.rm("{0}/.emu/sinks/{1}".format(source.path, self.name),
                 must_exist=True, error=True)
 
-        io.printf("Removed sink {0}".format(Util.colourise(self.name,
-                                                           Colours.RED)))
+        io.printf("Removed sink {0}".format(colourise(self.name,
+                                                      Colours.RED)))
 
         self.lock.unlock(force=force)
         source.lock.unlock(force=force)
@@ -813,7 +830,7 @@ class Sink:
     #
     def clean(self, dry_run=False):
         io.verbose("Cleaning sink {0} at '{1}'..."
-                   .format(Util.colourise(self.name, Colours.BLUE), self.path))
+                   .format(colourise(self.name, Colours.BLUE), self.path))
 
         if os.path.exists(self.lock.lockpath):
             if not dry_run:
@@ -829,7 +846,7 @@ class Sink:
                 if not dry_run:
                     Util.rm(path, must_exist=True)
                 io.printf("Deleted orphan node file '{0}'"
-                          .format(Util.colourise(path, Colours.RED)))
+                          .format(colourise(path, Colours.RED)))
 
         # Check for orphan trees:
         nodes = Util.ls(os.path.join(self.path, ".emu", "nodes"))
@@ -840,7 +857,7 @@ class Sink:
                 if not dry_run:
                     Util.rm(path, must_exist=True)
                 io.printf("Deleted orphan tree '{0}'"
-                          .format(Util.colourise(path, Colours.RED)))
+                          .format(colourise(path, Colours.RED)))
 
         # Delete broken symlinks in sink:
         for f in Util.ls(self.path):
@@ -856,7 +873,7 @@ class Sink:
                         if not dry_run:
                             os.unlink(path)
                         io.printf("Deleted broken symlink '{0}'"
-                                  .format(Util.colourise(path, Colours.RED)))
+                                  .format(colourise(path, Colours.RED)))
                 except Exception as e:
                     pass
 
@@ -866,11 +883,11 @@ class Sink:
         head_node = os.path.join(self.path, ".emu", "nodes", pointer)
         if not os.path.exists(head_node):
             io.printf("Deleted orphan HEAD '{0}'"
-                      .format(Util.colourise(pointer, Colours.RED)))
+                      .format(colourise(pointer, Colours.RED)))
             self.head(delete=True, dry_run=dry_run)
 
         io.printf("Sink {0} is clean."
-                  .format(Util.colourise(self.name, Colours.BLUE)))
+                  .format(colourise(self.name, Colours.BLUE)))
 
 
     def __str__(self):
@@ -911,7 +928,7 @@ class Sink:
         if not re.match(regex, name):
             err_cb("Invalid sink name {0}!\n\n"
                    "Sink names must consist solely of letters A-Z."
-                   .format(Util.colourise(name, Colours.ERROR)))
+                   .format(colourise(name, Colours.ERROR)))
 
         # Resolve relative paths:
         path = os.path.abspath(path)
@@ -920,10 +937,10 @@ class Sink:
         for sink in source.sinks():
             if sink.name == name:
                 err_cb("A sink named {0} already exists!"
-                       .format(Util.colourise(name, Colours.ERROR)))
+                       .format(colourise(name, Colours.ERROR)))
             if sink.path == path:
                 err_cb("Sink {0} is already at '{1}'!"
-                       .format(Util.colourise(sink.name, Colours.ERROR),
+                       .format(colourise(sink.name, Colours.ERROR),
                                path))
 
         source.lock.lock(force=force)
@@ -956,7 +973,7 @@ class Sink:
         source.lock.unlock(force=force)
 
         io.printf("Initialised sink {0} at '{1}'"
-                  .format(Util.colourise(name, Colours.INFO), path))
+                  .format(colourise(name, Colours.INFO), path))
 
         return Sink(name, source)
 
@@ -1134,9 +1151,10 @@ class Snapshot:
     # If 'dry_run' is True, don't make any actual changes. If 'force'
     # is True, ignore locks.
     def destroy(self, dry_run=False, force=False):
-        Util.printf("removing snapshot {0}"
-                    .format(Util.colourise(self.name, Colours.SNAPSHOT_DELETE)),
-                    prefix=self.sink.name, colour=Colours.OK)
+        io.printf("{}: removing snapshot {}".format(
+            colourise(self.sink.name, Colours.OK),
+            colourise(self.name, Colours.SNAPSHOT_DELETE))
+        )
 
         sink = self.sink
 
@@ -1255,8 +1273,8 @@ class Snapshot:
                 return (id, date)
 
         def err_cb(e):
-            Util.printf("Woops! Something went wrong.",
-                        prefix=sink.name, colour=Colours.ERROR)
+            io.printf("{}: woops! Something went wrong."
+                      .format(colourise(sink.name, Colours.ERROR)))
             if e:
                 io.error(e)
 
@@ -1289,8 +1307,8 @@ class Snapshot:
             except Exception:
                 pass
 
-            Util.printf("Failed to create new snapshot!",
-                        prefix=sink.name, colour=Colours.ERROR)
+            io.error("{}: failed to create new snapshot!"
+                     .format(colourise(sink.name, Colours.ERROR)))
             exit(1)
 
         source = sink.source
@@ -1324,9 +1342,10 @@ class Snapshot:
 
             # Print "transfer complete" message:
             if transfer_time > 10:
-                Util.printf(("File transfer complete ({time:.2f}s), "
-                             "creating snapshot.".format(time=transfer_time)),
-                            prefix=sink.name, colour=Colours.INFO)
+                io.printf("{}: file transfer complete ({:.2f}s), "
+                          "creating snapshot."
+                          .format(colourise(sink.name, Colours.INFO),
+                                  transfer_time))
 
         # Assert that we have a staging area to work with:
         if not dry_run:
@@ -1396,9 +1415,10 @@ class Snapshot:
         source.lock.unlock(force=force)
         sink.lock.unlock(force=force)
 
-        Util.printf("new snapshot {0}"
-                    .format(Util.colourise(name, Colours.SNAPSHOT_NEW)),
-                    prefix=sink.name, colour=Colours.OK)
+        io.printf("{}: new snapshot {}".format(
+            colourise(sink.name, Colours.OK),
+            colourise(name, Colours.SNAPSHOT_NEW))
+        )
 
         if not dry_run:
             return snapshot
@@ -1858,7 +1878,7 @@ class Util:
         read_permission = os.access(path, os.R_OK)
         if error and not read_permission:
             e = ("No read permissions for '{0}'!"
-                 .format(Util.colourise(path, Colours.ERROR)))
+                 .format(colourise(path, Colours.ERROR)))
 
             if hasattr(error, '__call__'):
                 # Execute error callback if provided
@@ -1880,7 +1900,7 @@ class Util:
         write_permission = os.access(path, os.W_OK)
         if error and not write_permission:
             e = ("No write permissions for '{0}'!"
-                 .format(Util.colourise(path, Colours.ERROR)))
+                 .format(colourise(path, Colours.ERROR)))
 
             if hasattr(error, '__call__'):
                 # Execute error callback if provided
@@ -1928,7 +1948,7 @@ class Util:
                 elif error:
                     # Fatal error if required
                     io.fatal("Failed to delete '{0}'."
-                             .format(Util.colourise(path, Colours.ERROR)))
+                             .format(colourise(path, Colours.ERROR)))
                 else:
                     return False
 
@@ -2073,8 +2093,8 @@ class Util:
 
         if error and process.returncode:
             e = ("Process '{0}' exited with return value {1}."
-                 .format(Util.colourise(" ".join(args), Colours.ERROR),
-                         Util.colourise(process.returncode, Colours.ERROR)))
+                 .format(colourise(" ".join(args), Colours.ERROR),
+                         colourise(process.returncode, Colours.ERROR)))
             # Error in operation:
             if hasattr(error, '__call__'):
                 # Execute error callback if provided
@@ -2191,7 +2211,7 @@ class Util:
                     error(e)
                 else:
                     io.fatal("failed to read '{0}'"
-                             .format(Util.colourise(path, Colours.ERROR)))
+                             .format(colourise(path, Colours.ERROR)))
             else:
                 raise e
 
@@ -2216,7 +2236,7 @@ class Util:
                     error(e)
                 else:
                     io.fatal("failed to write '{0}'"
-                             .format(Util.colourise(path, Colours.ERROR)))
+                             .format(colourise(path, Colours.ERROR)))
             else:
                 raise e
 
@@ -2277,36 +2297,7 @@ class Util:
             return program
         else:
             io.fatal("invalid checkum program '{0}'"
-                     .format(Util.colourise(program, Colours.ERROR)))
-
-
-    # printf() - Format and print a message
-    #
-    # If both 'colour' and 'prefix' are provided, then colourise only
-    # the prefix. If no 'prefix' is provided, colourise the whole
-    # message.
-    @staticmethod
-    def printf(msg, prefix=None, colour=None):
-
-        if prefix:
-            if colour:
-                prefix = Util.colourise(prefix, colour)
-
-            prefix = "{0}: ".format(prefix)
-
-        print(str(prefix) + msg)
-
-
-    # colourise() - Colourise a string
-    #
-    # Returns the given string wrapped in colour escape codes, if this
-    # property is enabled in the global configuration file.
-    @staticmethod
-    def colourise(string, colour):
-        if UserConfig.instance().use_colour():
-            return colour + str(string) + Colours.RESET
-        else:
-            return str(string)
+                     .format(colourise(program, Colours.ERROR)))
 
 
     @staticmethod
@@ -2465,10 +2456,10 @@ class Date:
         return time.strftime(self.REPR_FORMAT, self.date)
 
 
-#############################
-# Shell escape colour codes #
-#############################
 class Colours:
+    """
+    Escape codes for printing to colour-capable terminals.
+    """
     RESET   = '\033[0m'
     GREEN   = '\033[92m'
     YELLOW  = '\033[93m'
@@ -2515,7 +2506,7 @@ class Checksum():
                                            stdout=subprocess.PIPE)
             except OSError:
                 io.fatal("Invalid checksum program '{0}'!"
-                         .format(Util.colourise(program, Colours.RED)))
+                         .format(colourise(program, Colours.RED)))
 
         # Return to previous working directory:
         os.chdir(cwd)
@@ -2582,7 +2573,7 @@ class InvalidSnapshotIDError(InvalidArgsError):
         self.id = id
     def __str__(self):
         return ("Invalid snapshot identifier '{0}!'"
-                .format(Util.colourise(self.id, Colours.ERROR)))
+                .format(colourise(self.id, Colours.ERROR)))
 
 
 class InvalidBranchError(InvalidArgsError):
@@ -2591,8 +2582,8 @@ class InvalidBranchError(InvalidArgsError):
         self.tail = tail
     def __str__(self):
         return ("Could not create a branch history between snapshots {0} and {1}!"
-                .format(Util.colourise(self.head, Colours.ERROR),
-                        Util.colourise(self.tail, Colours.ERROR)))
+                .format(colourise(self.head, Colours.ERROR),
+                        colourise(self.tail, Colours.ERROR)))
 
 
 class SinkNotFoundError(Error):
@@ -2600,7 +2591,7 @@ class SinkNotFoundError(Error):
         self.name = name
     def __str__(self):
         return ("Sink '{0}' not found!"
-                .format(Util.colourise(self.name, Colours.ERROR)))
+                .format(colourise(self.name, Colours.ERROR)))
 
 
 class SnapshotNotFoundError(Error):
@@ -2609,7 +2600,7 @@ class SnapshotNotFoundError(Error):
     def __str__(self):
         return ("Snapshot '{0}:{1}' not found!"
                 .format(self.id.sink_name,
-                        Util.colourise(self.id.id, Colours.ERROR)))
+                        colourise(self.id.id, Colours.ERROR)))
 
 
 class SourceNotFoundError(Error):

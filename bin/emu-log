@@ -74,11 +74,11 @@ def main(argv, argc):
         # Print sink names when required:
         if print_sink_names and snapshot.sink != current_sink:
             current_sink = snapshot.sink
-            print(Util.colourise("{0}:".format(current_sink.name),
-                                 Colours.INFO))
+            print(colourise("{0}:".format(current_sink.name),
+                            Colours.INFO))
 
         # Log:
-        id = Util.colourise(snapshot.id.id, Colours.SNAPSHOT)
+        id = colourise(snapshot.id.id, Colours.SNAPSHOT)
         if options.short:
             s = "{0}  {1}".format(snapshot.id, snapshot.node.name())
         else:
@@ -89,9 +89,9 @@ def main(argv, argc):
             status = snapshot.node.status()
             s += " ("
             if status:
-                s += Util.colourise("ok", Colours.OK)
+                s += colourise("ok", Colours.OK)
             else:
-                s += Util.colourise("bad", Colours.ERROR)
+                s += colourise("bad", Colours.ERROR)
             s += ")"
 
         print(s)

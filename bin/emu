@@ -31,7 +31,7 @@ def get_script_path(name):
     script_exists = os.path.exists(script_path)
     if not script_exists:
         print("'{0}' is not an emu command. See 'emu help'"
-              .format(Util.colourise(name, Colours.ERROR)))
+              .format(colourise(name, Colours.ERROR)))
         sys.exit(1)
     return script_path
 
