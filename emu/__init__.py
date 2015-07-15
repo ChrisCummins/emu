@@ -568,17 +568,18 @@ class Source:
     # Creates the directory structure and files for an emu source, and
     # returns an instance.
     @staticmethod
-    def create(path, template_dir, verbose=False, force=False):
+    def create(sourcedir, template_dir, verbose=False, force=False):
 
         # Tidy up in case of error:
         def err_cb(*data):
             Util.rm(source_dir, verbose=verbose)
             raise SourceCreateError(source_dir)
 
-        Util.exists(path, error=err_cb)
+        if not path.exists(sourcedir):
+            raise SourceCreateError(sourcedir)
 
         # Create directory structure
-        source_dir = Util.concat_paths(path, "/.emu")
+        source_dir = Util.concat_paths(sourcedir, "/.emu")
         directories = ["/", "/hooks", "/sinks"]
         for d in directories:
             Util.mkdir(source_dir + d, mode=0700, verbose=verbose, error=err_cb)
@@ -589,9 +590,9 @@ class Source:
                    error=err_cb, archive=True, update=force,
                    verbose=verbose, quiet=not verbose)
 
-        print "Initialised source at '{0}'".format(path)
+        print "Initialised source at '{0}'".format(sourcedir)
 
-        return Source(path)
+        return Source(sourcedir)
 
 
 #####################
@@ -661,7 +662,7 @@ class Sink:
                            error=error)
 
                 # Create a new "Most Recent Backup" link:
-                if Util.exists(most_recent_link):
+                if path.exists(most_recent_link):
                     Util.rm(most_recent_link, error=error)
                 Util.ln_s(head.name, most_recent_link, error=error)
 
@@ -763,8 +764,10 @@ class Sink:
                        error=True, verbose=verbose, quiet=not verbose)
 
         # Check that merge was successful:
-        if not dry_run:
-            Util.exists(Util.concat_paths(self.path, "/.emu/trees/new"), error=True)
+        new_tree = Util.concat_paths(self.path, "/.emu/trees/new")
+        if not dry_run and not os.path.exists(new_tree):
+            print("Failed to create new tree " + new_tree)
+            sys.exit(1)
 
         Util.printf("merged {0} snapshots".format(len(snapshots)),
                     prefix=self.name, colour=Colours.OK)
@@ -855,7 +858,7 @@ class Sink:
         head_pointer = Util.concat_paths(self.path, "/.emu/HEAD")
         pointer = Util.read(head_pointer)
         head_node = Util.concat_paths(self.path, "/.emu/nodes/", pointer)
-        if not Util.exists(head_node):
+        if not os.path.exists(head_node):
             print ("Deleted orphan HEAD '{0}'"
                    .format(Util.colourise(pointer, Colours.RED)))
             self.head(delete=True, dry_run=dry_run)
@@ -894,7 +897,8 @@ class Sink:
         Util.mkdir(path, verbose=verbose, error=err_cb)
 
         # Check that sink directory exists:
-        Util.exists(path, error=err_cb)
+        if not os.path.exists(path):
+            err_cb(Error("Path does not exist " + path))
         Util.writable(path, error=err_cb)
 
         regex = r"^[a-zA-Z]+$"
@@ -1852,27 +1856,6 @@ class Node(EmuConfigParser):
 # Utility static class with helper functions #
 ##############################################
 class Util:
-    # exists() - Check that a path exists
-    #
-    # If 'error' is True and 'path' does not exist, then exit fatally
-    # with error code. If 'error' is a callback function, then execute
-    # it on no path existing.
-    @staticmethod
-    def exists(path, error=False):
-        exists = os.path.exists(path)
-        if error and not exists:
-            e = "'{0}' not found!".format(Util.colourise(path, Colours.ERROR))
-
-            if hasattr(error, '__call__'):
-                # Execute error callback if provided
-                error(e)
-            else:
-                # Else fatal error
-                print e
-                sys.exit(1)
-        return exists
-
-
     # readable() - Check that the user has read permissions for path
     #
     # If 'error' is True and 'path' is not readable, then exit fatally
@@ -1880,7 +1863,8 @@ class Util:
     # it on no read permissions.
     @staticmethod
     def readable(path, error=False):
-        Util.exists(path, error=error)
+        if not os.path.exists(path) and error:
+            sys.exit(1)
         read_permission = os.access(path, os.R_OK)
         if error and not read_permission:
             e = ("No read permissions for '{0}'!"
@@ -1903,7 +1887,8 @@ class Util:
     # it on no write permissions.
     @staticmethod
     def writable(path, error=False):
-        Util.exists(path, error=error)
+        if not os.path.exists(path) and error:
+            sys.exit(1)
         write_permission = os.access(path, os.W_OK)
         if error and not write_permission:
             e = ("No write permissions for '{0}'!"
@@ -1928,7 +1913,7 @@ class Util:
     @staticmethod
     def rm(path, must_exist=False, error=False,
            dry_run=False, verbose=False):
-        exists = Util.exists(path, error=must_exist)
+        exists = os.path.exists(path)
 
         if exists:
             Util.writable(path, error=error)
@@ -1977,7 +1962,7 @@ class Util:
     # 'must_exist' is True, then error if the file doesn't exist.
     @staticmethod
     def ls(path, must_exist=False, error=False):
-        exists = Util.exists(path, error=must_exist)
+        exists = os.path.exists(path)
         readable = Util.readable(path, error=error)
 
         if exists and readable:
@@ -1994,7 +1979,7 @@ class Util:
     # True, then error if the file doesn't exist.
     @staticmethod
     def mv(src, dst, must_exist=False, error=False, verbose=False):
-        exists = Util.exists(src, error=must_exist)
+        exists = os.path.exists(src)
         readable = Util.readable(src, error=error)
 
         if exists and readable:
@@ -2055,7 +2040,7 @@ class Util:
     @staticmethod
     def mkdir(path, mode=0777, fail_if_already_exists=False,
               error=False, verbose=False):
-        exists = Util.exists(path, fail_if_already_exists)
+        exists = os.path.exists(path)
 
         if exists:
             return False
@@ -2264,7 +2249,7 @@ class Util:
     # from the returned contents.
     @staticmethod
     def write(path, data, error=True):
-        exists = Util.exists(path)
+        exists = os.path.exists(path)
         if exists:
             Util.writable(path, error=error)
 
@@ -2414,7 +2399,7 @@ class Lockfile:
         if verbose:
             print "Writing lockfile '{0}'".format(self.path)
 
-        if Util.exists(self.path) and not force:
+        if os.path.exists(self.path) and not force:
             # Error state, lock exists:
             e = LockfileError(self)
 
@@ -2441,7 +2426,7 @@ class Lockfile:
         if verbose:
             print "Removing lockfile '{0}'".format(self.path)
 
-        exists = Util.exists(self.path)
+        exists = os.path.exists(self.path)
         if exists:
             (pid, timestamp) = self.read()
             owned_by_self = pid == os.getpid()
