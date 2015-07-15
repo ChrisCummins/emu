@@ -43,12 +43,12 @@ def main(argv, argc):
         for arg in args:
             try:
                 sink = Util.get_sink_by_name(arg, source.sinks())
-                sink.clean(verbose=options.verbose, dry_run=options.dry_run)
+                sink.clean(dry_run=options.dry_run)
             except SinkNotFoundError as e:
                 print(e)
                 sys.exit(1)
     else:
-        source.clean(recursive=options.recursive, verbose=options.verbose,
+        source.clean(recursive=options.recursive,
                      dry_run=options.dry_run)
 
     return 0

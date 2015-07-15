@@ -39,7 +39,7 @@ def main(argv, argc):
     sink = snapshots[0].sink
 
     sink.squash(snapshots, dry_run=options.dry_run,
-                force=options.force, verbose=options.verbose)
+                force=options.force)
 
     return 0
 

@@ -34,7 +34,7 @@ def main(argv, argc):
                                        require=True)
 
     for snapshot in snapshots:
-        snapshot.destroy(verbose=options.verbose)
+        snapshot.destroy()
 
     return 0
 

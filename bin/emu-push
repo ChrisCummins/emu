@@ -54,8 +54,7 @@ def main(argv, argc):
                             ignore_errors=options.ignore_errors,
                             archive=not options.no_archive,
                             owner=not options.no_owner,
-                            dry_run=options.dry_run,
-                            verbose=options.verbose)
+                            dry_run=options.dry_run)
 
     return status
 

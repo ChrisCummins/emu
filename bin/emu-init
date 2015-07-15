@@ -43,7 +43,7 @@ def main(argv, argc):
     # Perform initialisation
     try:
         Source.create(options.source_dir, options.template_dir,
-                      verbose=options.verbose, force=options.force)
+                      force=options.force)
         return 0
     except SourceCreateError as e:
         print(e)

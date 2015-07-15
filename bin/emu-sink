@@ -24,6 +24,7 @@ import sys
 import subprocess
 
 from emu import *
+from emu import io
 
 
 def main(argv, argc):
@@ -50,7 +51,7 @@ def main(argv, argc):
         # List sinks:
         for sink in source.sinks():
             print(Util.colourise(sink.name, Colours.GREEN))
-            if options.verbose:
+            if io.verbose_enabled:
                 snapshots = sink.snapshots()
                 if sink.head():
                     head_id = sink.head().id.id
@@ -82,7 +83,7 @@ def main(argv, argc):
             Sink.create(source, name, path, options.template_dir,
                         ignore_errors=options.ignore_errors,
                         archive=not options.no_archive,
-                        verbose=options.verbose, force=options.force)
+                        force=options.force)
 
         # Remove sinks:
         elif command == "rm":
@@ -93,7 +94,7 @@ def main(argv, argc):
             for arg in args:
                 try:
                     sink = Util.get_sink_by_name(arg, source.sinks())
-                    sink.destroy(force=options.force, verbose=options.verbose)
+                    sink.destroy(force=options.force)
                 except SinkNotFoundError as e:
                     print(e)
                     sys.exit(1)
@@ -107,7 +108,7 @@ def main(argv, argc):
             for arg in args:
                 try:
                     sink = Util.get_sink_by_name(arg, source.sinks())
-                    sink.clean(verbose=options.verbose, dry_run=options.dry_run)
+                    sink.clean(dry_run=options.dry_run)
                 except SinkNotFoundError as e:
                     print(e)
                     sys.exit(1)

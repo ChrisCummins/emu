@@ -34,6 +34,8 @@ from os import path
 from pkg_resources import resource_filename
 from sys import exit
 
+import io
+
 
 def print_version_and_quit(*data):
     """
@@ -306,8 +308,8 @@ class Parser(OptionParser):
                             default=find_source_dir(os.getcwd()))
         self.add_option("--version", action="callback",
                         callback=print_version_and_quit)
-        self.add_option("-v", "--verbose", action="store_true",
-                        dest="verbose", default=False)
+        self.add_option("-v", "--verbose", action="callback",
+                        callback=lambda *args: io.enable_verbose_messages)
         self.add_option("-h", "--help", action="callback",
                         callback=Util.help_and_quit)
 
@@ -488,7 +490,7 @@ class Source:
     # checkout() - Restore source to snapshot
     #
     # Transfer the contents of snapshot tree to source directory.
-    def checkout(self, snapshot, dry_run=False, force=False, verbose=False):
+    def checkout(self, snapshot, dry_run=False, force=False):
 
         def err_cb(e):
             Util.printf("Woops! Something went wrong.",
@@ -497,8 +499,8 @@ class Source:
                 print(e)
 
             try:
-                sink.lock.unlock(force=force, verbose=True)
-                self.lock.unlock(force=force, verbose=True)
+                sink.lock.unlock(force=force)
+                self.lock.unlock(force=force)
             except Exception:
                 pass
 
@@ -514,22 +516,21 @@ class Source:
         exclude = ["/.emu"]
         exclude_from = [os.path.join(self.path, ".emu", "excludes")]
 
-        self.lock.lock(force=force, verbose=verbose)
-        sink.lock.lock(force=force, verbose=verbose)
+        self.lock.lock(force=force)
+        sink.lock.lock(force=force)
 
         if not dry_run:
             # Perform file transfer:
             Util.rsync(snapshot.tree + "/", self.path,
                        dry_run=dry_run, exclude=exclude,
                        exclude_from=exclude_from,
-                       delete=True, error=err_cb,
-                       verbose=verbose)
+                       delete=True, error=err_cb)
 
         # Set new HEAD:
         sink.head(head=snapshot, dry_run=dry_run, error=err_cb)
 
-        sink.lock.unlock(force=force, verbose=verbose)
-        self.lock.unlock(force=force, verbose=verbose)
+        sink.lock.unlock(force=force)
+        self.lock.unlock(force=force)
 
         print("Source restored from {0}"
               .format(Util.colourise(snapshot.name, Colours.SNAPSHOT_NEW)))
@@ -558,20 +559,18 @@ class Source:
 
     # clean() - Clean up the source
     #
-    def clean(self, dry_run=False, verbose=False, recursive=False):
-        if verbose:
-            print("Cleaning source at '{0}'...".format(self.path))
+    def clean(self, dry_run=False, recursive=False):
+        io.verbose("Cleaning source at '{0}'...".format(self.path))
 
         if os.path.exists(self.lock.lockpath):
             if not dry_run:
                 os.remove(self.lock.lockpath)
-            if verbose:
-                print("Removed lock '{}'", self.lock.lockpath)
+            io.verbose("Removed lock '{}'", self.lock.lockpath)
 
         # Clean sinks:
         if recursive:
             for sink in self.sinks():
-                sink.clean(dry_run=dry_run, verbose=verbose)
+                sink.clean(dry_run=dry_run)
 
         print("Source is clean.")
 
@@ -584,11 +583,11 @@ class Source:
     # Creates the directory structure and files for an emu source, and
     # returns an instance.
     @staticmethod
-    def create(sourcedir, template_dir, verbose=False, force=False):
+    def create(sourcedir, template_dir, force=False):
 
         # Tidy up in case of error:
         def err_cb(*data):
-            Util.rm(source_dir, verbose=verbose)
+            Util.rm(source_dir)
             raise SourceCreateError(source_dir)
 
         if not path.exists(sourcedir):
@@ -598,12 +597,12 @@ class Source:
         source_dir = os.path.join(sourcedir, ".emu")
         directories = ["/", "/hooks", "/sinks"]
         for d in directories:
-            Util.mkdir(source_dir + d, mode=0700, verbose=verbose, error=err_cb)
+            Util.mkdir(source_dir + d, mode=0700, error=err_cb)
 
         # Copy template files
         Util.rsync(template_dir + "/", source_dir + "/",
                    error=err_cb, archive=True, update=force,
-                   verbose=verbose, quiet=not verbose)
+                   quiet=not io.verbose_enabled)
 
         print("Initialised source at '{0}'".format(sourcedir))
 
@@ -718,7 +717,7 @@ class Sink:
 
 
     def push(self, force=False, ignore_errors=False, archive=True,
-             owner=False, dry_run=False, verbose=False):
+             owner=False, dry_run=False):
 
         # We fetch the checksum problem first to ensure that if
         # there's any problems with the config, they are discovered
@@ -728,8 +727,7 @@ class Sink:
         # Remove old snapshots first:
         i = len(self.snapshots())
         while i >= self.config.max_snapshots():
-            self.snapshots()[0].destroy(dry_run=dry_run, force=force,
-                                        verbose=verbose)
+            self.snapshots()[0].destroy(dry_run=dry_run, force=force)
             if dry_run:
                 i -= 1
             else:
@@ -740,14 +738,13 @@ class Sink:
                     prefix=self.name, colour=Colours.OK)
         Snapshot.create(self, force=force, ignore_errors=ignore_errors,
                         archive=archive, owner=owner, dry_run=dry_run,
-                        checksum_program=checksum_program,
-                        verbose=verbose)
+                        checksum_program=checksum_program)
 
         return 0
 
     # squash() - Merge multiple snapshots
     #
-    def squash(self, snapshots, dry_run=False, force=False, verbose=False):
+    def squash(self, snapshots, dry_run=False, force=False):
 
         # Sanity check to ensure that target snapshots are all from
         # this sink:
@@ -779,7 +776,7 @@ class Sink:
             Util.rsync(snapshot_dir,
                        os.path.join(self.path, ".emu", "trees", "new"),
                        dry_run=dry_run, link_dest=link_dests,
-                       error=True, verbose=verbose, quiet=not verbose)
+                       error=True, quiet=not io.verbose_enabled)
 
         # Check that merge was successful:
         new_tree = os.path.join(self.path, ".emu", "trees", "new")
@@ -792,11 +789,11 @@ class Sink:
 
         # Then destroy all of the merged snapshots:
         for snapshot in snapshots:
-            snapshot.destroy(dry_run=dry_run, force=force, verbose=verbose)
+            snapshot.destroy(dry_run=dry_run, force=force)
 
         # Now create a snapshot from merging tree:
         snapshot = Snapshot.create(self, resume=True, force=force,
-                                   dry_run=dry_run, verbose=verbose)
+                                   dry_run=dry_run)
 
         # Set new HEAD:
         self.head(head=snapshot, dry_run=dry_run)
@@ -806,35 +803,33 @@ class Sink:
     #
     # Note that this only removes the sink pointer from the source,
     # it does not modify the sink.
-    def destroy(self, force=False, verbose=False):
+    def destroy(self, force=False):
         source = self.source
 
-        source.lock.lock(force=force, verbose=verbose)
-        self.lock.lock(force=force, verbose=verbose)
+        source.lock.lock(force=force)
+        self.lock.lock(force=force)
 
         # Delete sink pointer:
         Util.rm("{0}/.emu/sinks/{1}".format(source.path, self.name),
-                must_exist=True, error=True, verbose=verbose)
+                must_exist=True, error=True)
 
         print("Removed sink {0}".format(Util.colourise(self.name,
                                                        Colours.RED)))
 
-        self.lock.unlock(force=force, verbose=verbose)
-        source.lock.unlock(force=force, verbose=verbose)
+        self.lock.unlock(force=force)
+        source.lock.unlock(force=force)
 
 
     # clean() - Clean up the sink
     #
-    def clean(self, dry_run=False, verbose=False):
-        if verbose:
-            print("Cleaning sink {0} at '{1}'..."
-                  .format(Util.colourise(self.name, Colours.BLUE), self.path))
+    def clean(self, dry_run=False):
+        io.verbose("Cleaning sink {0} at '{1}'..."
+                   .format(Util.colourise(self.name, Colours.BLUE), self.path))
 
         if os.path.exists(self.lock.lockpath):
             if not dry_run:
                 os.remove(self.lock.lockpath)
-            if verbose:
-                print("Removed lock '{}'", self.lock.lockpath)
+            io.verbose("Removed lock '{}'", self.lock.lockpath)
 
         # Check for orphan node files:
         trees = Util.ls(os.path.join(self.path, ".emu", "trees"))
@@ -899,24 +894,24 @@ class Sink:
     # returns an instance.
     @staticmethod
     def create(source, name, path, template_dir, archive=True,
-               ignore_errors=False, verbose=False, force=False):
+               ignore_errors=False, force=False):
 
         # Tidy up in case of error:
         def err_cb(e):
             if e:
                 print(e)
             try:
-                Util.rm(emu_dir, verbose=False)
+                Util.rm(emu_dir)
             except Exception:
                 pass
             try:
-                source.lock.unlock(force=force, verbose=False)
+                source.lock.unlock(force=force)
             except Exception:
                 pass
             exit(1)
 
         # Create sink directory if required:
-        Util.mkdir(path, verbose=verbose, error=err_cb)
+        Util.mkdir(path, error=err_cb)
 
         # Check that sink directory exists:
         if not os.path.exists(path):
@@ -942,14 +937,14 @@ class Sink:
                        .format(Util.colourise(sink.name, Colours.ERROR),
                                path))
 
-        source.lock.lock(force=force, verbose=verbose)
+        source.lock.lock(force=force)
 
         # Create directory structure:
         emu_dir = os.path.join(path, ".emu")
         directories = ["", "trees", "nodes"]
         for d in directories:
             Util.mkdir(os.path.join(emu_dir, d), mode=0700,
-                       verbose=verbose, error=err_cb)
+                       error=err_cb)
 
         # Ignore rsync errors if required:
         if ignore_errors:
@@ -960,7 +955,7 @@ class Sink:
         # Copy template files:
         Util.rsync(template_dir + "/", emu_dir + "/",
                    error=rsync_error, archive=archive, update=force,
-                   verbose=verbose, quiet=not verbose)
+                   quiet=not io.verbose_enabled)
 
         # Create HEAD:
         Util.write(os.path.join(emu_dir, "HEAD"), "", error=err_cb)
@@ -969,7 +964,7 @@ class Sink:
         Util.write("{0}/.emu/sinks/{1}".format(source.path, name),
                    path + "\n", error=err_cb)
 
-        source.lock.unlock(force=force, verbose=verbose)
+        source.lock.unlock(force=force)
 
         print(("Initialised sink {0} "
                "at '{1}'").format(Util.colourise(name, Colours.INFO), path))
@@ -1154,7 +1149,7 @@ class Snapshot:
     #
     # If 'dry_run' is True, don't make any actual changes. If 'force'
     # is True, ignore locks.
-    def destroy(self, dry_run=False, force=False, verbose=False):
+    def destroy(self, dry_run=False, force=False):
         Util.printf("removing snapshot {0}"
                     .format(Util.colourise(self.name, Colours.SNAPSHOT_DELETE)),
                     prefix=self.sink.name, colour=Colours.OK)
@@ -1165,7 +1160,7 @@ class Snapshot:
         if dry_run:
             return
 
-        sink.lock.lock(force=force, verbose=verbose)
+        sink.lock.lock(force=force)
 
         # If current snapshot is HEAD, then set parent HEAD:
         head = sink.head()
@@ -1173,8 +1168,7 @@ class Snapshot:
             new_head = head.parent()
 
             # Remove old "Most Recent Backup" link:
-            Util.rm(os.path.join(sink.path, "Most Recent Backup"),
-                    verbose=verbose)
+            Util.rm(os.path.join(sink.path, "Most Recent Backup"))
 
             if new_head:
                 # Update head:
@@ -1195,12 +1189,12 @@ class Snapshot:
 
         # Delete snapshot files:
         Util.rm(os.path.join(sink.path, self.name),
-                must_exist=True, error=True, verbose=verbose)
-        Util.rm(self.tree, must_exist=True, error=True, verbose=verbose)
+                must_exist=True, error=True)
+        Util.rm(self.tree, must_exist=True, error=True)
         Util.rm("{0}/.emu/nodes/{1}".format(sink.path, self.id.id),
-                must_exist=True, error=True, verbose=verbose)
+                must_exist=True, error=True)
 
-        sink.lock.unlock(force=force, verbose=verbose)
+        sink.lock.unlock(force=force)
 
 
     # diff() - Compare snapshot checksums
@@ -1257,7 +1251,7 @@ class Snapshot:
     @staticmethod
     def create(sink, resume=False, transfer_from_source=True, force=False,
                ignore_errors=False, archive=True, owner=True,
-               checksum_program="sha1sum", dry_run=False, verbose=False):
+               checksum_program="sha1sum", dry_run=False):
 
         # If two snapshots are created in the same second and with the
         # same checksum, then their IDs will be identical. To prevent
@@ -1284,25 +1278,25 @@ class Snapshot:
 
             # Tidy up any intermediate files which may have been created:
             try:
-                Util.rm(name_link, verbose=True)
+                Util.rm(name_link)
             except Exception:
                 pass
             try:
-                Util.rm(tree, verbose=True)
+                Util.rm(tree)
             except Exception:
                 pass
             try:
-                Util.rm(node_path, verbose=True)
+                Util.rm(node_path)
             except Exception:
                 pass
             try:
                 if sink.head().id == id:
-                    sink.head(delete=true, verbose=True)
+                    sink.head(delete=true)
             except Exception:
                 pass
             try:
-                source.lock.unlock(force=force, verbose=True)
-                sink.lock.unlock(force=force, verbose=True)
+                source.lock.unlock(force=force)
+                sink.lock.unlock(force=force)
             except Exception:
                 pass
             try:
@@ -1321,8 +1315,8 @@ class Snapshot:
         exclude_from = [os.path.join(source.path, ".emu", "excludes")]
         link_dests = []
 
-        source.lock.lock(force=force, verbose=verbose)
-        sink.lock.lock(force=force, verbose=verbose)
+        source.lock.lock(force=force)
+        sink.lock.lock(force=force)
 
         # Ignore rsync errors if required:
         if ignore_errors:
@@ -1342,8 +1336,7 @@ class Snapshot:
                                        owner=owner, dry_run=dry_run,
                                        link_dest=link_dests, exclude=exclude,
                                        exclude_from=exclude_from, delete=True,
-                                       delete_excluded=True, error=rsync_error,
-                                       verbose=verbose)
+                                       delete_excluded=True, error=rsync_error)
 
             # Print "transfer complete" message:
             if transfer_time > 10:
@@ -1360,9 +1353,8 @@ class Snapshot:
         else:
             # Create worker threads to compute the snapshot checksum
             # and disk usage:
-            checksum_t = Checksum(staging_area, program=checksum_program,
-                                  verbose=verbose)
-            du_t = DiskUsage(staging_area, verbose=verbose)
+            checksum_t = Checksum(staging_area, program=checksum_program)
+            du_t = DiskUsage(staging_area)
 
             # Blocking:
             checksum = checksum_t.get()
@@ -1375,12 +1367,11 @@ class Snapshot:
 
         if not dry_run:
             # Move tree into position
-            Util.mv(staging_area, tree,
-                    verbose=verbose, must_exist=True, error=err_cb)
+            Util.mv(staging_area, tree, must_exist=True, error=err_cb)
 
             # Make name symlink:
             Util.ln_s(".emu/trees/{0}".format(id.id),
-                      name_link, verbose=verbose, error=err_cb)
+                      name_link, error=err_cb)
 
         # Get parent node ID:
         if sink.head():
@@ -1418,8 +1409,8 @@ class Snapshot:
             snapshot = Snapshot(SnapshotID(sink.name, id.id), sink)
             sink.head(head=snapshot, dry_run=dry_run, error=err_cb)
 
-        source.lock.unlock(force=force, verbose=verbose)
-        sink.lock.unlock(force=force, verbose=verbose)
+        source.lock.unlock(force=force)
+        sink.lock.unlock(force=force)
 
         Util.printf("new snapshot {0}"
                     .format(Util.colourise(name, Colours.SNAPSHOT_NEW)),
@@ -1931,8 +1922,7 @@ class Util:
     # 'must_exist' is True, then error if the file doesn't exist. This
     # function returns boolean on whether a file was deleted or not.
     @staticmethod
-    def rm(path, must_exist=False, error=False,
-           dry_run=False, verbose=False):
+    def rm(path, must_exist=False, error=False, dry_run=False):
         exists = os.path.exists(path)
 
         if exists:
@@ -1952,8 +1942,7 @@ class Util:
                     if not dry_run:
                         os.remove(path)
 
-                if verbose:
-                    print("Deleted {0} '{1}'".format(type, path))
+                io.verbose("Deleted {0} '{1}'".format(type, path))
                 return True
 
             # Failed to remove path:
@@ -1998,7 +1987,7 @@ class Util:
     # error, or a callback function to execute. If 'must_exist' is
     # True, then error if the file doesn't exist.
     @staticmethod
-    def mv(src, dst, must_exist=False, error=False, verbose=False):
+    def mv(src, dst, must_exist=False, error=False):
         exists = os.path.exists(src)
         readable = Util.readable(src, error=error)
 
@@ -2006,8 +1995,7 @@ class Util:
             try:
                 shutil.move(src, dst)
 
-                if verbose:
-                    print("Moved '{0}' -> '{1}'".format(src, dst))
+                io.verbose("Moved '{0}' -> '{1}'".format(src, dst))
 
                 return True
             except Exception as e:
@@ -2033,13 +2021,12 @@ class Util:
     # 'error' can either by a boolean that dictates whether to exit
     # fatally on error, or a callback function to execute.
     @staticmethod
-    def ln_s(src, dst, error=False, verbose=False):
+    def ln_s(src, dst, error=False):
 
         try:
             os.symlink(src, dst)
 
-            if verbose:
-                print("Link '{0}' -> '{1}'".format(src, dst))
+            io.verbose("Link '{0}' -> '{1}'".format(src, dst))
 
         except Exception as e:
             # Error in operation:
@@ -2059,7 +2046,7 @@ class Util:
     # fatally on error, or a callback function to execute.
     @staticmethod
     def mkdir(path, mode=0777, fail_if_already_exists=False,
-              error=False, verbose=False):
+              error=False):
         exists = os.path.exists(path)
 
         if exists:
@@ -2068,9 +2055,8 @@ class Util:
             try:
                 os.makedirs(path, mode)
 
-                if verbose:
-                    print("Created directory '{0}' with mode 0{1:o}"
-                          .format(path, mode))
+                io.verbose("Created directory '{0}' with mode 0{1:o}"
+                           .format(path, mode))
 
                 return True
             except Exception as e:
@@ -2104,13 +2090,12 @@ class Util:
     # arguments are handlers for their respective IO streams.
     @staticmethod
     def p_exec(args, stdin=None, stdout=None, stderr=None,
-               wait=True, error=False, verbose=False):
+               wait=True, error=False):
 
         if isinstance(args, basestring):
             args = shlex.split(args)
 
-        if verbose:
-            print("Executing '{0}'.".format(" ".join(args)))
+        io.verbose("Executing '{0}'.".format(" ".join(args)))
 
         process = subprocess.Popen(args, stdin=stdin, stdout=stdout,
                                    stderr=stderr)
@@ -2147,7 +2132,7 @@ class Util:
               exclude=None, exclude_from=None,
               delete=False, delete_excluded=False, wait=True,
               stdout=None, stderr=None, args=None,
-              error=False, verbose=False, quiet=False):
+              error=False, quiet=False):
 
         rsync_flags = ["rsync", "--human-readable", "--recursive"]
 
@@ -2214,7 +2199,7 @@ class Util:
 
         # Perform rsync.
         Util.p_exec(rsync_flags, stdout=stdout, stderr=stderr,
-                    wait=wait, error=error, verbose=verbose)
+                    wait=wait, error=error)
 
         # Return elapsed rsync time.
         return time.time() - start_time
@@ -2438,7 +2423,7 @@ class DirectoryLock:
     def owned_by_self(self):
         return self.pid == os.getpid()
 
-    def lock(self, force=False, verbose=False):
+    def lock(self, force=False):
         """
         Lock directory to current process.
 
@@ -2458,8 +2443,7 @@ class DirectoryLock:
             DirectoryIsLockedError: If the lock is already claimed
               (not raised if force option is used).
         """
-        if verbose:
-            print("Writing lockfile '{0}'".format(self.lockpath))
+        io.verbose("Writing lockfile '{0}'".format(self.lockpath))
 
         if not self.islocked or force or self.pid == os.getpid():
             with open(self.lockpath, "w") as lockfile:
@@ -2467,7 +2451,7 @@ class DirectoryLock:
         else:
             raise DirectoryIsLockedError(self)
 
-    def unlock(self, force=False, verbose=False):
+    def unlock(self, force=False):
         """
         Unlock directory from current process.
 
@@ -2482,8 +2466,7 @@ class DirectoryLock:
         if not self.islocked:
             return
 
-        if verbose:
-            print("Removing lockfile '{0}'".format(self.lockpath))
+        io.verbose("Removing lockfile '{0}'".format(self.lockpath))
 
         if self.owned_by_self or force:
             os.remove(self.lockpath)
@@ -2546,12 +2529,10 @@ class Colours:
 ##################
 class Checksum():
 
-    def __init__(self, path, program="sha1sum", verbose=False):
-        self.verbose = verbose
+    def __init__(self, path, program="sha1sum"):
         self.start = time.time()
 
-        if self.verbose:
-            print("Creating {0} checksum worker thread...".format(program))
+        io.verbose("Creating {0} checksum worker thread...".format(program))
 
         # Record the starting working directory:
         cwd = os.getcwd()
@@ -2585,21 +2566,18 @@ class Checksum():
     def get(self):
         (stdout, stderr) = self.p2.communicate()
 
-        if self.verbose:
-            print("Checksum worker thread complete in {0:.1f}s."
-                  .format(time.time() - self.start))
+        io.verbose("Checksum worker thread complete in {0:.1f}s."
+                   .format(time.time() - self.start))
 
         return stdout.split()[0][:32]
 
 
 class DiskUsage():
 
-    def __init__(self, path, verbose=False):
-        self.verbose = verbose
+    def __init__(self, path):
         self.start = time.time()
 
-        if self.verbose:
-            print("Creating disk usage worker thread...")
+        io.verbose("Creating disk usage worker thread...")
 
         # Create a /dev/null pipe:
         with open(os.devnull, 'w') as devnull:
@@ -2616,9 +2594,8 @@ class DiskUsage():
     def get(self):
         (stdout, stderr) = self.p1.communicate()
 
-        if self.verbose:
-            print("Disk usage worker thread complete in {0:.1f}s."
-                  .format(time.time() - self.start))
+        io.verbose("Disk usage worker thread complete in {0:.1f}s."
+                   .format(time.time() - self.start))
 
         return stdout.split()[0]
 
