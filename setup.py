@@ -32,7 +32,7 @@ man_dir = man_prefix + "/man1/"
 
 
 setup(name="emu",
-      version="0.2.2",
+      version="0.2.3",
       description=("Fast, incremental, rotating snapshot backups."),
       url="https://github.com/ChrisCummins/emu",
       author="Chris Cummins",
