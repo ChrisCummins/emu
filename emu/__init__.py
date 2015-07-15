@@ -2614,7 +2614,7 @@ class Error(Exception):
     pass
 
 
-class InvalidArgsError(Exception):
+class InvalidArgsError(Error):
     def __init__(self, msg):
         self.msg = msg
     def __str__(self):
@@ -2639,7 +2639,7 @@ class InvalidBranchError(InvalidArgsError):
                         Util.colourise(self.tail, Colours.ERROR)))
 
 
-class SinkNotFoundError(Exception):
+class SinkNotFoundError(Error):
     def __init__(self, name):
         self.name = name
     def __str__(self):
@@ -2647,7 +2647,7 @@ class SinkNotFoundError(Exception):
                 .format(Util.colourise(self.name, Colours.ERROR)))
 
 
-class SnapshotNotFoundError(Exception):
+class SnapshotNotFoundError(Error):
     def __init__(self, id):
         self.id = id
     def __str__(self):
@@ -2684,7 +2684,7 @@ class SourceNotFoundError(Error):
         return self.__repr__()
 
 
-class SourceCreateError(Exception):
+class SourceCreateError(Error):
     def __init__(self, source_dir):
         self.source_dir = source_dir
     def __str__(self):
@@ -2692,7 +2692,7 @@ class SourceCreateError(Exception):
                 .format(self.source_dir))
 
 
-class LockfileError(Exception):
+class LockfileError(Error):
     def __init__(self, lock):
         self.lock = lock
     def __str__(self):
@@ -2710,7 +2710,7 @@ class LockfileError(Exception):
         return string
 
 
-class VersionError(Exception):
+class VersionError(Error):
     def __init__(self, msg):
         self.msg = msg
     def __str__(self):
