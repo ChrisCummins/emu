@@ -43,7 +43,7 @@ def print_version_and_quit(*data):
 
     Never returns.
     """
-    print(Meta.versionstr())
+    io.printf(Meta.versionstr())
     exit(0)
 
 
@@ -373,9 +373,7 @@ class Parser(OptionParser):
                         # Execute error callback if provided:
                         error(e)
                     else:
-                        # Else fatal error:
-                        print(e)
-                        exit(1)
+                        io.fatal(e)
                 else:
                     raise e
 
@@ -409,9 +407,7 @@ class Parser(OptionParser):
                         # Execute error callback if provided:
                         error(e)
                     else:
-                        # Else fatal error:
-                        print(e)
-                        exit(1)
+                        io.fatal(e)
 
                 # If no args are given, generate a list of all sink names:
                 if accept_no_args and not len(args):
@@ -451,9 +447,7 @@ class Parser(OptionParser):
                         # Execute error callback if provided:
                         error(e)
                     else:
-                        # Else fatal error:
-                        print(e)
-                        exit(1)
+                        io.fatal(e)
                 else:
                     raise e
 
@@ -465,8 +459,7 @@ class Source:
 
     def __init__(self, path):
         if not path:
-            print("fatal: Not an emu source (or any parent directory)")
-            exit(1)
+            io.fatal("fatal: Not an emu source (or any parent directory)")
 
         self.path = path
         self.lock = DirectoryLock(self.path)
@@ -475,8 +468,7 @@ class Source:
             s = "fatal: Malformed emu source"
             if e:
                 s += ". {0}".format(e)
-            print(s)
-            exit(1)
+            io.fatal(s)
 
         # Sanity checks:
         Util.readable(self.path,                                   error=err_cb)
@@ -496,7 +488,7 @@ class Source:
             Util.printf("Woops! Something went wrong.",
                         prefix=sink.name, colour=Colours.ERROR)
             if e:
-                print(e)
+                io.error(e)
 
             try:
                 sink.lock.unlock(force=force)
@@ -510,7 +502,7 @@ class Source:
 
             exit(1)
 
-        print("Checking out {0}".format(snapshot.id))
+        io.printf("Checking out {0}".format(snapshot.id))
 
         sink = snapshot.sink
         exclude = ["/.emu"]
@@ -532,8 +524,8 @@ class Source:
         sink.lock.unlock(force=force)
         self.lock.unlock(force=force)
 
-        print("Source restored from {0}"
-              .format(Util.colourise(snapshot.name, Colours.SNAPSHOT_NEW)))
+        io.printf("Source restored from {0}"
+                  .format(Util.colourise(snapshot.name, Colours.SNAPSHOT_NEW)))
 
 
     # sinks() - Get a source's sinks
@@ -553,8 +545,7 @@ class Source:
                 return self._sinks
 
             except SinkNotFoundError as e:
-                print(e)
-                exit(1)
+                io.fatal(e)
 
 
     # clean() - Clean up the source
@@ -572,7 +563,7 @@ class Source:
             for sink in self.sinks():
                 sink.clean(dry_run=dry_run)
 
-        print("Source is clean.")
+        io.printf("Source is clean.")
 
     def __repr__(self):
         return self.path
@@ -604,7 +595,7 @@ class Source:
                    error=err_cb, archive=True, update=force,
                    quiet=not io.verbose_enabled)
 
-        print("Initialised source at '{0}'".format(sourcedir))
+        io.printf("Initialised source at '{0}'".format(sourcedir))
 
         return Source(sourcedir)
 
@@ -617,10 +608,10 @@ class Sink:
     def __init__(self, name, source):
 
         def err_cb(e):
-            print("Non-existent or malformed emu sink.")
             if e:
-                print(e)
-            exit(1)
+                io.fatal("Non-existent or malformed emu sink.", e, sep="\n")
+            else:
+                io.fatal("Non-existent or malformed emu sink.")
 
         self.name = name
         self.source = source
@@ -750,8 +741,7 @@ class Sink:
         # this sink:
         for snapshot in snapshots:
             if snapshot.sink != self:
-                print("fatal: Cannot merge snapshots across multiple sinks.")
-                exit(1)
+                io.fatal("Cannot merge snapshots across multiple sinks.")
 
         # Return if we have nothing to do:
         if len(snapshots) < 2:
@@ -781,8 +771,7 @@ class Sink:
         # Check that merge was successful:
         new_tree = os.path.join(self.path, ".emu", "trees", "new")
         if not dry_run and not os.path.exists(new_tree):
-            print("Failed to create new tree " + new_tree)
-            exit(1)
+            io.fatal("Failed to create new tree " + new_tree)
 
         Util.printf("merged {0} snapshots".format(len(snapshots)),
                     prefix=self.name, colour=Colours.OK)
@@ -813,8 +802,8 @@ class Sink:
         Util.rm("{0}/.emu/sinks/{1}".format(source.path, self.name),
                 must_exist=True, error=True)
 
-        print("Removed sink {0}".format(Util.colourise(self.name,
-                                                       Colours.RED)))
+        io.printf("Removed sink {0}".format(Util.colourise(self.name,
+                                                           Colours.RED)))
 
         self.lock.unlock(force=force)
         source.lock.unlock(force=force)
@@ -839,8 +828,8 @@ class Sink:
 
                 if not dry_run:
                     Util.rm(path, must_exist=True)
-                print("Deleted orphan node file '{0}'"
-                      .format(Util.colourise(path, Colours.RED)))
+                io.printf("Deleted orphan node file '{0}'"
+                          .format(Util.colourise(path, Colours.RED)))
 
         # Check for orphan trees:
         nodes = Util.ls(os.path.join(self.path, ".emu", "nodes"))
@@ -850,8 +839,8 @@ class Sink:
 
                 if not dry_run:
                     Util.rm(path, must_exist=True)
-                print("Deleted orphan tree '{0}'"
-                      .format(Util.colourise(path, Colours.RED)))
+                io.printf("Deleted orphan tree '{0}'"
+                          .format(Util.colourise(path, Colours.RED)))
 
         # Delete broken symlinks in sink:
         for f in Util.ls(self.path):
@@ -866,8 +855,8 @@ class Sink:
                     if not os.path.exists(dst):
                         if not dry_run:
                             os.unlink(path)
-                        print("Deleted broken symlink '{0}'"
-                              .format(Util.colourise(path, Colours.RED)))
+                        io.printf("Deleted broken symlink '{0}'"
+                                  .format(Util.colourise(path, Colours.RED)))
                 except Exception as e:
                     pass
 
@@ -876,12 +865,12 @@ class Sink:
         pointer = Util.read(head_pointer)
         head_node = os.path.join(self.path, ".emu", "nodes", pointer)
         if not os.path.exists(head_node):
-            print("Deleted orphan HEAD '{0}'"
-                  .format(Util.colourise(pointer, Colours.RED)))
+            io.printf("Deleted orphan HEAD '{0}'"
+                      .format(Util.colourise(pointer, Colours.RED)))
             self.head(delete=True, dry_run=dry_run)
 
-        print("Sink {0} is clean."
-              .format(Util.colourise(self.name, Colours.BLUE)))
+        io.printf("Sink {0} is clean."
+                  .format(Util.colourise(self.name, Colours.BLUE)))
 
 
     def __str__(self):
@@ -899,7 +888,7 @@ class Sink:
         # Tidy up in case of error:
         def err_cb(e):
             if e:
-                print(e)
+                io.error(e)
             try:
                 Util.rm(emu_dir)
             except Exception:
@@ -966,8 +955,8 @@ class Sink:
 
         source.lock.unlock(force=force)
 
-        print(("Initialised sink {0} "
-               "at '{1}'").format(Util.colourise(name, Colours.INFO), path))
+        io.printf("Initialised sink {0} at '{1}'"
+                  .format(Util.colourise(name, Colours.INFO), path))
 
         return Sink(name, source)
 
@@ -990,10 +979,7 @@ class Snapshot:
         self.name = self.node.name()
 
         def err_cb(e):
-            print("Non-existent or malformed snapshot '{0}'".format(self.id))
-            if e:
-                print(e)
-            exit(1)
+            io.fatal("Non-existent or malformed snapshot '{0}'".format(self.id))
 
         # Sanity checks:
         Util.readable(os.path.join(self.sink.path, self.name), error=err_cb)
@@ -1064,9 +1050,7 @@ class Snapshot:
                     # Execute error callback if provided:
                     error(e)
                 else:
-                    # Else fatal error:
-                    print(e)
-                    exit(1)
+                    io.fatal(e)
             else:
                 raise e
 
@@ -1274,7 +1258,7 @@ class Snapshot:
             Util.printf("Woops! Something went wrong.",
                         prefix=sink.name, colour=Colours.ERROR)
             if e:
-                print(e)
+                io.error(e)
 
             # Tidy up any intermediate files which may have been created:
             try:
@@ -1592,8 +1576,7 @@ class ConfigParser(_ConfigParser):
 
         file_exists = Util.readable(self.path)
         if not file_exists:
-            print("fatal: Config file '{0}' not found".format(self.path))
-            exit(1)
+            io.fatal("Config file '{0}' not found".format(self.path))
 
         self.read(self.path)
 
@@ -1630,9 +1613,8 @@ class ConfigParser(_ConfigParser):
         try:
             return self.get(section, prop)
         except Exception as e:
-            print("fatal: No property '{0}:{1}' in config file '{2}'"
-                  .format(section, prop, self.path))
-            exit(1)
+            io.fatal("No property '{0}:{1}' in config file '{2}'"
+                     .format(section, prop, self.path))
 
 
     def set_string(self, section, prop, value):
@@ -1648,10 +1630,9 @@ class ConfigParser(_ConfigParser):
         elif value.lower() == "false":
             return False
         else:
-            print("Boolean configuration property '{0}:{1}' in config file "
-                  "'{2}' is neither \"true\" or \"false\""
-                  .format(section, prop, self.path))
-            exit(1)
+            io.fatal("boolean configuration property '{0}:{1}' in config file "
+                     "'{2}' is neither \"true\" or \"false\""
+                     .format(section, prop, self.path))
 
 
     def set_bool(self, section, prop, value):
@@ -1667,10 +1648,9 @@ class ConfigParser(_ConfigParser):
             value = self.get_string(section, prop)
             return int(value)
         except ValueError:
-            print("fatal: Value '{0}' for configuration property '{0}:{1}' "
-                  "in file '{2}' is not an integer"
-                  .format(value, section, prop, self.path))
-            exit(1)
+            io.fatal("value '{0}' for configuration property '{0}:{1}' "
+                     "in file '{2}' is not an integer"
+                     .format(value, section, prop, self.path))
 
 
     def set_int(self, section, prop, n):
@@ -1678,9 +1658,9 @@ class ConfigParser(_ConfigParser):
             self.set(section, prop, int(n))
             self.flush()
         except ValueError:
-            print("fatal: Value '{0}' for configuration property '{0}:{1}' "
-                  "in file '{2}' is not an integer"
-                  .format(n, section, prop, self.path))
+            io.fatal("value '{0}' for configuration property '{0}:{1}' "
+                     "in file '{2}' is not an integer"
+                     .format(n, section, prop, self.path))
 
 
     def get_status(self, section, prop):
@@ -1691,10 +1671,9 @@ class ConfigParser(_ConfigParser):
         elif value.lower() == "dirty":
             return False
         else:
-            print("Configuration property '{0}:{1}' in config file "
-                  "'{2}' is neither \"clean\" or \"dirty\""
-                  .format(section, prop, self.path))
-            exit(1)
+            io.fatal("Configuration property '{0}:{1}' in config file "
+                     "'{2}' is neither \"clean\" or \"dirty\""
+                     .format(section, prop, self.path))
 
 
     def set_status(self, section, prop, value):
@@ -1885,9 +1864,7 @@ class Util:
                 # Execute error callback if provided
                 error(e)
             else:
-                # Else fatal error
-                print(e)
-                exit(1)
+                io.fatal(e)
         return read_permission
 
 
@@ -1909,9 +1886,7 @@ class Util:
                 # Execute error callback if provided
                 error(e)
             else:
-                # Else fatal error
-                print(e)
-                exit(1)
+                io.fatal(e)
         return write_permission
 
 
@@ -1952,9 +1927,8 @@ class Util:
                     error(e)
                 elif error:
                     # Fatal error if required
-                    print("Failed to delete '{0}'."
-                          .format(Util.colourise(path, Colours.ERROR)))
-                    exit(1)
+                    io.fatal("Failed to delete '{0}'."
+                             .format(Util.colourise(path, Colours.ERROR)))
                 else:
                     return False
 
@@ -2004,9 +1978,7 @@ class Util:
                     # Execute error callback if provided
                     error(e)
                 elif error:
-                    # Fatal error if required
-                    print("Failed to move '{0}' to '{1}'.".format(src, dst))
-                    exit(1)
+                    io.fatal("Failed to move '{0}' to '{1}'.".format(src, dst))
                 else:
                     return False
 
@@ -2034,9 +2006,7 @@ class Util:
                 # Execute error callback if provided
                 error(e)
             elif error:
-                # Fatal error if required
-                print("Failed to move '{0}' to '{1}'.".format(src, dst))
-                exit(1)
+                io.fatal("failed to move '{0}' to '{1}'.".format(src, dst))
 
 
     # mkdir() - Create a directory and all required parents
@@ -2065,9 +2035,7 @@ class Util:
                     # Execute error callback if provided
                     error(e)
                 elif error:
-                    # Fatal error if required
-                    print("Failed to create directory '{0}'.".format(path))
-                    exit(1)
+                    io.fatal("failed to create directory '{0}'.".format(path))
                 else:
                     return False
 
@@ -2112,9 +2080,7 @@ class Util:
                 # Execute error callback if provided
                 error(e)
             elif error:
-                # Fatal error if required
-                print(e)
-                exit(1)
+                io.fatal(e)
 
         return process
 
@@ -2224,10 +2190,8 @@ class Util:
                     # Execute error callback if provided:
                     error(e)
                 else:
-                    # Else fatal error:
-                    print("Failed to read '{0}'"
-                          .format(Util.colourise(path, Colours.ERROR)))
-                    exit(1)
+                    io.fatal("failed to read '{0}'"
+                             .format(Util.colourise(path, Colours.ERROR)))
             else:
                 raise e
 
@@ -2251,10 +2215,8 @@ class Util:
                     # Execute error callback if provided:
                     error(e)
                 else:
-                    # Else fatal error:
-                    print("Failed to write '{0}'"
-                          .format(Util.colourise(path, Colours.ERROR)))
-                    exit(1)
+                    io.fatal("failed to write '{0}'"
+                             .format(Util.colourise(path, Colours.ERROR)))
             else:
                 raise e
 
@@ -2314,9 +2276,8 @@ class Util:
         if re.search(regex, program.lower()):
             return program
         else:
-            print("fatal: Invalid checkum program '{0}'"
-                  .format(Util.colourise(program, Colours.ERROR)))
-            exit(1)
+            io.fatal("invalid checkum program '{0}'"
+                     .format(Util.colourise(program, Colours.ERROR)))
 
 
     # printf() - Format and print a message
@@ -2553,9 +2514,8 @@ class Checksum():
                                            stdin=self.p1.stdout,
                                            stdout=subprocess.PIPE)
             except OSError:
-                print("Invalid checksum program '{0}'!"
-                      .format(Util.colourise(program, Colours.RED)))
-                exit(1)
+                io.fatal("Invalid checksum program '{0}'!"
+                         .format(Util.colourise(program, Colours.RED)))
 
         # Return to previous working directory:
         os.chdir(cwd)
@@ -2699,17 +2659,22 @@ class DirectoryIsLockedError(Error):
     def __repr__(self):
         claimaint_is_running = True if isprocess(self.claimint) else False
         claimaint_status = "running" if claimaint_is_running else "dead"
-        print("Directory '{path}' is locked by".format(path=self.path))
-        print("    Process      {pid} ({status})"
-              .format(pid=self.claimaint, status=claimaint_status))
-        print("    Date locked  {date}".format(date=self.claim_date))
-        print()
+        msg = [
+            "Directory '{path}' is locked by".format(path=self.path),
+            "    Process      {pid} ({status})".format(pid=self.claimaint,
+                                                       status=claimaint_status),
+            "    Date locked  {date}".format(date=self.claim_date),
+            ""
+        ]
         if claimaint_is_running:
-            print("It looks like the process is still running.")
+            msg.append("It looks like the process is still running.")
         else:
-            print("It looks like the process is no longer running.")
-        print()
-        print("To ignore this lock and overwrite, use option '--force'.")
+            msg.append("It looks like the process is no longer running.")
+        msg += [
+            "",
+            "To ignore this lock and overwrite, use option '--force'."
+        ]
+        return "\n".join(msg)
 
     def __str__(self):
         return self.__repr__()
@@ -2733,5 +2698,5 @@ class VersionError(Error):
 # anything other than acknowledge the signal, as the err_cb() methods
 # are used for tidying up.
 def _sigint_handler(signum, frame):
-    print("emu: received SIGINT")
+    io.printf("emu: received SIGINT")
 signal.signal(signal.SIGINT, _sigint_handler)
