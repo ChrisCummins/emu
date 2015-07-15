@@ -467,7 +467,7 @@ class Source:
             exit(1)
 
         self.path = path
-        self.lock = Lockfile(Util.concat_paths(self.path, "/.emu/LOCK"))
+        self.lock = DirectoryLock(self.path)
 
         def err_cb(e):
             s = "fatal: Malformed emu source"
@@ -562,7 +562,11 @@ class Source:
         if verbose:
             print("Cleaning source at '{0}'...".format(self.path))
 
-        Util.rm(self.lock.path, dry_run=dry_run, verbose=True)
+        if os.path.exists(self.lock.lockpath):
+            if not dry_run:
+                os.remove(self.lock.lockpath)
+            if verbose:
+                print("Removed lock '{}'", self.lock.lockpath)
 
         # Clean sinks:
         if recursive:
@@ -625,7 +629,7 @@ class Sink:
         self.path = Util.read("{0}/.emu/sinks/{1}".format(self.source.path,
                                                            self.name),
                               error=err_cb)
-        self.lock = Lockfile(Util.concat_paths(self.path, "/.emu/LOCK"))
+        self.lock = DirectoryLock(self.path)
 
         # Sanity checks:
         Util.readable(Util.concat_paths(self.path, "/.emu/"),       error=err_cb)
@@ -824,7 +828,11 @@ class Sink:
             print("Cleaning sink {0} at '{1}'..."
                   .format(Util.colourise(self.name, Colours.BLUE), self.path))
 
-        Util.rm(self.lock.path, dry_run=dry_run, verbose=True)
+        if os.path.exists(self.lock.lockpath):
+            if not dry_run:
+                os.remove(self.lock.lockpath)
+            if verbose:
+                print("Removed lock '{}'", self.lock.lockpath)
 
         # Check for orphan node files:
         trees = Util.ls(Util.concat_paths(self.path, "/.emu/trees"))
@@ -2381,82 +2389,122 @@ class Util:
         exit(0)
 
 
-##################
-# Lockfile class #
-##################
-class Lockfile:
+class DirectoryLock:
+    """
+    A file-based locking mechanism for directories.
 
-    def __init__(self, path):
-        self.path = path
+    Directory locks signal intended exclusive read and write access to
+    other compliant emu processes. Note that these locks provide no
+    guarantees: they can be forced, and they do not provide any
+    protection against non-emu processes.
 
+    Attributes:
 
-    # read() - Return lockfile PID and timestamp
-    #
-    def read(self):
-        contents = Util.read(self.path).split()
-        pid = int(contents[0])
-        timestamp = datetime.fromtimestamp(int(contents[1]))
-        return (pid, timestamp)
+        path (str): Directory of lock.
+        lockpath (str): Path to lock file.
+        pid (int): The process ID of the lock. If lock is not claimed,
+          return None.
+        date (datetime): The date that the lock was claimed. If lock
+          is not claimed, return None.
+        islocked (bool): Whether the directory is locked.
+        owned_by_self (bool): Whether the current process has
+          locked the directory.
+    """
+    def __init__(self, dirpath, lockpath=None):
+        """
+        Create a new directory lock.
 
+        Arguments:
 
-    # lock() - Assign lockfile to current process
-    #
-    def lock(self, force=False, error=True, verbose=False):
+            dirpath (str): Path of directory to lock.
+            lockpath (str, optional): Path of lockfile for
+              directory. Defaults to: <dirpath>/.emu/LOCK
+        """
+        lockpath = lockpath or path.join(dirpath, ".emu", "LOCK")
+        self.path = path.abspath(dirpath)
+        self.lockpath = path.join(lockpath)
+
+    @property
+    def pid(self):
+        if path.exists(self.lockpath):
+            with open(self.lockpath) as lockfile:
+                data = lockfile.read()
+                components = data.split()
+                pid = int(components[0])
+                return pid
+        else:
+            return None
+
+    @property
+    def date(self):
+        if path.exists(self.lockpath):
+            with open(self.lockpath) as lockfile:
+                data = lockfile.read()
+                components = data.split()
+                date = datetime.fromtimestamp(int(contents[1]))
+                return date
+        else:
+            return None
+
+    @property
+    def islocked(self):
+        return os.path.exists(self.lockpath)
+
+    @property
+    def owned_by_self(self):
+        return self.pid == os.getpid()
+
+    def lock(self, force=False, verbose=False):
+        """
+        Lock directory to current process.
+
+        A lock can be claimed if any of these conditions are true:
+
+        1. There's no lock.
+        2. There *is* a lock but we're using force.
+        3. There is a lock but we own it.
+
+        Arguments:
+
+            force (boolean, optional): If true, ignore any existing
+              lock. If false, fail if lock already claimed.
+
+        Raises:
+
+            DirectoryIsLockedError: If the lock is already claimed
+              (not raised if force option is used).
+        """
         if verbose:
-            print("Writing lockfile '{0}'".format(self.path))
+            print("Writing lockfile '{0}'".format(self.lockpath))
 
-        if os.path.exists(self.path) and not force:
-            # Error state, lock exists:
-            e = LockfileError(self)
-
-            if error:
-                if hasattr(error, '__call__'):
-                    # Execute error callback if provided:
-                    error(e)
-                else:
-                    # Else fatal error:
-                    print(e)
-                    exit(1)
-            else:
-                raise e
+        if not self.islocked or force or self.pid == os.getpid():
+            with open(self.lockpath, "w") as lockfile:
+                print(os.getpid(), time.time(), file=lockfile)
         else:
-            # No lockfile, create new:
-            Util.write(self.path, "{0} {1}\n".format(os.getpid(),
-                                                     int(time.time())),
-                       error=error)
+            raise DirectoryIsLockedError(self)
 
+    def unlock(self, force=False, verbose=False):
+        """
+        Unlock directory from current process.
 
-    # unlock() - Free lockfile from current process
-    #
-    def unlock(self, force=False, error=True, verbose=False):
+        To release a lock, we must already own the lock.
+
+        Raises:
+
+            DirectoryIsLockedError: If the lock is claimed by another
+              process (not raised if force option is used).
+        """
+        # There's no lock, so do nothing.
+        if not self.islocked:
+            return
+
         if verbose:
-            print("Removing lockfile '{0}'".format(self.path))
+            print("Removing lockfile '{0}'".format(self.lockpath))
 
-        exists = os.path.exists(self.path)
-        if exists:
-            (pid, timestamp) = self.read()
-            owned_by_self = pid == os.getpid()
+        if self.owned_by_self or force:
+            os.remove(self.lockpath)
         else:
-            owned_by_self = False
-
-        if owned_by_self or force:
-            # Destory lockfile:
-            Util.rm(self.path, must_exist=True)
-        else:
-            # Error state, lock either is owned by different process
-            # or does not exist:
-            e = LockfileError(self)
-
-            if error:
-                if hasattr(error, '__call__'):
-                    # Execute error callback if provided:
-                    error(e)
-                else:
-                    # Else fatal error:
-                    print(e)
-                    exit(1)
-            else:
-                raise e
+            raise DirectoryIsLockedError(self)
 
 
 #############################
@@ -2678,22 +2726,32 @@ class SourceCreateError(Error):
                 .format(self.source_dir))
 
 
-class LockfileError(Error):
-    def __init__(self, lock):
-        self.lock = lock
-    def __str__(self):
-        (pid, timestamp) = self.lock.read()
-        string = ("Failed to modify lock '{0}'!\n"
-                  .format(Util.colourise(self.lock.path, Colours.ERROR)))
-        string += ("Lock was claimed by process {0} at {1}.\n"
-                   .format(Util.colourise(pid, Colours.INFO),
-                           Util.colourise(timestamp, Colours.INFO)))
-        if isprocess(pid):
-            string += "It looks like the process is still running."
+class DirectoryIsLockedError(Error):
+    """
+    Raised in case of lock contention.
+    """
+    def __init__(self, dirlock):
+        self.path = dirlock.path
+        self.claimant = dirlock.pid
+        self.claim_date = dirlock.date
+
+    def __repr__(self):
+        claimaint_is_running = True if isprocess(self.claimint) else False
+        claimaint_status = "running" if claimaint_is_running else "dead"
+        print("Directory '{path}' is locked by".format(path=self.path))
+        print("    Process      {pid} ({status})"
+              .format(pid=self.claimaint, status=claimaint_status))
+        print("    Date locked  {date}".format(date=self.claim_date))
+        print()
+        if claimaint_is_running:
+            print("It looks like the process is still running.")
         else:
-            string += "It looks like the process is no longer running.\n"
-        string += "\nTo ignore this lock and overwrite, use option '--force'."
-        return string
+            print("It looks like the process is no longer running.")
+        print()
+        print("To ignore this lock and overwrite, use option '--force'.")
+
+    def __str__(self):
+        return self.__repr__()
 
 
 class VersionError(Error):
