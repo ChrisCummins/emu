@@ -51,7 +51,7 @@ def main(argv, argc):
         return os.system("man emu")
 
     if argv[0] == "--version" or argv[0] == "version":
-        version_and_quit()
+        print_version_and_quit()
 
     # Assemble script path and arguments
     script_path = get_script_path(argv[0])
