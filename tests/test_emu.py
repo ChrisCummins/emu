@@ -25,6 +25,18 @@ import emu
 
 class TestEmu(TestCase):
 
+    # which()
+    def test_which(self):
+        self._test("/bin/ls", emu.which("ls"))
+        self._test("/bin/ls", emu.which("/bin/ls"))
+        self._test(None, emu.which("not-a-real-command"))
+
+    def test_which_path(self):
+        self._test("/bin/ls", emu.which("ls", path=("/usr", "/bin")))
+        self._test(None, emu.which("ls", path=("/dev",)))
+        self._test(None, emu.which("ls", path=("/not-a-real-path",)))
+        self._test(None, emu.which("not-a-real-command", path=("/bin",)))
+
     # isroot()
     def test_isroot(self):
         self._test(False, emu.isroot(os.getcwd()))

@@ -23,49 +23,65 @@ import sys
 import os
 
 from emu import *
+from emu import io
 
 
-def get_script_path(name):
-    script_name = "emu-" + name
-    script_path = sys.path[0] + "/" + script_name
-    script_exists = os.path.exists(script_path)
-    if not script_exists:
-        print("'{0}' is not an emu command. See 'emu help'"
-              .format(colourise(name, Colours.ERROR)))
-        sys.exit(1)
-    return script_path
+def main(arguments=[]):
+    """
+    Emu main entry point.
 
+    Accepts a list of arguments, and parses and performs the
+    appropriate actions.
 
-def main(argv, argc):
-    # Go to man page if help arg or no args
-    if (not argc or
-        argv[0] == "-h" or
-        argv[0] == "--help"):
+    Examples:
+
+        >>> emu.main()
+        # Opens man page.
+
+        >>> emu.main(["clean", "--dry-run"])
+        # Runs "clean" script with args "--dry-run".
+
+    Arguments:
+
+        arguments (list of str, optional): Arguments to parse and
+          execute.
+
+    Returns:
+
+        int: Return code of command.
+    """
+
+    # Go to man page if help argument or no args.
+    if (not len(arguments) or
+        arguments[0] == "-h" or
+        arguments[0] == "--help"):
         return os.system("man emu")
 
-    # emu help [command] handling
-    if (argv[0] == "help"):
-        if argc > 1:
-            get_script_path(argv[1])
-            return os.system("man emu-" + argv[1])
+    # emu help [command] handling.
+    elif (arguments[0] == "help"):
+        if len(arguments) > 1:
+            # Lookup the path to emu command, as this will fail if the
+            # command does not exist.
+            lookup_emu_program(arguments[1])
+            return os.system("man emu-" + arguments[1])
         return os.system("man emu")
 
-    if argv[0] == "--version" or argv[0] == "version":
-        print_version_and_quit()
+    # emu version command.
+    elif arguments[0] == "--version" or arguments[0] == "version":
+        io.printf(Meta.versionstr())
+        return 0
 
-    # Assemble script path and arguments
-    script_path = get_script_path(argv[0])
-    command = script_path + ' ' + ' '.join(argv[1:])
-    return os.system(command)
-
-    # Assemble script path and arguments
-    command = script_path + ' ' + ' '.join(argv[1:])
-
-    ret = os.system(command)
-    return ret
+    else:
+        # Assemble script path and arguments.
+        script_path = lookup_emu_program(arguments[0])
+        script_args = arguments[1:]
+        command = ' '.join([script_path] + script_args)
+        return os.system(command)
 
 
 if __name__ == "__main__":
-    argv = sys.argv[1:]
-    ret = main(argv, len(argv))
-    sys.exit(int(ret % 255))
+    try:
+        ret = main(sys.argv[1:])
+        sys.exit(int(ret % 255))
+    except InvalidEmuCommand as error:
+        io.fatal(error)

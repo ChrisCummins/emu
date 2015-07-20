@@ -60,6 +60,87 @@ def print_version_and_quit(*data):
     exit(0)
 
 
+def which(program, path=None):
+    """
+    Returns the full path of shell commands.
+
+    Replicates the functionality of system which (1) command. Looks
+    for the named program in the directories indicated in the $PATH
+    environment variable, and returns the full path if found.
+
+    Examples:
+
+        >>> emu.which("ls")
+        "/bin/ls"
+
+        >>> emu.which("/bin/ls")
+        "/bin/ls"
+
+        >>> emu.which("not-a-real-command")
+        None
+
+        >>> emu.which("ls", path=("/usr/bin", "/bin"))
+        "/bin/ls"
+
+    Arguments:
+
+        program (str): The name of the program to look for. Can
+          be an absolute path.
+        path (sequence of str, optional): A list of directories to
+          look for the pgoram in. Default value is system $PATH.
+
+    Returns:
+
+       str: Full path to program if found, else None.
+    """
+    # If path is not given, read the $PATH environment variable.
+    path = path or os.environ["PATH"].split(os.pathsep)
+    abspath = True if os.path.split(program)[0] else False
+    if abspath:
+        if os.path.isfile(program) and os.access(program, os.X_OK):
+            return program
+    else:
+        for directory in path:
+            # De-quote directories.
+            directory = directory.strip('"')
+            exe_file = os.path.join(directory, program)
+            if os.path.isfile(exe_file) and os.access(exe_file, os.X_OK):
+                return exe_file
+
+    return None
+
+
+def lookup_emu_program(command):
+    """
+    Return the path to the program which implements an emu command.
+
+    Example:
+
+        >>> lookup_emu_program("clean")
+        "/bin/emu-clean"
+
+    Arguments:
+
+        command (str): The name of the emu command to look up.
+
+    Returns:
+
+        str: Absolute path of the program to implement command.
+
+    Raises:
+
+        InvalidEmuCommand: If the command does not exist.
+    """
+    # TODO: Use a more robust mechanism than using "which", since this
+    # will fail if the scripts have not been installed into the
+    # environment path.
+    script = "emu-" + command
+    script_path = which(script)
+    if not script_path:
+        raise InvalidEmuCommand(command)
+    return script_path
+
+
 def isroot(dirpath):
     """
     Return whether a directory is the filesystem root.
@@ -2584,6 +2665,21 @@ class InvalidBranchError(InvalidArgsError):
         return ("Could not create a branch history between snapshots {0} and {1}!"
                 .format(colourise(self.head, Colours.ERROR),
                         colourise(self.tail, Colours.ERROR)))
+
+
+class InvalidEmuCommand(ValueError):
+    """
+    Thrown if an invalid emu command is requested.
+    """
+    def __init__(self, command):
+        self.command = command
+
+    def __repr__(self):
+        return ("'{}' is not an emu command. See 'emu help'"
+                .format(colourise(command, Colours.ERROR)))
+
+    def __str__(self):
+        return self.__repr__()
 
 
 class SinkNotFoundError(Error):
