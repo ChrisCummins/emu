@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Chris Cummins.
+# Copyright (C) 2012-2017 Chris Cummins.
 #
 # This file is part of emu.
 #
@@ -1631,7 +1631,7 @@ class Meta:
     # Version and copyright information:
     #
     version = Version(0, 2, 3, dirty=True)
-    copyright = { "start": 2012, "end": 2015, "authors": ["Chris Cummins"]}
+    copyright = { "start": 2012, "end": 2017, "authors": ["Chris Cummins"]}
 
     #
     # Template paths:

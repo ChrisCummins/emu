@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Chris Cummins.
+# Copyright (C) 2012-2017 Chris Cummins.
 #
 # This file is part of emu.
 #
