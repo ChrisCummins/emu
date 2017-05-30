@@ -2676,7 +2676,7 @@ class InvalidEmuCommand(ValueError):
 
     def __repr__(self):
         return ("'{}' is not an emu command. See 'emu help'"
-                .format(colourise(command, Colours.ERROR)))
+                .format(colourise(self.command, Colours.ERROR)))
 
     def __str__(self):
         return self.__repr__()
