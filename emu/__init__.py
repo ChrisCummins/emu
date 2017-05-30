@@ -2443,7 +2443,7 @@ class DirectoryLock:
             with open(self.lockpath) as lockfile:
                 data = lockfile.read()
                 components = data.split()
-                date = datetime.fromtimestamp(int(contents[1]))
+                date = datetime.fromtimestamp(int(components[1]))
                 return date
         else:
             return None
