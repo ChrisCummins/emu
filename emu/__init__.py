@@ -1398,8 +1398,19 @@ class Snapshot:
         exclude_from = [os.path.join(source.path, ".emu", "excludes")]
         link_dests = []
 
-        source.lock.lock(force=force)
-        sink.lock.lock(force=force)
+        # lock the sink and source
+        try:
+            source.lock.lock(force=force)
+        except DirectoryIsLockedError as e:
+            io.fatal("failed to acquire source lock '{}'"
+                     .format(source.lock.lockpath))
+        try:
+            sink.lock.lock(force=force)
+        except DirectoryIsLockedError as e:
+            io.fatal("failed to acquire sink {} lock '{}'"
+                     .format(colourise(sink.name, Colours.ERROR),
+                             sink.lock.lockpath))
+
 
         # Ignore rsync errors if required:
         if ignore_errors:
