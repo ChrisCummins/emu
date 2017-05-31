@@ -43,7 +43,7 @@ class TestCase(unittest.TestCase):
             if approximate:
                 self.assertAlmostEqual(expected, actual, places=places)
             else:
-                self.assertTrue(actual == expected)
+                self.assertEqual(actual, expected)
             print("OK\n")
         except AssertionError as e:
             print("FAIL")

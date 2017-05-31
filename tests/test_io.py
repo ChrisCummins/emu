@@ -20,7 +20,7 @@ from tests import TestCase
 import re
 import os
 from os import path
-from StringIO import StringIO
+from io import BytesIO
 
 import emu
 from emu import io
@@ -28,28 +28,23 @@ from emu import io
 
 class TestIO(TestCase):
 
-    # colourise()
-    # def test_colourise(self):
-    #     self._test("\033[91mHello, World!\033[0m",
-    #                io.colourise(io.Colours.RED, "Hello, World!"))
-
     def _test_output(self, print_fn, enable_fn, disable_fn):
-        out = StringIO()
+        out = BytesIO()
         disable_fn()
         print_fn("foo", file=out)
         self._test("", out.getvalue())
 
-        out = StringIO()
+        out = BytesIO()
         enable_fn()
         print_fn("foo", file=out)
         self._test("foo\n", out.getvalue())
 
-        out = StringIO()
+        out = BytesIO()
         disable_fn()
         print_fn("foo", file=out)
         self._test("", out.getvalue())
 
-        out = StringIO()
+        out = BytesIO()
         enable_fn()
         print_fn("foo", file=out)
         self._test("foo\n", out.getvalue())
@@ -86,7 +81,7 @@ class TestIO(TestCase):
 
     # fatal()
     def test_fatal(self):
-        out = StringIO()
+        out = BytesIO()
         with self.assertRaises(SystemExit) as ctx:
             io.fatal("foo", file=out)
         # Check default return code.
@@ -94,7 +89,7 @@ class TestIO(TestCase):
         self._test("fatal: foo\n", out.getvalue())
 
     def test_fatal_status(self):
-        out = StringIO()
+        out = BytesIO()
         with self.assertRaises(SystemExit) as ctx:
             io.fatal("foo", file=out, status=10)
         # Check specified return code.

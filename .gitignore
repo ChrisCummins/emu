@@ -1,3 +1,6 @@
+# virutalenv
+env/
+
 # Tests output.
 test.log
 

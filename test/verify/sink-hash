@@ -16,11 +16,6 @@ emu verify $name:$hash
 
 # Break snapshot and test verify failure
 touch $source/.emu/trees/$hash/a
-set +e
 emu verify $name:$hash
-if ! (( $? ))
-then
-    exit $EXIT_ASSERT_FAIL
-fi
 
 test_teardown

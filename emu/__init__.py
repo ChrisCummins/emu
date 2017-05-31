@@ -26,7 +26,7 @@ import signal
 import subprocess
 import sys
 import getpass
-from ConfigParser import ConfigParser as _ConfigParser
+from configparser import ConfigParser as _ConfigParser
 
 from datetime import datetime
 from optparse import OptionParser
@@ -34,7 +34,7 @@ from os import path
 from pkg_resources import resource_filename
 from sys import exit
 
-import io
+from . import io
 
 
 def colourise(string, colour):
@@ -681,7 +681,7 @@ class Source:
         source_dir = os.path.join(sourcedir, ".emu")
         directories = ["/", "/hooks", "/sinks"]
         for d in directories:
-            Util.mkdir(source_dir + d, mode=0700, error=err_cb)
+            Util.mkdir(source_dir + d, mode=0o700, error=err_cb)
 
         # Copy template files
         Util.rsync(template_dir + "/", source_dir + "/",
@@ -1030,7 +1030,7 @@ class Sink:
         emu_dir = os.path.join(path, ".emu")
         directories = ["", "trees", "nodes"]
         for d in directories:
-            Util.mkdir(os.path.join(emu_dir, d), mode=0700,
+            Util.mkdir(os.path.join(emu_dir, d), mode=0o700,
                        error=err_cb)
 
         # Ignore rsync errors if required:
@@ -1482,7 +1482,7 @@ class Snapshot:
             node.set("Snapshot", "snapshot",      id.id)
             node.set("Snapshot", "parent",        head_id)
             node.set("Snapshot", "name",          name)
-            node.set("Snapshot", "date",          date)
+            node.set("Snapshot", "date",          str(date))
             node.set("Snapshot", "checksum",      checksum_program)
             node.set("Snapshot", "size",          size)
             node.add_section("Tree")
@@ -1490,12 +1490,12 @@ class Snapshot:
             node.set("Sink",     "source",        sink.source.path)
             node.set("Sink",     "sink",          id.sink_name)
             node.set("Sink",     "path",          sink.path)
-            node.set("Sink",     "snapshot-no",   len(sink.snapshots()) + 1)
-            node.set("Sink",     "max-snapshots", sink.config.max_snapshots())
+            node.set("Sink",     "snapshot-no",   str(len(sink.snapshots()) + 1))
+            node.set("Sink",     "max-snapshots", str(sink.config.max_snapshots()))
             node.add_section("Emu")
-            node.set("Emu",      "emu-version",   Meta.version)
+            node.set("Emu",      "emu-version",   str(Meta.version))
             node.set("Emu",      "user",          getpass.getuser())
-            node.set("Emu",      "uid",           os.getuid())
+            node.set("Emu",      "uid",           str(os.getuid()))
             with open(node_path, "wb") as node_file:
                 node.write(node_file)
 
@@ -1838,7 +1838,7 @@ class UserConfig(ConfigParser):
     # use_colour() - Return True is UI should use colour
     #
     def use_colour(self):
-        return self.get_bool("general", "colour")
+        return self.getboolean("general", "colour", fallback=True)
 
 
     # default_source() - Return the default source directory
@@ -2128,7 +2128,7 @@ class Util:
     # 'error' can either by a boolean that dictates whether to exit
     # fatally on error, or a callback function to execute.
     @staticmethod
-    def mkdir(path, mode=0777, fail_if_already_exists=False,
+    def mkdir(path, mode=0o777, fail_if_already_exists=False,
               error=False):
         exists = os.path.exists(path)
 
@@ -2173,7 +2173,7 @@ class Util:
     def p_exec(args, stdin=None, stdout=None, stderr=None,
                wait=True, error=False):
 
-        if isinstance(args, basestring):
+        if isinstance(args, str):
             args = shlex.split(args)
 
         io.verbose("Executing '{0}'.".format(" ".join(args)))
@@ -2234,7 +2234,7 @@ class Util:
             rsync_flags += ["--dry-run",
                             "--itemize-changes"]
 
-        if isinstance(link_dest, basestring):
+        if isinstance(link_dest, str):
             # Single link dest:
             rsync_flags += ["--link-dest", link_dest]
         elif link_dest:
@@ -2242,7 +2242,7 @@ class Util:
             for dest in link_dest:
                 rsync_flags += ["--link-dest", dest]
 
-        if isinstance(exclude, basestring):
+        if isinstance(exclude, str):
             # Single exclude pattern:
             rsync_flags += ["--exclude", exclude]
         elif exclude:
@@ -2250,7 +2250,7 @@ class Util:
             for pattern in exclude:
                 rsync_flags += ["--exclude", pattern]
 
-        if isinstance(exclude_from, basestring):
+        if isinstance(exclude_from, str):
             # Single exclude path:
             rsync_flags += ["--exclude-from", exclude_from]
         elif exclude_from:
