@@ -1966,6 +1966,7 @@ class Util:
     @staticmethod
     def readable(path, error=False):
         if not os.path.exists(path) and error:
+            print(path, "does not exist")
             exit(1)
         read_permission = os.access(path, os.R_OK)
         if error and not read_permission:
