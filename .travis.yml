@@ -15,8 +15,10 @@ before_install:
   - python --version
 
 install:
+  - python --version
   - sudo python setup.py install
 
 script:
+  - python --version
   - sudo python setup.py test
   - ./scripts/run-tests.sh
