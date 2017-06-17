@@ -3,6 +3,10 @@ sudo: required
 
 os:
   - linux
+# TODO:  - osx
+
+env:
+  EMU_MANDIR=man
 
 language: python
 
@@ -11,11 +15,14 @@ python:
 
 before_install:
   - virtualenv -p python3.6 env
-  - sudo sh -c "source env/bin/activate ; python --version"
+  - source env/bin/activate
+  - python --version
 
 install:
-  - sudo sh -c "source env/bin/activate ; python setup.py install"
+  - mkdir -pv $EMU_MANDIR
+  - python setup.py install
 
 script:
-  - sudo sh -c "source env/bin/activate ; python setup.py test"
+  - python setup.py test
   - ./scripts/run-tests.sh
+  - cat test.log
