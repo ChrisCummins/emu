@@ -11,14 +11,11 @@ python:
 
 before_install:
   - virtualenv -p python3.6 env
-  - source env/bin/activate
-  - python --version
+  - sudo sh -c "source env/bin/activate ; python --version"
 
 install:
-  - python --version
-  - python setup.py install
+  - sudo sh -c "source env/bin/activate ; python setup.py install"
 
 script:
-  - python --version
-  - python setup.py test
+  - sudo sh -c "source env/bin/activate ; python setup.py test"
   - ./scripts/run-tests.sh
