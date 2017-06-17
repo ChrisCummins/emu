@@ -9,6 +9,11 @@ language: python
 python:
   - "3.6"
 
+before_install:
+  - virtualenv -p python3.6 env
+  - source env/bin/activate
+  - python --version
+
 install:
   - sudo python setup.py install
 
