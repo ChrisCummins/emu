@@ -14,13 +14,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with emu.  If not, see <http://www.gnu.org/licenses/>.
+import os
 from glob import glob
 from setuptools import setup
 from setuptools.command.test import test
 
 
 # Directory to install man pages to.
-man_prefix = "/usr/share/man"
+man_prefix = os.environ.get("EMU_MANDIR", "/usr/share/man")
 man_dir = man_prefix + "/man1/"
 
 
