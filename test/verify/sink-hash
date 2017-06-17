@@ -16,6 +16,11 @@ emu verify $name:$hash
 
 # Break snapshot and test verify failure
 touch $source/.emu/trees/$hash/a
-emu verify $name:$hash
+if emu verify $name:$hash ; then
+    echo "should have failed!"
+    exit 5
+else
+    echo "good"
+fi
 
 test_teardown
