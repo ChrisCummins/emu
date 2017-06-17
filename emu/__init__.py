@@ -723,14 +723,16 @@ class Sink:
         self.config = SinkConfig(config_path)
 
 
-    # snapshots() - Return a list of all snapshots
-    #
     def snapshots(self):
+        """
+        Iterate over all snapshots.
+
+        Returns:
+            Iterable
+        """
         ids = Util.ls(os.path.join(self.path, ".emu", "nodes"), must_exist=True)
-        snapshots = []
         for id in ids:
-            snapshots.append(Snapshot(SnapshotID(self.name, id), self))
-        return snapshots
+            yield Snapshot(SnapshotID(self.name, id), self)
 
 
     # head() - Get/Set the current sink head
@@ -787,17 +789,56 @@ class Sink:
                 return None
 
 
-    # tail() - Return the oldest snapshot in the current branch
-    #
-    # Traverse each snapshot's parent until we reach a null pointer,
-    # starting from the HEAD.
     def tail(self):
+        """
+        Return the oldest snapshot in the current branch.
+
+        Traverse each snapshot's parent until we reach a null pointer, starting
+        from the HEAD.
+
+        Returns:
+            Snapshot: Tail
+        """
         head = self.head()
 
         if head:
-            return head.branch()[-1]
+            return list(head.branch())[-1]
         else:
             return None
+
+
+    def rotate(self, force=False, dry_run=False):
+        """
+        Remove old snapshots.
+        """
+        i = len(list(self.snapshots()))
+        while i >= self.config.max_snapshots():
+            list(self.snapshots())[0].destroy(dry_run=dry_run, force=force)
+            if dry_run:
+                i -= 1
+            else:
+                i = len(list(self.snapshots()))
+
+    def rotate_tm(self, force=False, dry_run=False):
+        """
+        Rotate old snapshots, using the following strategy:
+
+        * All snapshots less than 24 hours old are kept.
+        * Daily snapshots are kept for the past month. Where multiple snapshots
+          exist for the same day, the most recent one is kept.
+        * Weekly snapshots are kept for all previous months. Where multiple
+          snapshots exist for the same week, the most recent one is kept.
+        """
+        node = self.head()
+#        while node:
+
+
+        while i >= self.config.max_snapshots():
+            list(self.snapshots())[0].destroy(dry_run=dry_run, force=force)
+            if dry_run:
+                i -= 1
+            else:
+                i = len(list(self.snapshots()))
 
 
     def push(self, force=False, ignore_errors=False, archive=True,
@@ -808,18 +849,11 @@ class Sink:
         # now:
         checksum_program = self.config.checksum_program()
 
-        # Remove old snapshots first:
-        i = len(self.snapshots())
-        while i >= self.config.max_snapshots():
-            self.snapshots()[0].destroy(dry_run=dry_run, force=force)
-            if dry_run:
-                i -= 1
-            else:
-                i = len(self.snapshots())
+        self.rotate(force=force, dry_run=dry_run)
 
         io.printf("{}: pushing snapshot ({} of {})".format(
             colourise(self.name, Colours.OK),
-            len(self.snapshots()) + 1,
+            len(list(self.snapshots())) + 1,
             self.config.max_snapshots())
         )
 
@@ -1119,16 +1153,19 @@ class Snapshot:
 
             return clean
 
-
-    # nth_parent() - Return the nth parent of snapshot
-    #
-    # Traverse each snapshot's parent until we have travelled 'n'
-    # nodes from the starting point.
     def nth_parent(self, n, truncate=False, error=False):
+        """
+        Return the nth parent of snapshot
+
+        Traverse each snapshot's parent until we have travelled 'n' nodes from
+        the starting point.
+
+        Returns:
+            Snapshot: nth parent.
+        """
         parent = self.parent()
 
         try:
-
             if n > 0:
                 if parent:
                     return parent.nth_parent(n - 1, truncate=truncate,
@@ -1152,38 +1189,35 @@ class Snapshot:
             else:
                 raise e
 
-
-    # branch() - Return every snapshot in branch as array
-    #
-    # Traverse each snapshot's parent, returning an ordered array
-    # starting the current snapshot (self), and each successive
-    # parent snapshot.
     def branch(self):
-        branch = [self]
+        """
+        Iterate over snapshots in branch
 
-        current = self
-        next = self.parent()
+        Returns:
+            Iterable: Snapshots from newest to oldest
+        """
+        node = self
+        while node:
+            yield node
+            node = node.parent()
 
-        while next:
-            branch.append(next)
-            current = next
-            next = next.parent()
-
-        return branch
-
-
-    # nth_child() - Return the nth child of snapshot
-    #
-    # Traverse each snapshot's child until we have travelled 'n' nodes
-    # from the starting point.
     def nth_child(self, n, truncate=False, error=False):
+        """
+        Return the nth child of snapshot
+
+        Traverse each snapshot's child until we have travelled 'n' nodes from
+        the starting point.
+
+        Returns:
+            Snapshot: nth child of snapshot.
+        """
         head = self.sink.head()
 
         if not head:
             id = SnapshotID(self.sink.name, "HEAD")
             raise SnapshotNotFoundError(id)
 
-        branch = head.branch()
+        branch = list(head.branch())
 
         # Iterate over snapshots in order to get the index of self:
         index_of_self = None
@@ -1210,10 +1244,10 @@ class Snapshot:
             id = SnapshotID(self.sink.name, "TAIL~{0}".format(n))
             raise SnapshotNotFoundError(id)
 
-
-    # parent() - Get/set snapshot's parent
-    #
     def parent(self, value=None, delete=False):
+        """
+        Get/set snapshot's parent.
+        """
         if value != None:
             self.node.parent(value=value.id.id)
         elif delete:
@@ -1226,12 +1260,13 @@ class Snapshot:
             else:
                 return None
 
-
-    # destroy() - Destroy a snapshot
-    #
-    # If 'dry_run' is True, don't make any actual changes. If 'force'
-    # is True, ignore locks.
     def destroy(self, dry_run=False, force=False):
+        """
+        Destroy a snapshot.
+
+        If 'dry_run' is True, don't make any actual changes. If 'force' is
+        True, ignore locks.
+        """
         io.printf("{}: removing snapshot {}".format(
             colourise(self.sink.name, Colours.OK),
             colourise(self.name, Colours.SNAPSHOT_DELETE))
@@ -1279,13 +1314,11 @@ class Snapshot:
 
         sink.lock.unlock(force=force)
 
-
     # diff() - Compare snapshot checksums
     #
     # Returns True if other snapshot has identical checksum.
     def diff(self, other):
         return self.id.checksum == other.id.checksum
-
 
     def __repr__(self):
         return str(self.id)
@@ -1424,7 +1457,7 @@ class Snapshot:
         if not resume:
             # Use up to 20 of the most recent snapshots as link
             # destinations:
-            for snapshot in sink.snapshots()[-20:]:
+            for snapshot in list(sink.snapshots())[-20:]:
                 link_dests.append(snapshot.tree)
 
             # Perform file transfer:
@@ -1493,7 +1526,7 @@ class Snapshot:
             node.set("Sink",     "source",        str(sink.source.path))
             node.set("Sink",     "sink",          str(id.sink_name))
             node.set("Sink",     "path",          str(sink.path))
-            node.set("Sink",     "snapshot-no",   str(len(sink.snapshots()) + 1))
+            node.set("Sink",     "snapshot-no",   str(len(list(sink.snapshots())) + 1))
             node.set("Sink",     "max-snapshots", str(sink.config.max_snapshots()))
             node.add_section("Emu")
             node.set("Emu",      "emu-version",   str(Meta.version))
