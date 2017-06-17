@@ -1342,7 +1342,10 @@ class Snapshot:
         def _get_unique_id(checksum):
             # Generate an ID from date and checksum:
             date = Date()
-            id = SnapshotID(sink.name, date.hex() + checksum)
+            _hash = str(date.hex()) + checksum
+            assert len(_hash) == 40
+
+            id = SnapshotID(sink.name, _hash)
             try:
                 # See if a snapshot with that ID already exists:
                 Util.get_snapshot_by_id(id, sink.snapshots())
@@ -1480,23 +1483,23 @@ class Snapshot:
             node = _ConfigParser()
             node.add_section("Snapshot")
             node.set("Snapshot", "snapshot",      id.id)
-            node.set("Snapshot", "parent",        head_id)
-            node.set("Snapshot", "name",          name)
+            node.set("Snapshot", "parent",        str(head_id))
+            node.set("Snapshot", "name",          str(name))
             node.set("Snapshot", "date",          str(date))
-            node.set("Snapshot", "checksum",      checksum_program)
-            node.set("Snapshot", "size",          size)
+            node.set("Snapshot", "checksum",      str(checksum_program))
+            node.set("Snapshot", "size",          str(size))
             node.add_section("Tree")
             node.add_section("Sink")
-            node.set("Sink",     "source",        sink.source.path)
-            node.set("Sink",     "sink",          id.sink_name)
-            node.set("Sink",     "path",          sink.path)
+            node.set("Sink",     "source",        str(sink.source.path))
+            node.set("Sink",     "sink",          str(id.sink_name))
+            node.set("Sink",     "path",          str(sink.path))
             node.set("Sink",     "snapshot-no",   str(len(sink.snapshots()) + 1))
             node.set("Sink",     "max-snapshots", str(sink.config.max_snapshots()))
             node.add_section("Emu")
             node.set("Emu",      "emu-version",   str(Meta.version))
-            node.set("Emu",      "user",          getpass.getuser())
+            node.set("Emu",      "user",          str(getpass.getuser()))
             node.set("Emu",      "uid",           str(os.getuid()))
-            with open(node_path, "wb") as node_file:
+            with open(node_path, "w") as node_file:
                 node.write(node_file)
 
         # Update HEAD:
@@ -1521,8 +1524,8 @@ class Snapshot:
 #####################################
 class SnapshotID:
     def __init__(self, sink_name, id):
-        self.sink_name = sink_name
-        self.id = id
+        self.sink_name = str(sink_name)
+        self.id = str(id)
         self.timestamp = id[:8]
         self.checksum = id[8:]
 
@@ -1696,7 +1699,7 @@ class ConfigParser(_ConfigParser):
     # flush() - Write config properties to disk
     #
     def flush(self):
-        with open(self.path, "wb") as config_file:
+        with open(self.path, "w") as config_file:
             self.write(config_file)
 
     # section() - Set/get items as dictionary
@@ -1819,7 +1822,7 @@ class UserConfig(ConfigParser):
         cfg.set("general", "colour", "true")
 
         # Write config settings to file:
-        with open(path, "wb") as cfg_file:
+        with open(path, "w") as cfg_file:
             cfg.write(cfg_file)
 
 
@@ -2608,7 +2611,8 @@ class Checksum():
     # get() - Return the path checksum
     #
     def get(self):
-        (stdout, stderr) = self.p2.communicate()
+        stdout, _ = self.p2.communicate()
+        stdout = stdout.decode('utf-8')
 
         io.verbose("Checksum worker thread complete in {0:.1f}s."
                    .format(time.time() - self.start))
