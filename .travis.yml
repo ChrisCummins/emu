@@ -25,4 +25,4 @@ install:
 script:
   - python setup.py test
   - ./scripts/run-tests.sh
-  - cat test.log
+  - test ! -f test.log || cat test.log

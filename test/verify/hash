@@ -15,6 +15,10 @@ emu verify origin:$hash
 
 # Break snapshot and test verify failure
 touch $source/.emu/trees/$hash/a
-emu verify origin:$hash
+if emu verify origin:$hash ; then
+    echo "ok"
+else
+    exit 5
+fi
 
 test_teardown

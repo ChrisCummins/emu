@@ -24,7 +24,7 @@ set -e
 rm -rfv $EMU_TEST_DIR/test-source
 sudo mkdir -pv $EMU_TEST_DIR/test-source
 cd $EMU_TEST_DIR/test-source
-sudo "$EMU"
+sudo "$EMU" --version
 sudo rm -rfv $EMU_TEST_DIR/test-source
 
 test_teardown
