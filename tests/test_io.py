@@ -20,7 +20,7 @@ from tests import TestCase
 import re
 import os
 from os import path
-from io import BytesIO
+from io import StringIO
 
 import emu
 from emu import io
@@ -29,22 +29,22 @@ from emu import io
 class TestIO(TestCase):
 
     def _test_output(self, print_fn, enable_fn, disable_fn):
-        out = BytesIO()
+        out = StringIO()
         disable_fn()
         print_fn("foo", file=out)
         self._test("", out.getvalue())
 
-        out = BytesIO()
+        out = StringIO()
         enable_fn()
         print_fn("foo", file=out)
         self._test("foo\n", out.getvalue())
 
-        out = BytesIO()
+        out = StringIO()
         disable_fn()
         print_fn("foo", file=out)
         self._test("", out.getvalue())
 
-        out = BytesIO()
+        out = StringIO()
         enable_fn()
         print_fn("foo", file=out)
         self._test("foo\n", out.getvalue())
@@ -81,7 +81,7 @@ class TestIO(TestCase):
 
     # fatal()
     def test_fatal(self):
-        out = BytesIO()
+        out = StringIO()
         with self.assertRaises(SystemExit) as ctx:
             io.fatal("foo", file=out)
         # Check default return code.
@@ -89,7 +89,7 @@ class TestIO(TestCase):
         self._test("fatal: foo\n", out.getvalue())
 
     def test_fatal_status(self):
-        out = BytesIO()
+        out = StringIO()
         with self.assertRaises(SystemExit) as ctx:
             io.fatal("foo", file=out, status=10)
         # Check specified return code.
