@@ -10,8 +10,8 @@ python:
   - "3.6"
 
 install:
-  - python setup.py install
+  - sudo python setup.py install
 
 script:
-  - python setup.py test
+  - sudo python setup.py test
   - ./scripts/run-tests.sh
