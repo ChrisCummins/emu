@@ -742,7 +742,7 @@ class Sink:
     # head. If 'delete' is True, it deletes the current head.
     def head(self, head=None, dry_run=False, delete=False, error=True):
         head_pointer = os.path.join(self.path, ".emu", "HEAD")
-        most_recent_link = os.path.join(self.path, "Most Recent Backup")
+        most_recent_link = os.path.join(self.path, "Latest")
 
         # Option 1 of 3: Set a new HEAD pointer.
         if head:
@@ -761,7 +761,7 @@ class Sink:
                 Util.write(head_pointer, head.id.id + "\n",
                            error=error)
 
-                # Create a new "Most Recent Backup" link:
+                # Create a new "Latest" link:
                 if path.exists(most_recent_link):
                     Util.rm(most_recent_link, error=error)
                 Util.ln_s(head.name, most_recent_link, error=error)
@@ -1318,8 +1318,8 @@ class Snapshot:
         if head and head.id == self.id:
             new_head = head.parent()
 
-            # Remove old "Most Recent Backup" link:
-            Util.rm(os.path.join(sink.path, "Most Recent Backup"))
+            # Remove old "Latest" link:
+            Util.rm(os.path.join(sink.path, "Latest"))
 
             if new_head:
                 # Update head:
