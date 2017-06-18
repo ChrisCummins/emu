@@ -403,7 +403,7 @@ class Parser(OptionParser):
         self.add_option("--version", action="callback",
                         callback=print_version_and_quit)
         self.add_option("-v", "--verbose", action="callback",
-                        callback=lambda *args: io.enable_verbose_messages)
+                        callback=lambda *_: io.enable_verbose_messages)
         self.add_option("-h", "--help", action="callback",
                         callback=Util.help_and_quit)
 
@@ -828,18 +828,43 @@ class Sink:
           exist for the same day, the most recent one is kept.
         * Weekly snapshots are kept for all previous months. Where multiple
           snapshots exist for the same week, the most recent one is kept.
+        * Snapshots are removed, starting with the oldest, until at least 20% of
+          the total storage space on the partition containing the sink is free.
         """
-        node = self.head()
-#        while node:
+        snapshot = self.head()
 
+        now = datetime.now()
+        current_day = now.day
+        current_week = now.isocalendar()[1]
 
-        while i >= self.config.max_snapshots():
-            list(self.snapshots())[0].destroy(dry_run=dry_run, force=force)
-            if dry_run:
-                i -= 1
+        while snapshot:
+            diff = now - snapshot.node.date
+            parent = snapshot.parent()
+
+            if diff.days < 1:
+                hours_ago = diff.seconds // 3600
+                io.printf(f"skipping snapshot {snapshot} from {hours_ago} hours ago")
+            elif diff.days < 31:
+                days_ago = diff.days
+                if current_day != snapshot.node.date.day:
+                    io.printf(f"skipping last snapshot {snapshot} from {days_ago} days ago")
+                    current_day = snapshot.node.date.day
+                else:
+                    io.printf(f"removing snapshot {snapshot} from {days_ago} days ago")
+                    snapshot.destroy(dry_run=dry_run, force=force)
             else:
-                i = len(list(self.snapshots()))
+                weeks_ago = diff.days // 7
+                if current_week != snapshot.node.date.isocalendar()[1]:
+                    io.printf(f"skipping last snapshot {snapshot} from {weeks_ago} weeks ago")
+                    current_week = snapshot.node.date.isocalendar()[1]
+                else:
+                    io.printf(f"removing snapshot {snaphot} from {weeks_ago} weeks ago")
+                    snapshot.destroy(dry_run=dry_run, force=force)
 
+            snapshot = parent
+
+        # while available_space < .2:
+        #     print("todo delete tail")
 
     def push(self, force=False, ignore_errors=False, archive=True,
              owner=False, dry_run=False):
@@ -849,7 +874,7 @@ class Sink:
         # now:
         checksum_program = self.config.checksum_program()
 
-        self.rotate(force=force, dry_run=dry_run)
+        self.rotate_tm(force=force, dry_run=dry_run)
 
         io.printf("{}: pushing snapshot ({} of {})".format(
             colourise(self.name, Colours.OK),
@@ -1117,7 +1142,6 @@ class Snapshot:
         Util.readable(os.path.join(self.sink.path, self.name), error=err_cb)
         Util.readable(os.path.join(self.sink.path, ".emu", "trees", self.id.id),
                       error=err_cb)
-
 
     # verify() - Verify the contents of snapshot
     #
@@ -1944,6 +1968,10 @@ class Node(ConfigParser):
         s, p ="Snapshot", "name"
         return self.get_string(s, p)
 
+    @property
+    def date(self):
+        s, p = "Snapshot", "date"
+        return datetime.strptime(self.get_string(s, p), Date.REPR_FORMAT)
 
     def has_status(self):
         s, p = "Tree", "Status"
@@ -2561,7 +2589,7 @@ class DirectoryLock:
 class Date:
 
     REPR_FORMAT = "%A %B %d %H:%M:%S %Y"
-    SNAPSHOT_FORMAT = "{0}-{1:02d}-{2:02d} {3:02d}.{4:02d}.{5:02d}"
+    SNAPSHOT_FORMAT = "{0}-{1:02d}-{2:02d}-{3:02d}{4:02d}{5:02d}"
 
     def __init__(self):
         self.date = time.localtime()

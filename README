@@ -24,12 +24,12 @@ INSTALLATION
 Emu uses python setuptools to automate installation. Simply execute
 this command from the base project directory:
 
-    sudo python2 ./setup.py install
+    sudo python3 ./setup.py install
 
 It is recommended that users run the test suite. Note that this must
 be performed _after_ installation:
 
-    sudo python2 ./setup.py test
+    sudo python3 ./setup.py test
 
 BACKGROUND
 --------------------------------------------------------------------------------
