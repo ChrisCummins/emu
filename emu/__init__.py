@@ -809,18 +809,6 @@ class Sink:
 
     def rotate(self, force=False, dry_run=False):
         """
-        Remove old snapshots.
-        """
-        i = len(list(self.snapshots()))
-        while i >= self.config.max_snapshots():
-            list(self.snapshots())[0].destroy(dry_run=dry_run, force=force)
-            if dry_run:
-                i -= 1
-            else:
-                i = len(list(self.snapshots()))
-
-    def rotate_tm(self, force=False, dry_run=False):
-        """
         Rotate old snapshots, using the following strategy:
 
         * All snapshots less than 24 hours old are kept.
@@ -883,13 +871,10 @@ class Sink:
         # now:
         checksum_program = self.config.checksum_program()
 
-        self.rotate_tm(force=force, dry_run=dry_run)
+        self.rotate(force=force, dry_run=dry_run)
 
-        io.printf("{}: pushing snapshot ({} of {})".format(
-            colourise(self.name, Colours.OK),
-            len(list(self.snapshots())) + 1,
-            self.config.max_snapshots())
-        )
+        prefix = colourise(self.name, Colours.OK)
+        io.printf(f"{prefix}: pushing snapshot")
 
         Snapshot.create(self, force=force, ignore_errors=ignore_errors,
                         archive=archive, owner=owner, dry_run=dry_run,
@@ -1560,7 +1545,6 @@ class Snapshot:
             node.set("Sink",     "sink",          str(id.sink_name))
             node.set("Sink",     "path",          str(sink.path))
             node.set("Sink",     "snapshot-no",   str(len(list(sink.snapshots())) + 1))
-            node.set("Sink",     "max-snapshots", str(sink.config.max_snapshots()))
             node.add_section("Emu")
             node.set("Emu",      "emu-version",   str(Meta.version))
             node.set("Emu",      "user",          str(getpass.getuser()))
@@ -1937,17 +1921,6 @@ class SinkConfig(ConfigParser):
 
     def __init__(self, path):
         ConfigParser.__init__(self, path)
-
-    def max_snapshots(self, n=None):
-        s, p = "Snapshots", "max-number"
-
-        if n != None:
-            # Option 1 of 2: Set the maximum number of snapshots.
-            self.set_int(s, p, n)
-        else:
-            # Option 2 of 2: Get the maximum number of snapshots.
-            return self.get_int(s, p)
-
 
     def checksum_program(self, value=None):
         s, p = "Snapshots", "checksum"

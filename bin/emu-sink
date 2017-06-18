@@ -52,7 +52,7 @@ def main(argv, argc):
         for sink in source.sinks():
             print(colourise(sink.name, Colours.GREEN))
             if io.verbose_enabled:
-                snapshots = sink.snapshots()
+                snapshots = list(sink.snapshots())
                 if sink.head():
                     head_id = sink.head().id.id
                 else:
@@ -64,7 +64,6 @@ def main(argv, argc):
 
                 print("Location:        {0}".format(sink.path))
                 print("No of snapshots: {0}".format(len(snapshots)))
-                print("Max snapshots:   {0}".format(sink.config.max_snapshots()))
                 print("Head:            {0}".format(head_id))
                 print("Device:          {0}".format(device))
 

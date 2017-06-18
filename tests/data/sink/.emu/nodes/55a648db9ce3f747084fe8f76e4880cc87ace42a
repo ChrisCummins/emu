@@ -1,6 +1,6 @@
 [Snapshot]
 snapshot = 55a648db9ce3f747084fe8f76e4880cc87ace42a
-parent = 
+parent =
 name = 2015-07-15 11.49.47
 date = Wednesday July 15 11:49:47 2015
 checksum = sha1sum
@@ -13,10 +13,8 @@ source = /home/chris/src/emu/tests/data/source
 sink = origin
 path = /home/chris/src/emu/tests/data/sink
 snapshot-no = 1
-max-snapshots = 10
 
 [Emu]
 emu-version = 0.2.1*
 user = chris
 uid = 1000
-
