@@ -1,11 +1,13 @@
 .PHONY: check test install help
 
+PYTHON ?= python
+
 check test: install
-	python setup.py test
+	$(PYTHON) setup.py test
 	./scripts/run-tests.sh
 
 install:
-	python setup.py install
+	$(PYTHON) setup.py install
 
 help:
 	@echo "usage: make {install,test}"
