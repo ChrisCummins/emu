@@ -875,63 +875,6 @@ class Sink:
 
         return 0
 
-    # squash() - Merge multiple snapshots
-    #
-    def squash(self, snapshots, dry_run=False, force=False):
-
-        # Sanity check to ensure that target snapshots are all from
-        # this sink:
-        for snapshot in snapshots:
-            if snapshot.sink != self:
-                io.fatal("Cannot merge snapshots across multiple sinks.")
-
-        # Return if we have nothing to do:
-        if len(snapshots) < 2:
-            io.printf("{}: nothing to squash"
-                      .format(colourise(self.name, Colours.OK)))
-            return
-
-        # Merge target snapshots into staging area:
-        for snapshot in snapshots:
-            link_dests = []
-            for other in snapshots[-20:]:
-                if other != snapshot:
-                    link_dests.append(other.tree)
-
-            io.printf("{}: merging snapshot {}".format(
-                colourise(self.name, Colours.OK),
-                colourise(snapshot.name, Colours.SNAPSHOT_NEW))
-            )
-            snapshot_dir = snapshot.tree
-            if snapshot_dir[-1] != "/":
-                snapshot_dir += "/"
-            Util.rsync(snapshot_dir,
-                       os.path.join(self.path, "new"),
-                       dry_run=dry_run, link_dest=link_dests,
-                       error=True, quiet=not io.verbose_enabled)
-
-        # Check that merge was successful:
-        new_tree = os.path.join(self.path, "new")
-        if not dry_run and not os.path.exists(new_tree):
-            io.fatal("Failed to create new tree " + new_tree)
-
-        io.printf("{}: merged {} snapshots".format(
-            colourise(self.name, Colours.OK),
-            len(snapshots))
-        )
-
-        # Then destroy all of the merged snapshots:
-        for snapshot in snapshots:
-            snapshot.destroy(dry_run=dry_run, force=force)
-
-        # Now create a snapshot from merging tree:
-        snapshot = Snapshot.create(self, resume=True, force=force,
-                                   dry_run=dry_run)
-
-        # Set new HEAD:
-        self.head(head=snapshot, dry_run=dry_run)
-
-
     # destroy() - Remove a sink from source
     #
     # Note that this only removes the sink pointer from the source,
@@ -951,7 +894,6 @@ class Sink:
 
         self.lock.unlock(force=force)
         source.lock.unlock(force=force)
-
 
     # clean() - Clean up the sink
     #
