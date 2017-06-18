@@ -84,16 +84,6 @@ def main(argv, argc):
         else:
             s = "snapshot       {0}".format(id)
 
-        # Print cached status, if available:
-        if snapshot.node.has_status():
-            status = snapshot.node.status()
-            s += " ("
-            if status:
-                s += colourise("ok", Colours.OK)
-            else:
-                s += colourise("bad", Colours.ERROR)
-            s += ")"
-
         print(s)
 
         if not options.short:

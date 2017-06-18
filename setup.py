@@ -61,10 +61,9 @@ setup(name="emu",
               'man/emu-sink.1',
               'man/emu-clean.1',
               'man/emu-push.1',
-              'man/emu-verify.1',
               'man/emu-squash.1',
               'man/emu-prune.1',
-              'man/emu-log.1'
+              'man/emu-log.1',
           ])
       ],
       scripts=[
@@ -77,7 +76,6 @@ setup(name="emu",
           'bin/emu',
           'bin/emu-sink',
           'bin/emu-squash',
-          'bin/emu-verify'
       ],
       test_suite="nose.collector",
       tests_require=[

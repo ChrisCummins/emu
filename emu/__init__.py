@@ -865,19 +865,13 @@ class Sink:
     def push(self, force=False, ignore_errors=False, archive=True,
              owner=False, dry_run=False):
 
-        # We fetch the checksum program first to ensure that if
-        # there's any problems with the config, they are discovered
-        # now:
-        checksum_program = self.config.checksum_program()
-
         self.rotate(force=force, dry_run=dry_run)
 
         prefix = colourise(self.name, Colours.OK)
         io.printf(f"{prefix}: pushing snapshot")
 
         Snapshot.create(self, force=force, ignore_errors=ignore_errors,
-                        archive=archive, owner=owner, dry_run=dry_run,
-                        checksum_program=checksum_program)
+                        archive=archive, owner=owner, dry_run=dry_run)
 
         return 0
 
@@ -1129,40 +1123,6 @@ class Snapshot:
         # Sanity checks:
         Util.readable(self.tree, error=err_cb)
 
-    # verify() - Verify the contents of snapshot
-    #
-    # Verify the checksum by computing it again and comparing. The
-    # result of this verification is then cached in the node, under
-    # the "Tree" section:
-    #
-    #   [Tree]
-    #   Status: (CLEAN|DIRTY)
-    #   Last-Verified: <timestamp>
-    #
-    # If "cache_results" is true, then update nodes with verification
-    # results. If "use_cached" is True, then retrieve these values
-    # from the node (if present).
-    def verify(self, cache_results=True, use_cached=False):
-
-        if use_cached and self.node.has_status():
-            return self.node.status()
-
-        else:
-
-            # We compute a new checksum and compare that against the
-            # ID:
-            program = self.node.checksum_program()
-            worker_thread = Checksum(self.tree, program=program)
-            clean = worker_thread.get() == self.node.checksum()
-
-            # Update the node with status and last-verified info:
-            if cache_results:
-                date = Date()
-                self.node.status(value=clean)
-                self.node.last_verified(value=date)
-
-            return clean
-
     def nth_parent(self, n, truncate=False, error=False):
         """
         Return the nth parent of snapshot
@@ -1324,12 +1284,6 @@ class Snapshot:
 
         sink.lock.unlock(force=force)
 
-    # diff() - Compare snapshot checksums
-    #
-    # Returns True if other snapshot has identical checksum.
-    def diff(self, other):
-        return self.id == other.id
-
     def __repr__(self):
         return str(self.name)
 
@@ -1376,14 +1330,13 @@ class Snapshot:
     # the file transfer from source to staging area.
     @staticmethod
     def create(sink, resume=False, transfer_from_source=True, force=False,
-               ignore_errors=False, archive=True, owner=True,
-               checksum_program="sha1sum", dry_run=False):
+               ignore_errors=False, archive=True, owner=True, dry_run=False):
 
-        # If two snapshots are created in the same second and with the
-        # same checksum, then their IDs will be identical. To prevent
-        # this, we need to wait until the timestamp will be different.
-        def _get_unique_id(checksum):
-            # Generate an ID from date and checksum:
+        # If two snapshots are created in the same second then their IDs will be
+        # identical. To prevent this, we need to wait until the timestamp will
+        # be different.
+        def _get_unique_id():
+            # Generate an ID from date:
             date = Date()
             id = SnapshotID(sink.name, date.snapshotfmt())
 
@@ -1392,7 +1345,7 @@ class Snapshot:
                 Util.get_snapshot_by_id(id, sink.snapshots())
                 # If id does, wait for a bit and try again:
                 time.sleep(0.5)
-                return _get_unique_id(checksum)
+                return _get_unique_id()
             except SnapshotNotFoundError:
                 # If the ID is unique, return it:
                 return (id, date)
@@ -1483,19 +1436,7 @@ class Snapshot:
         if not dry_run:
             Util.readable(staging_area, error=err_cb)
 
-        if dry_run:
-            checksum = "0" * 32
-        else:
-            # Create worker threads to compute the snapshot checksum
-            # and disk usage:
-            checksum_t = Checksum(staging_area, program=checksum_program)
-            du_t = DiskUsage(staging_area)
-
-            # Blocking:
-            checksum = checksum_t.get()
-            size = du_t.get()
-
-        (id, date) = _get_unique_id(checksum)
+        (id, date) = _get_unique_id()
         name = date.snapshotfmt()
         tree = os.path.join(sink.path, name)
 
@@ -1518,10 +1459,7 @@ class Snapshot:
             node.set("Snapshot", "parent",        str(head_id))
             node.set("Snapshot", "name",          str(name))
             node.set("Snapshot", "date",          str(date))
-            node.set("Snapshot", "checksum",      str(checksum_program))
-            node.set("Snapshot", "size",          str(size))
             node.add_section("Tree")
-            node.set("Tree", "checksum",          str(checksum))
             node.add_section("Sink")
             node.set("Sink",     "source",        str(sink.source.path))
             node.set("Sink",     "sink",          str(id.sink_name))
@@ -1828,15 +1766,6 @@ class ConfigParser(_ConfigParser):
         self.flush()
 
 
-    def get_checksum_program(self, section, prop):
-        value = self.get_string(section, prop)
-        return Util.verify_checksum_program(value)
-
-
-    def set_checksum_program(self, section, prop, value):
-        self.set_string(Util.verify_checksum_program(value))
-
-
 ###########################
 # Global Emu config class #
 ###########################
@@ -1901,20 +1830,6 @@ class SinkConfig(ConfigParser):
     def __init__(self, path):
         ConfigParser.__init__(self, path)
 
-    def checksum_program(self, value=None):
-        s, p = "Snapshots", "checksum"
-
-        if value != None:
-            # Option 1 of 3: Set the checksum program.
-            self.set_checksum_program(s, p, value)
-        elif self.has_option(s, p):
-            # Option 2 of 3: Get the checksum program.
-            return self.get_checksum_program(s, p)
-        else:
-            # Option 3 of 3: Set default and recurse.
-            self.set_checksum_program(s, p, "sha1sum")
-            return self.checksum_program()
-
 
 ########################
 # Snapshot Node Parser #
@@ -1933,50 +1848,6 @@ class Node(ConfigParser):
     def date(self):
         s, p = "Snapshot", "date"
         return datetime.strptime(self.get_string(s, p), Date.REPR_FORMAT)
-
-    def checksum(self, value=None):
-        s, p = "Tree", "checksum"
-        if value != None:
-            self.set_status(s, p, value)
-        elif self.has_option(s, p):
-            return self.get_string(s, p)
-        else:
-            return False
-
-    def has_status(self):
-        s, p = "Tree", "Status"
-        return self.has_option(s, p)
-
-    def status(self, value=None):
-        s, p = "Tree", "Status"
-
-        if value != None:
-            self.set_status(s, p, value)
-        elif self.has_option(s, p):
-            return self.get_status(s, p)
-        else:
-            return False
-
-
-    def checksum_program(self, value=None):
-        s, p = "Snapshot", "checksum"
-
-        if value != None:
-            self.set_checksum_program(s, p, value)
-        elif self.has_option(s, p):
-            return self.get_checksum_program(s, p)
-        else:
-            return "sha1sum"
-
-
-    def last_verified(self, value=None):
-        s, p ="Tree", "Last-Verified"
-
-        if value != None:
-            self.set_string(s, p, value)
-        else:
-            self.get_string(s, p)
-
 
     def parent(self, value=None):
         s, p = "Snapshot", "parent"
@@ -2415,17 +2286,6 @@ class Util:
                 tilde += str(n_index)
         return tilde
 
-
-    @staticmethod
-    def verify_checksum_program(program):
-        regex = r"^(md5|sha1)sum$"
-        if re.search(regex, program.lower()):
-            return program
-        else:
-            io.fatal("invalid checkum program '{0}'"
-                     .format(colourise(program, Colours.ERROR)))
-
-
     @staticmethod
     def help_and_quit(*data):
         script = sys.argv[0]                # Name of the current script
@@ -2600,83 +2460,6 @@ class Colours:
     SNAPSHOT_DELETE = RED
     SNAPSHOT_NEW    = BLUE
     SNAPSHOT        = GREEN
-
-
-##################
-# Worker threads #
-##################
-class Checksum():
-
-    def __init__(self, path, program="sha1sum"):
-        self.start = time.time()
-
-        io.verbose("Creating {0} checksum worker thread...".format(program))
-
-        # Record the starting working directory:
-        cwd = os.getcwd()
-
-        # Set working directory to path:
-        os.chdir(path)
-
-        # Create a /dev/null pipe:
-        with open(os.devnull, 'w') as devnull:
-
-            # Create processes
-            self.p1 = subprocess.Popen(["find", ".", "-type", "f",
-                                        "-printf", "'%T@ %p\n'"],
-                                       stdout=subprocess.PIPE,
-                                       stderr=devnull)
-            try:
-                self.p2 = subprocess.Popen([program],
-                                           stdin=self.p1.stdout,
-                                           stdout=subprocess.PIPE)
-            except OSError:
-                io.fatal("Invalid checksum program '{0}'!"
-                         .format(colourise(program, Colours.RED)))
-
-        # Return to previous working directory:
-        os.chdir(cwd)
-
-
-    # get() - Return the path checksum
-    #
-    def get(self):
-        stdout, _ = self.p2.communicate()
-        stdout = stdout.decode('utf-8')
-
-        io.verbose("Checksum worker thread complete in {0:.1f}s."
-                   .format(time.time() - self.start))
-
-        return stdout.split()[0][:32]
-
-
-class DiskUsage():
-
-    def __init__(self, path):
-        self.start = time.time()
-
-        io.verbose("Creating disk usage worker thread...")
-
-        # Create a /dev/null pipe:
-        with open(os.devnull, 'w') as devnull:
-
-            # Create processes
-            self.p1 = subprocess.Popen(["du", "--summarize",
-                                        "--human-readable", path],
-                                       stdout=subprocess.PIPE,
-                                       stderr=devnull)
-
-
-    # get() - Return the disk size
-    #
-    def get(self):
-        (stdout, _) = self.p1.communicate()
-        stdout = stdout.decode('utf-8')
-
-        io.verbose("Disk usage worker thread complete in {0:.1f}s."
-                   .format(time.time() - self.start))
-
-        return stdout.split()[0]
 
 
 ###############
