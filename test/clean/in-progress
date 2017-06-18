@@ -7,21 +7,18 @@ emu init
 mkdir -pv $sink
 emu sink add origin $sink
 
-mkdir $sink/.emu/trees/new
-touch $sink/.emu/trees/new/test
-assert_is_dir $sink/.emu/trees/new
-assert_is_file $sink/.emu/trees/new/test
+touch $sink/.emu/nodes/foobar
+touch $sink/.emu/HEAD
+assert_is_file $sink/.emu/nodes/foobar
 
 set +e
 emu clean --dry-run --recursive
 set -e
-assert_is_dir $sink/.emu/trees/new
-assert_is_file $sink/.emu/trees/new/test
+assert_is_file $sink/.emu/nodes/foobar
 
 set +e
 emu clean --recursive
 set -e
-assert_is_not_dir $sink/.emu/trees/new
-assert_is_not_file $sink/.emu/trees/new/test
+assert_is_not_file $sink/.emu/nodes/foobar
 
 test_teardown

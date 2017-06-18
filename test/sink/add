@@ -13,7 +13,6 @@ emu sink add test $EMU_TEST_DIR/test-new
 assert_is_dir "$EMU_TEST_DIR/test-new"
 assert_dir_is_not_empty "$EMU_TEST_DIR/test-new"
 assert_is_dir "$EMU_TEST_DIR/test-new/.emu/nodes"
-assert_is_dir "$EMU_TEST_DIR/test-new/.emu/trees"
 
 assert_is_file "$EMU_TEST_DIR/test-new/.emu/HEAD"
 assert_file_is_empty "$EMU_TEST_DIR/test-new/.emu/HEAD"

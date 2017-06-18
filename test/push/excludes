@@ -12,17 +12,13 @@ echo "- test" >> .emu/excludes
 echo "hello, world!" > test
 emu push
 
-hash=$(ls ../test-sink/.emu/trees)
-assert_is_dir ../test-sink/.emu/trees/$hash
-assert_is_not_file ../test-sink/.emu/trees/$hash/test
+assert_is_not_file ../test-sink/Latest/test
 
 emu prune origin:HEAD
 
 echo "" > .emu/excludes
 emu push
-hash=$(ls ../test-sink/.emu/trees)
-assert_is_dir ../test-sink/.emu/trees/$hash
-assert_is_file ../test-sink/.emu/trees/$hash/test
+assert_is_file ../test-sink/Latest/test
 
 
 test_teardown

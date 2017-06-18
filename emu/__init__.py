@@ -575,7 +575,7 @@ class Source:
 
     # checkout() - Restore source to snapshot
     #
-    # Transfer the contents of snapshot tree to source directory.
+    # Transfer the contents of snapshot to source directory.
     def checkout(self, snapshot, dry_run=False, force=False):
 
         def err_cb(e):
@@ -604,12 +604,11 @@ class Source:
         self.lock.lock(force=force)
         sink.lock.lock(force=force)
 
-        if not dry_run:
-            # Perform file transfer:
-            Util.rsync(snapshot.tree + "/", self.path,
-                       dry_run=dry_run, exclude=exclude,
-                       exclude_from=exclude_from,
-                       delete=True, error=err_cb)
+        # Perform file transfer:
+        Util.rsync(snapshot.tree + "/", self.path,
+                   dry_run=dry_run, exclude=exclude,
+                   exclude_from=exclude_from,
+                   delete=True, error=err_cb)
 
         # Set new HEAD:
         sink.head(head=snapshot, dry_run=dry_run, error=err_cb)
@@ -716,7 +715,6 @@ class Sink:
         # Sanity checks:
         Util.readable(os.path.join(self.path, ".emu"),          error=err_cb)
         Util.readable(os.path.join(self.path, ".emu", "nodes"), error=err_cb)
-        Util.readable(os.path.join(self.path, ".emu", "trees"), error=err_cb)
         Util.readable(os.path.join(self.path, ".emu", "HEAD"),  error=err_cb)
 
         config_path = os.path.join(self.path, ".emu", "config")
@@ -913,12 +911,12 @@ class Sink:
             if snapshot_dir[-1] != "/":
                 snapshot_dir += "/"
             Util.rsync(snapshot_dir,
-                       os.path.join(self.path, ".emu", "trees", "new"),
+                       os.path.join(self.path, "new"),
                        dry_run=dry_run, link_dest=link_dests,
                        error=True, quiet=not io.verbose_enabled)
 
         # Check that merge was successful:
-        new_tree = os.path.join(self.path, ".emu", "trees", "new")
+        new_tree = os.path.join(self.path, "new")
         if not dry_run and not os.path.exists(new_tree):
             io.fatal("Failed to create new tree " + new_tree)
 
@@ -972,25 +970,14 @@ class Sink:
             io.verbose("Removed lock '{}'", self.lock.lockpath)
 
         # Check for orphan node files:
-        trees = Util.ls(os.path.join(self.path, ".emu", "trees"))
+        dir_contents = Util.ls(self.path)
         for f in Util.ls(os.path.join(self.path, ".emu", "nodes")):
-            if f not in trees:
+            if f not in dir_contents:
                 path = os.path.join(self.path, ".emu", "nodes", f)
 
                 if not dry_run:
                     Util.rm(path, must_exist=True)
                 io.printf("Deleted orphan node file '{0}'"
-                          .format(colourise(path, Colours.RED)))
-
-        # Check for orphan trees:
-        nodes = Util.ls(os.path.join(self.path, ".emu", "nodes"))
-        for f in Util.ls(os.path.join(self.path, ".emu", "trees")):
-            if f not in nodes:
-                path = os.path.join(self.path, ".emu", "trees", f)
-
-                if not dry_run:
-                    Util.rm(path, must_exist=True)
-                io.printf("Deleted orphan tree '{0}'"
                           .format(colourise(path, Colours.RED)))
 
         # Delete broken symlinks in sink:
@@ -1081,7 +1068,7 @@ class Sink:
 
         # Create directory structure:
         emu_dir = os.path.join(path, ".emu")
-        directories = ["", "trees", "nodes"]
+        directories = ["", "nodes"]
         for d in directories:
             Util.mkdir(os.path.join(emu_dir, d), mode=0o700,
                        error=err_cb)
@@ -1119,23 +1106,22 @@ class Snapshot:
 
     def __init__(self, id, sink):
 
-        tree_path = os.path.join(sink.path, ".emu", "trees", id.id)
+        def err_cb(e):
+            io.fatal("Non-existent or malformed snapshot '{0}'".format(self.id))
+
         node_path = os.path.join(sink.path, ".emu", "nodes", id.id)
+        Util.readable(node_path, error=err_cb)
 
         self.id = id
         self.sink = sink
 
-        self.tree = tree_path
         self.node = Node(node_path)
         self.name = self.node.name()
 
-        def err_cb(e):
-            io.fatal("Non-existent or malformed snapshot '{0}'".format(self.id))
+        self.tree = os.path.join(sink.path, self.name)
 
         # Sanity checks:
-        Util.readable(os.path.join(self.sink.path, self.name), error=err_cb)
-        Util.readable(os.path.join(self.sink.path, ".emu", "trees", self.id.id),
-                      error=err_cb)
+        Util.readable(self.tree, error=err_cb)
 
     # verify() - Verify the contents of snapshot
     #
@@ -1415,10 +1401,6 @@ class Snapshot:
 
             # Tidy up any intermediate files which may have been created:
             try:
-                Util.rm(name_link)
-            except Exception:
-                pass
-            try:
                 Util.rm(tree)
             except Exception:
                 pass
@@ -1447,7 +1429,7 @@ class Snapshot:
             exit(1)
 
         source = sink.source
-        staging_area = os.path.join(sink.path, ".emu", "trees", "new")
+        staging_area = os.path.join(sink.path, "new")
         exclude = ["/.emu"]
         exclude_from = [os.path.join(source.path, ".emu", "excludes")]
         link_dests = []
@@ -1511,16 +1493,11 @@ class Snapshot:
 
         (id, date) = _get_unique_id(checksum)
         name = date.snapshotfmt()
-        tree = os.path.join(sink.path, ".emu", "trees", id.id)
-        name_link = os.path.join(sink.path, name)
+        tree = os.path.join(sink.path, name)
 
         if not dry_run:
             # Move tree into position
             Util.mv(staging_area, tree, must_exist=True, error=err_cb)
-
-            # Make name symlink:
-            Util.ln_s(".emu/trees/{0}".format(id.id),
-                      name_link, error=err_cb)
 
         # Get parent node ID:
         if sink.head():

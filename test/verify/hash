@@ -14,7 +14,7 @@ hash=$(ls $source/.emu/nodes)
 emu verify origin:$hash
 
 # Break snapshot and test verify failure
-touch $source/.emu/trees/$hash/a
+touch $source/Latest/a
 if emu verify origin:$hash ; then
     echo "should have failed!"
     exit 5
