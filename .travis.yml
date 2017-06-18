@@ -3,7 +3,7 @@ sudo: required
 
 os:
   - linux
-# TODO:  - osx
+  - osx
 
 env:
   EMU_MANDIR=man
