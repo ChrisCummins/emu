@@ -35,8 +35,7 @@ def main(argv, argc):
     snapshot = parser.parse_snapshots(source, accept_sink_names=False,
                                       single_arg=True)[0]
 
-    source.checkout(snapshot, dry_run=options.dry_run,
-                    force=options.force)
+    source.pull(snapshot, dry_run=options.dry_run, force=options.force)
 
     return 0
 

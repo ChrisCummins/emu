@@ -573,11 +573,12 @@ class Source:
         Util.readable(os.path.join(self.path, ".emu", "hooks"),    error=err_cb)
         Util.readable(os.path.join(self.path, ".emu", "sinks"),    error=err_cb)
 
+    def pull(self, snapshot, dry_run=False, force=False):
+        """
+        Pull contents of source from snapshot.
 
-    # checkout() - Restore source to snapshot
-    #
-    # Transfer the contents of snapshot to source directory.
-    def checkout(self, snapshot, dry_run=False, force=False):
+        Restores source state to the specified snapshot.
+        """
 
         def err_cb(e):
             io.printf("{}: woops! Something went wrong."
@@ -591,12 +592,12 @@ class Source:
             except Exception:
                 pass
 
-            io.error("{}: failed to checkout snapshot {}!"
+            io.error("{}: failed to pull snapshot {}!"
                      .format(colourise(sink.name, Colours.ERROR),
                              colourise(snapshot.id.snapshot_name, Colours.GREEN)))
             exit(1)
 
-        io.printf("Checking out {0}".format(snapshot.id))
+        io.printf("Pull from {0}".format(snapshot.id))
 
         sink = snapshot.sink
         exclude = ["/.emu"]
