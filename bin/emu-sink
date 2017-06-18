@@ -54,7 +54,7 @@ def main(argv, argc):
             if io.verbose_enabled:
                 snapshots = list(sink.snapshots())
                 if sink.head():
-                    head_id = sink.head().id.id
+                    head_id = sink.head().id.snapshot_name
                 else:
                     head_id = ""
 

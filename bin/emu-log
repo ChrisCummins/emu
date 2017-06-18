@@ -78,7 +78,7 @@ def main(argv, argc):
                             Colours.INFO))
 
         # Log:
-        id = colourise(snapshot.id.id, Colours.SNAPSHOT)
+        id = colourise(snapshot.id.snapshot_name, Colours.SNAPSHOT)
         if options.short:
             s = "{0}  {1}".format(snapshot.id, snapshot.node.name())
         else:

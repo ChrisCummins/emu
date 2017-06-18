@@ -276,8 +276,10 @@ def isprocess(pid, error=False):
         return False
 
 
+SNAPSHOT_NAME_REGEX = r"[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6}"
+
 def _parse_snapshot_id(string, sink):
-    regex = (r"((?P<id>[a-f0-9]{40})|"
+    regex = (r"((?P<id>[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6})|"
              "(?P<head>HEAD)|"
              "(?P<tail>TAIL))"
              "(?P<n_index>~([0-9]+)?)?")
@@ -326,9 +328,9 @@ def _parse_arg(arg, source, accept_sink_names=True):
     #_parse_snapshot_id(string, sink)
 
     regex = (r"^(?P<sink>[a-zA-Z]+)"
-             "(:(?P<src>([a-f0-9]{40}|HEAD|TAIL)(~[0-9]*)?)"
+             "(:(?P<src>([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6}|HEAD|TAIL)(~[0-9]*)?)"
              "(?P<branch>.."
-             "(?P<dst>([a-f0-9]{40}|HEAD|TAIL)(~[0-9]*)?)?)?)?")
+             "(?P<dst>([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6}|HEAD|TAIL)(~[0-9]*)?)?)?)?")
 
     match = re.match(regex, arg)
 
@@ -352,9 +354,8 @@ def _parse_arg(arg, source, accept_sink_names=True):
     elif accept_sink_names:
         return sink.snapshots()
     else:
-        raise InvalidArgsError("One or more snapshots must be "
-                               "specified using "
-                               "<sink>:<snapshot>")
+        raise InvalidArgsError(
+            "One or more snapshots must be specified using <sink>:<snapshot>")
 
     if dst_match:
         dst = _parse_snapshot_id(dst_match, sink)
@@ -592,7 +593,7 @@ class Source:
 
             io.error("{}: failed to checkout snapshot {}!"
                      .format(colourise(sink.name, Colours.ERROR),
-                             colourise(snapshot.id.id, Colours.GREEN)))
+                             colourise(snapshot.id.snapshot_name, Colours.GREEN)))
             exit(1)
 
         io.printf("Checking out {0}".format(snapshot.id))
@@ -756,7 +757,7 @@ class Sink:
 
             # Else write a new HEAD pointer:
             if not dry_run:
-                Util.write(head_pointer, head.id.id + "\n",
+                Util.write(head_pointer, head.id.snapshot_name + "\n",
                            error=error)
 
                 # Create a new "Latest" link:
@@ -765,7 +766,7 @@ class Sink:
                 Util.ln_s(head.name, most_recent_link, error=error)
 
             io.printf("{}: HEAD at {}".format(colourise(self.name, Colours.OK),
-                                              head.id.id))
+                                              head.id.snapshot_name))
 
         # Option 2 of 3: Delete the HEAD pointer, leaving the sink
         #              headless.
@@ -1104,12 +1105,12 @@ class Sink:
 #########################
 class Snapshot:
 
-    def __init__(self, id, sink):
+    def __init__(self, id: 'SnapshotID', sink: Sink):
 
         def err_cb(e):
             io.fatal("Non-existent or malformed snapshot '{0}'".format(self.id))
 
-        node_path = os.path.join(sink.path, ".emu", "nodes", id.id)
+        node_path = os.path.join(sink.path, ".emu", "nodes", id.snapshot_name)
         Util.readable(node_path, error=err_cb)
 
         self.id = id
@@ -1117,6 +1118,11 @@ class Snapshot:
 
         self.node = Node(node_path)
         self.name = self.node.name()
+
+        # Temporary sanity check until the id==name refactor is complete:
+        if self.name != self.id.snapshot_name:
+            print(f"WTF {self.name} != {self.id.snapshot_name}")
+            sys.exit(100)
 
         self.tree = os.path.join(sink.path, self.name)
 
@@ -1147,7 +1153,7 @@ class Snapshot:
             # ID:
             program = self.node.checksum_program()
             worker_thread = Checksum(self.tree, program=program)
-            clean = worker_thread.get() == self.id.checksum
+            clean = worker_thread.get() == self.node.checksum()
 
             # Update the node with status and last-verified info:
             if cache_results:
@@ -1176,7 +1182,7 @@ class Snapshot:
                                              error=error)
                 elif not truncate:
                     id = SnapshotID(self.sink.name,
-                                    self.id.id + Util.n_index_to_tilde(n))
+                                    self.id.snapshot_name + Util.n_index_to_tilde(n))
                     raise SnapshotNotFoundError(id)
                 else:
                     return self
@@ -1253,7 +1259,7 @@ class Snapshot:
         Get/set snapshot's parent.
         """
         if value != None:
-            self.node.parent(value=value.id.id)
+            self.node.parent(value=value.id.snapshot_name)
         elif delete:
             self.node.parent(value="")
         else:
@@ -1313,7 +1319,7 @@ class Snapshot:
         Util.rm(os.path.join(sink.path, self.name),
                 must_exist=True, error=True)
         Util.rm(self.tree, must_exist=True, error=True)
-        Util.rm("{0}/.emu/nodes/{1}".format(sink.path, self.id.id),
+        Util.rm("{0}/.emu/nodes/{1}".format(sink.path, self.id.snapshot_name),
                 must_exist=True, error=True)
 
         sink.lock.unlock(force=force)
@@ -1322,7 +1328,7 @@ class Snapshot:
     #
     # Returns True if other snapshot has identical checksum.
     def diff(self, other):
-        return self.id.checksum == other.id.checksum
+        return self.id == other.id
 
     def __repr__(self):
         return str(self.name)
@@ -1379,15 +1385,13 @@ class Snapshot:
         def _get_unique_id(checksum):
             # Generate an ID from date and checksum:
             date = Date()
-            _hash = str(date.hex()) + checksum
-            assert len(_hash) == 40
+            id = SnapshotID(sink.name, date.snapshotfmt())
 
-            id = SnapshotID(sink.name, _hash)
             try:
                 # See if a snapshot with that ID already exists:
                 Util.get_snapshot_by_id(id, sink.snapshots())
                 # If id does, wait for a bit and try again:
-                time.sleep(0.05)
+                time.sleep(0.5)
                 return _get_unique_id(checksum)
             except SnapshotNotFoundError:
                 # If the ID is unique, return it:
@@ -1501,22 +1505,23 @@ class Snapshot:
 
         # Get parent node ID:
         if sink.head():
-            head_id = sink.head().id.id
+            head_id = sink.head().id.snapshot_name
         else:
             head_id = ""
 
         if not dry_run:
             # Create node:
-            node_path = "{0}/.emu/nodes/{1}".format(sink.path, id.id)
+            node_path = "{0}/.emu/nodes/{1}".format(sink.path, id.snapshot_name)
             node = _ConfigParser()
             node.add_section("Snapshot")
-            node.set("Snapshot", "snapshot",      id.id)
+            node.set("Snapshot", "snapshot",      id.snapshot_name)
             node.set("Snapshot", "parent",        str(head_id))
             node.set("Snapshot", "name",          str(name))
             node.set("Snapshot", "date",          str(date))
             node.set("Snapshot", "checksum",      str(checksum_program))
             node.set("Snapshot", "size",          str(size))
             node.add_section("Tree")
+            node.set("Tree", "checksum",          str(checksum))
             node.add_section("Sink")
             node.set("Sink",     "source",        str(sink.source.path))
             node.set("Sink",     "sink",          str(id.sink_name))
@@ -1531,7 +1536,7 @@ class Snapshot:
 
         # Update HEAD:
         if not dry_run:
-            snapshot = Snapshot(SnapshotID(sink.name, id.id), sink)
+            snapshot = Snapshot(SnapshotID(sink.name, id.snapshot_name), sink)
             sink.head(head=snapshot, dry_run=dry_run, error=err_cb)
 
         source.lock.unlock(force=force)
@@ -1550,17 +1555,15 @@ class Snapshot:
 # Unique global snapshot identifier #
 #####################################
 class SnapshotID:
-    def __init__(self, sink_name, id):
+    def __init__(self, sink_name: str, snapshot_name: str):
         self.sink_name = str(sink_name)
-        self.id = str(id)
-        self.timestamp = id[:8]
-        self.checksum = id[8:]
+        self.snapshot_name = str(snapshot_name)
 
     def __repr__(self):
-        return self.sink_name + ":" + self.id
+        return self.sink_name + ":" + self.snapshot_name
 
     def __key__(self):
-        return (self.sink_name, self.id)
+        return (self.sink_name, self.snapshot_name)
 
     def __hash__(self):
         return hash(self.__key__())
@@ -1569,8 +1572,8 @@ class SnapshotID:
 # are first sorted alphabetically by sink, then chronologically by timestamp.
 
     def __eq__(self, other):
-        if other.id:
-            return self.id == other.id and self.sink_name == other.sink_name
+        if other.snapshot_name:
+            return self.snapshot_name == other.snapshot_name and self.sink_name == other.sink_name
         else:
             return False
 
@@ -1580,8 +1583,7 @@ class SnapshotID:
     def __gt__(self, other):
         # If snapshots have same sink, sort chronologically:
         if self.sink_name == other.sink_name:
-            date, other_date = int(self.timestamp, 16), int(other.timestamp, 16)
-            return date > other_date
+            return self.snapshot_name > other.snapshot_name
         # Else sort alphabetically:
         else:
             sinks = [self.sink_name, other.sink_name]
@@ -1932,10 +1934,18 @@ class Node(ConfigParser):
         s, p = "Snapshot", "date"
         return datetime.strptime(self.get_string(s, p), Date.REPR_FORMAT)
 
+    def checksum(self, value=None):
+        s, p = "Tree", "checksum"
+        if value != None:
+            self.set_status(s, p, value)
+        elif self.has_option(s, p):
+            return self.get_string(s, p)
+        else:
+            return False
+
     def has_status(self):
         s, p = "Tree", "Status"
         return self.has_option(s, p)
-
 
     def status(self, value=None):
         s, p = "Tree", "Status"
@@ -2733,7 +2743,7 @@ class SnapshotNotFoundError(Error):
     def __str__(self):
         return ("Snapshot '{0}:{1}' not found!"
                 .format(self.id.sink_name,
-                        colourise(self.id.id, Colours.ERROR)))
+                        colourise(self.id.snapshot_name, Colours.ERROR)))
 
 
 class SourceNotFoundError(Error):
