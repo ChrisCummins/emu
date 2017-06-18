@@ -863,13 +863,22 @@ class Sink:
 
             snapshot = parent
 
-        # while available_space < .2:
-        #     print("todo delete tail")
+        # delete snapshots, starting with the tail, until at least 20% of the
+        # space on the drive is available
+        statvfs = os.statvfs(self.path)
+        available_space = statvfs.f_bavail / statvfs.f_blocks
+        while len(list(self.snapshots())) and available_space < .2:
+            print(f"available space is {available_space:.0%}, removing {snapshot}")
+            self.tail().destroy(dry_run=dry_run, force=force)
+
+            # break manually on a dry-run to prevent infinite loop:
+            if dry_run:
+                break
 
     def push(self, force=False, ignore_errors=False, archive=True,
              owner=False, dry_run=False):
 
-        # We fetch the checksum problem first to ensure that if
+        # We fetch the checksum program first to ensure that if
         # there's any problems with the config, they are discovered
         # now:
         checksum_program = self.config.checksum_program()
