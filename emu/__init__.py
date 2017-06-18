@@ -1345,7 +1345,7 @@ class Snapshot:
         return self.id.checksum == other.id.checksum
 
     def __repr__(self):
-        return str(self.id)
+        return str(self.name)
 
     def __hash__(self):
         return hash(self.id)
