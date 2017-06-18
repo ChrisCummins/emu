@@ -103,7 +103,7 @@ def main(argv, argc):
                 print_dict(snapshot.node.section("Sink"))
                 print_dict(snapshot.node.section("Emu"))
             if i < no_of_snapshots:
-                print
+                print()
 
     # Flush pagination
     tmp_file.flush()

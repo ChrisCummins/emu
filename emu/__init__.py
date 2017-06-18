@@ -2710,7 +2710,8 @@ class DiskUsage():
     # get() - Return the disk size
     #
     def get(self):
-        (stdout, stderr) = self.p1.communicate()
+        (stdout, _) = self.p1.communicate()
+        stdout = stdout.decode('utf-8')
 
         io.verbose("Disk usage worker thread complete in {0:.1f}s."
                    .format(time.time() - self.start))
