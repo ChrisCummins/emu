@@ -64,7 +64,7 @@ def index():
     source = emu.Source(source_dir)
 
     data = {
-        "refresh_every": 10,  # seconds
+        "refresh_every": 60,  # seconds
         "assets": {
             "cache_tag": 1,
             "styles_css": flask.url_for('static', filename='styles.css'),
