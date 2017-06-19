@@ -66,27 +66,29 @@
             <div class="timeline-badge">
               <a><i class="fa fa-circle" id=""></i></a>
             </div>
+            {% if in_progress %}
             <div class="timeline-panel">
               <div class="timeline-heading">
-                <h4>Now</h4>
+                <h4>In Progress</h4>
               </div>
             </div>
+            {% endif %}
           </li>
           {% for snapshot in snapshots %}
 
           <li {% if loop.index0 % 2 == 0 %}class="timeline-inverted"{% endif %}
-              style="top: {{ snapshot.position * 200 | round }}px">
+              style="top: {{ snapshot.position * 1 | round }}px">
             <div class="timeline-badge">
               <a><i class="fa fa-circle" id=""></i></a>
             </div>
             <div class="timeline-panel">
               <div class="timeline-heading">
-                <h4>{{ snapshot.how_long_ago }} on {{ snapshot.sink }}</h4>
+                <h4>{% if num_sinks > 1 %}{{ snapshot.sink }}:{% endif %}{{ snapshot.name }} from {{ snapshot.how_long_ago }}{% if num_sinks > 1 %} on {{ snapshot.sink }}{% endif %}</h4>
               </div>
             </div>
           </li>
           {% endfor %}
-          <li class="clearfix no-float" style="height: {{ snapshots[-1].position * 200 | round }}px"></li>
+          <li class="clearfix no-float" style="height: {{ snapshots[-1].position * 1 | round }}px"></li>
         </ul>
 
       </div> <!-- /.col-lg-12 -->

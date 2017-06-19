@@ -35,7 +35,7 @@ def get_snapshot_data(snapshot: emu.Snapshot) -> Dict[str, str]:
         "sink": snapshot.sink.name,
         "name": snapshot.name,
         "how_long_ago": humanize.naturaltime(datetime.now() - snapshot.date),
-        "seconds_ago": (datetime.now() - snapshot.date).seconds,
+        "seconds_ago": (datetime.now() - snapshot.date).total_seconds(),
     }
 
 
@@ -48,7 +48,8 @@ def get_snapshots_data(source: emu.Source) -> List[Dict[str, str]]:
     gaps = [data[0]["seconds_ago"]]
     for i in range(1, len(data)):
         gaps.append(data[i]["seconds_ago"] - data[i-1]["seconds_ago"])
-    gaps = [g / max(gaps) for g in gaps]  # normalize
+    mingap = min(gaps)
+    gaps = [g / mingap for g in gaps]  # normalize
     acc = 0
     for d, gap in zip(data, gaps):
         acc += gap
@@ -74,6 +75,7 @@ def index():
             "path": unexpand_user(source.path),
         },
         "sinks": [get_sink_data(sink) for sink in source.sinks()],
+        "in_progress": any(sink.is_inprogress for sink in source.sinks()),
         "snapshots": get_snapshots_data(source),
         "emu": {
             "version": emu.Meta.version,

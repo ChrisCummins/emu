@@ -827,6 +827,10 @@ class Sink:
         statvfs = os.statvfs(self.path)
         return statvfs.f_blocks * statvfs.f_bsize
 
+    @property
+    def is_inprogress(self):
+        """ return true if new snapshot is in progress """
+        return os.path.exists(os.path.join(self.path, ".emu", "new")) and self.lock.islocked
 
     def push(self, force=False, ignore_errors=False, archive=True,
              owner=False, dry_run=False):
