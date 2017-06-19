@@ -799,15 +799,35 @@ class Sink:
 
         # delete snapshots, starting with the tail, until at least 20% of the
         # space on the drive is available
-        statvfs = os.statvfs(self.path)
-        available_space = statvfs.f_bavail / statvfs.f_blocks
-        while len(list(self.snapshots())) and available_space < .2:
-            print(f"available space is {available_space:.0%}, removing {snapshot}")
+        while len(list(self.snapshots())) and self.free_space_ratio < .2:
+            print(f"available space is {self.free_space_ratio:.0%}, " +
+                  f"removing {snapshot}")
             self.tail().destroy(dry_run=dry_run, force=force)
 
             # break manually on a dry-run to prevent infinite loop:
             if dry_run:
                 break
+
+    @property
+    def used_space_on_device(self):
+        statvfs = os.statvfs(self.path)
+        return (statvfs.f_blocks - statvfs.f_bavail) * statvfs.f_bsize
+
+    @property
+    def free_space_on_device(self):
+        statvfs = os.statvfs(self.path)
+        return statvfs.f_bavail * statvfs.f_bsize
+
+    @property
+    def free_space_ratio(self):
+        statvfs = os.statvfs(self.path)
+        return statvfs.f_bavail / statvfs.f_blocks
+
+    @property
+    def device_capacity(self):
+        statvfs = os.statvfs(self.path)
+        return statvfs.f_blocks * statvfs.f_bsize
+
 
     def push(self, force=False, ignore_errors=False, archive=True,
              owner=False, dry_run=False):
@@ -1145,6 +1165,11 @@ class Snapshot:
             Util.rm(self.tree, must_exist=True, error=True)
             Util.rm(f"{sink.path}/.emu/nodes/{self.id.snapshot_name}",
                     must_exist=True, error=True)
+
+    @property
+    def date(self):
+        return datetime.strptime(self.name, "%Y-%m-%d-%H%M%S")
+
 
     def __repr__(self):
         return str(self.name)
