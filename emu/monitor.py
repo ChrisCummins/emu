@@ -87,7 +87,7 @@ def index():
 
 
 def main():
-    app.run(debug=True)
+    app.run(host='0.0.0.0')
 
 
 if __name__ == "__main__":
