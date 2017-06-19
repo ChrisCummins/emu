@@ -25,13 +25,6 @@ man_prefix = os.environ.get("EMU_MANDIR", "/usr/share/man")
 man_dir = man_prefix + "/man1/"
 
 
-# class BlackBoxTests(test):
-#     def run(self):
-#         from subprocess import call
-#         call(['./scripts/run-tests.sh',])
-#         test.run(self)
-
-
 setup(name="emu",
       version="0.2.5",
       description=("Fast, incremental, rotating backups"),
@@ -42,15 +35,18 @@ setup(name="emu",
       packages=["emu"],
       package_data={
           'emu': [
+              'static/site.js',
+              'static/styles.css',
               'templates/sink-templates/config',
+              'templates/source-templates/config',
+              'templates/source-templates/excludes',
+              'templates/source-templates/hooks/exec/log.error.sample',
+              'templates/source-templates/hooks/exec/mount-remote.post.sample',
+              'templates/source-templates/hooks/exec/mount-remote.pre.sample',
+              'templates/source-templates/hooks/push/email-report.post.sample',
               'templates/source-templates/hooks/push/email.error.sample',
               'templates/source-templates/hooks/push/log-start.pre.sample',
-              'templates/source-templates/hooks/push/email-report.post.sample',
-              'templates/source-templates/hooks/exec/mount-remote.post.sample',
-              'templates/source-templates/hooks/exec/log.error.sample',
-              'templates/source-templates/hooks/exec/mount-remote.pre.sample',
-              'templates/source-templates/excludes',
-              'templates/source-templates/config'
+              'templates/timeline.html',
           ]
       },
       data_files=[
@@ -70,6 +66,7 @@ setup(name="emu",
           'bin/emu-clean',
           'bin/emu-init',
           'bin/emu-log',
+          'bin/emu-monitor',
           'bin/emu-prune',
           'bin/emu-pull',
           'bin/emu-push',
@@ -78,8 +75,10 @@ setup(name="emu",
       test_suite="nose.collector",
       tests_require=[
           "coverage",
-          "nose"
+          "nose",
       ],
-      #cmdclass = {'test': BlackBoxTests},
-      install_requires=[],
+      install_requires=[
+        "Flask==0.12.2",
+        "humanize==0.5.1",
+      ],
       zip_safe=False)
