@@ -34,7 +34,8 @@ from os import path
 from pkg_resources import resource_filename
 from sys import exit
 
-from . import io
+from emu import io
+from emu.lockfile import LockFile
 
 
 def colourise(string, colour):
@@ -557,7 +558,7 @@ class Source:
             io.fatal("fatal: Not an emu source (or any parent directory)")
 
         self.path = path
-        self.lock = DirectoryLock(self.path)
+        self.lock = LockFile(os.path.join(self.path, ".emu", "LOCK"))
 
         def err_cb(e):
             s = "fatal: Malformed emu source"
@@ -586,13 +587,7 @@ class Source:
             if e:
                 io.error(e)
 
-            try:
-                sink.lock.unlock(force=force)
-                self.lock.unlock(force=force)
-            except Exception:
-                pass
-
-            io.error("{}: failed to checkout snapshot {}!"
+            io.error("{}: failed to pull snapshot {}!"
                      .format(colourise(sink.name, Colours.ERROR),
                              colourise(snapshot.id.snapshot_name, Colours.GREEN)))
             exit(1)
@@ -603,17 +598,13 @@ class Source:
         exclude = ["/.emu"]
         exclude_from = [os.path.join(self.path, ".emu", "excludes")]
 
-        self.lock.lock(force=force)
-        sink.lock.lock(force=force)
-
-        # Perform file transfer:
-        Util.rsync(snapshot.tree + "/", self.path,
-                   dry_run=dry_run, exclude=exclude,
-                   exclude_from=exclude_from,
-                   delete=True, error=err_cb)
-
-        sink.lock.unlock(force=force)
-        self.lock.unlock(force=force)
+        with self.lock.acquire(replace_stale=True, force=force):
+            with sink.lock.acquire(replace_stale=True, force=force):
+                # Perform file transfer:
+                Util.rsync(snapshot.tree + "/", self.path,
+                           dry_run=dry_run, exclude=exclude,
+                           exclude_from=exclude_from,
+                           delete=True, error=err_cb)
 
         io.printf("Source restored from {0}"
                   .format(colourise(snapshot.name, Colours.SNAPSHOT_NEW)))
@@ -644,10 +635,10 @@ class Source:
     def clean(self, dry_run=False, recursive=False):
         io.verbose("Cleaning source at '{0}'...".format(self.path))
 
-        if os.path.exists(self.lock.lockpath):
+        if self.lock.isstale:
             if not dry_run:
-                os.remove(self.lock.lockpath)
-            io.verbose("Removed lock '{}'", self.lock.lockpath)
+                os.remove(self.lock.path)
+            io.verbose("Removed lock '{}'", self.lock.path)
 
         # Clean sinks:
         if recursive:
@@ -706,10 +697,9 @@ class Sink:
 
         self.name = name
         self.source = source
-        self.path = Util.read("{0}/.emu/sinks/{1}".format(self.source.path,
-                                                           self.name),
+        self.path = Util.read(f"{self.source.path}/.emu/sinks/{self.name}",
                               error=err_cb)
-        self.lock = DirectoryLock(self.path)
+        self.lock = LockFile(os.path.join(self.path, ".emu", "LOCK"))
 
         # Sanity checks:
         Util.readable(os.path.join(self.path, ".emu"),          error=err_cb)
@@ -731,20 +721,21 @@ class Sink:
         for id in ids:
             yield Snapshot(SnapshotID(self.name, id), self)
 
+    def snapshot_names(self):
+        return sorted(Util.ls(os.path.join(self.path, ".emu", "nodes"),
+                              must_exist=True))
+
     def head(self):
         """
         Get the current sink head
 
         Returns the snapshot pointed to by the HEAD file, or None if headless.
         """
-        nodes = sorted(Util.ls(os.path.join(self.path, ".emu", "nodes"),
-                               must_exist=True))
-
         # no snapshots
-        if not len(nodes):
+        if not len(self.snapshot_names()):
             return None
 
-        return Snapshot(SnapshotID(self.name, nodes[0]), self)
+        return Snapshot(SnapshotID(self.name, self.snapshot_names()[-1]), self)
 
     def tail(self):
         """
@@ -756,14 +747,11 @@ class Sink:
         Returns:
             Snapshot: Tail
         """
-        nodes = sorted(Util.ls(os.path.join(self.path, ".emu", "nodes")))
-
         # no snapshots
-        if not len(nodes):
+        if not len(self.snapshot_names()):
             return None
 
-        return Snapshot(SnapshotID(self.name, nodes[-1]), self)
-
+        return Snapshot(SnapshotID(self.name, self.snapshot_names()[0]), self)
 
     def rotate(self, force=False, dry_run=False):
         """
@@ -841,18 +829,14 @@ class Sink:
     def destroy(self, force=False):
         source = self.source
 
-        source.lock.lock(force=force)
-        self.lock.lock(force=force)
-
         # Delete sink pointer:
-        Util.rm("{0}/.emu/sinks/{1}".format(source.path, self.name),
-                must_exist=True, error=True)
+        with source.lock.acquire(replace_stale=True, force=force):
+            with self.lock.acquire(replace_stale=True, force=force):
+                Util.rm("{0}/.emu/sinks/{1}".format(source.path, self.name),
+                        must_exist=True, error=True)
 
         io.printf("Removed sink {0}".format(colourise(self.name,
                                                       Colours.RED)))
-
-        self.lock.unlock(force=force)
-        source.lock.unlock(force=force)
 
     # clean() - Clean up the sink
     #
@@ -860,10 +844,10 @@ class Sink:
         io.verbose("Cleaning sink {0} at '{1}'..."
                    .format(colourise(self.name, Colours.BLUE), self.path))
 
-        if os.path.exists(self.lock.lockpath):
+        if self.lock.isstale:
             if not dry_run:
-                os.remove(self.lock.lockpath)
-            io.verbose("Removed lock '{}'", self.lock.lockpath)
+                os.remove(self.lock.path)
+            io.verbose("Removed lock '{}'", self.lock.path)
 
         # Check for orphan node files:
         dir_contents = Util.ls(self.path)
@@ -918,10 +902,6 @@ class Sink:
                 Util.rm(emu_dir)
             except Exception:
                 pass
-            try:
-                source.lock.unlock(force=force)
-            except Exception:
-                pass
             exit(1)
 
         # Create sink directory if required:
@@ -951,34 +931,31 @@ class Sink:
                        .format(colourise(sink.name, Colours.ERROR),
                                path))
 
-        source.lock.lock(force=force)
+        with source.lock.acquire(replace_stale=True, force=force):
+            # Create directory structure:
+            emu_dir = os.path.join(path, ".emu")
+            directories = ["", "nodes"]
+            for d in directories:
+                Util.mkdir(os.path.join(emu_dir, d), mode=0o700,
+                           error=err_cb)
 
-        # Create directory structure:
-        emu_dir = os.path.join(path, ".emu")
-        directories = ["", "nodes"]
-        for d in directories:
-            Util.mkdir(os.path.join(emu_dir, d), mode=0o700,
-                       error=err_cb)
+            # Ignore rsync errors if required:
+            if ignore_errors:
+                rsync_error = False
+            else:
+                rsync_error = err_cb
 
-        # Ignore rsync errors if required:
-        if ignore_errors:
-            rsync_error = False
-        else:
-            rsync_error = err_cb
+            # Copy template files:
+            Util.rsync(template_dir + "/", emu_dir + "/",
+                       error=rsync_error, archive=archive, update=force,
+                       quiet=not io.verbose_enabled)
 
-        # Copy template files:
-        Util.rsync(template_dir + "/", emu_dir + "/",
-                   error=rsync_error, archive=archive, update=force,
-                   quiet=not io.verbose_enabled)
+            # Create HEAD:
+            Util.write(os.path.join(emu_dir, "HEAD"), "", error=err_cb)
 
-        # Create HEAD:
-        Util.write(os.path.join(emu_dir, "HEAD"), "", error=err_cb)
-
-        # Create pointer:
-        Util.write("{0}/.emu/sinks/{1}".format(source.path, name),
-                   path + "\n", error=err_cb)
-
-        source.lock.unlock(force=force)
+            # Create pointer:
+            Util.write("{0}/.emu/sinks/{1}".format(source.path, name),
+                       path + "\n", error=err_cb)
 
         io.printf("Initialised sink {0} at '{1}'"
                   .format(colourise(name, Colours.INFO), path))
@@ -1140,35 +1117,34 @@ class Snapshot:
         if dry_run:
             return
 
-        sink.lock.lock(force=force)
+        with sink.lock.acquire(replace_stale=True, force=force):
 
-        # If current snapshot is HEAD, then set parent HEAD:
-        head = sink.head()
-        if head and head.id == self.id and head.parent():
-            new_head = head.parent()
+            # If current snapshot is HEAD, then set parent HEAD:
+            head = sink.head()
+            if head and head.id == self.id:
+                Util.rm(os.path.join(sink.path, "Latest"))
 
-            # Remove old "Latest" link:
-            Util.rm(os.path.join(sink.path, "Latest"))
-            Util.ln_s(new_head.name, "Latest")
+                if len(self.sink.snapshot_names()) >= 2:
+                    new_head = Snapshot(
+                        SnapshotID(sink.name, self.sink.snapshot_names()[-2]), sink)
+                    Util.ln_s(new_head.name, os.path.join(sink.path, "Latest"))
 
-        # Re-allocate parent references from all other snapshots:
-        new_parent = self.parent()
-        for snapshot in sink.snapshots():
-            parent = snapshot.parent()
-            if parent and parent.id == self.id:
-                if new_parent:
-                    snapshot.parent(value=new_parent)
-                else:
-                    snapshot.parent(delete=True)
+            # Re-allocate parent references from all other snapshots:
+            new_parent = self.parent()
+            for snapshot in sink.snapshots():
+                parent = snapshot.parent()
+                if parent and parent.id == self.id:
+                    if new_parent:
+                        snapshot.parent(value=new_parent)
+                    else:
+                        snapshot.parent(delete=True)
 
-        # Delete snapshot files:
-        Util.rm(os.path.join(sink.path, self.name),
-                must_exist=True, error=True)
-        Util.rm(self.tree, must_exist=True, error=True)
-        Util.rm("{0}/.emu/nodes/{1}".format(sink.path, self.id.snapshot_name),
-                must_exist=True, error=True)
-
-        sink.lock.unlock(force=force)
+            # Delete snapshot files:
+            Util.rm(os.path.join(sink.path, self.name),
+                    must_exist=True, error=True)
+            Util.rm(self.tree, must_exist=True, error=True)
+            Util.rm(f"{sink.path}/.emu/nodes/{self.id.snapshot_name}",
+                    must_exist=True, error=True)
 
     def __repr__(self):
         return str(self.name)
@@ -1251,11 +1227,6 @@ class Snapshot:
                 Util.rm(node_path)
             except Exception:
                 pass
-            try:
-                source.lock.unlock(force=force)
-                sink.lock.unlock(force=force)
-            except Exception:
-                pass
 
             io.error("{}: failed to create new snapshot!"
                      .format(colourise(sink.name, Colours.ERROR)))
@@ -1268,88 +1239,75 @@ class Snapshot:
         link_dests = []
 
         # lock the sink and source
-        try:
-            source.lock.lock(force=force)
-        except DirectoryIsLockedError as e:
-            io.fatal("failed to acquire source lock '{}'"
-                     .format(source.lock.lockpath))
-        try:
-            sink.lock.lock(force=force)
-        except DirectoryIsLockedError as e:
-            io.fatal("failed to acquire sink {} lock '{}'"
-                     .format(colourise(sink.name, Colours.ERROR),
-                             sink.lock.lockpath))
+        with source.lock.acquire(replace_stale=True, force=force):
+            with sink.lock.acquire(replace_stale=True, force=force):
 
+                # Ignore rsync errors if required:
+                if ignore_errors:
+                    rsync_error = False
+                else:
+                    rsync_error = err_cb
 
-        # Ignore rsync errors if required:
-        if ignore_errors:
-            rsync_error = False
-        else:
-            rsync_error = err_cb
+                if not resume:
+                    # Use up to 20 of the most recent snapshots as link
+                    # destinations:
+                    for snapshot in list(sink.snapshots())[-20:]:
+                        link_dests.append(snapshot.tree)
 
-        if not resume:
-            # Use up to 20 of the most recent snapshots as link
-            # destinations:
-            for snapshot in list(sink.snapshots())[-20:]:
-                link_dests.append(snapshot.tree)
+                    # Perform file transfer:
+                    transfer_time = Util.rsync(source.path + "/",
+                                               staging_area, archive=archive,
+                                               owner=owner, dry_run=dry_run,
+                                               link_dest=link_dests, exclude=exclude,
+                                               exclude_from=exclude_from, delete=True,
+                                               delete_excluded=True, error=rsync_error)
 
-            # Perform file transfer:
-            transfer_time = Util.rsync(source.path + "/",
-                                       staging_area, archive=archive,
-                                       owner=owner, dry_run=dry_run,
-                                       link_dest=link_dests, exclude=exclude,
-                                       exclude_from=exclude_from, delete=True,
-                                       delete_excluded=True, error=rsync_error)
+                    # Print "transfer complete" message:
+                    if transfer_time > 10:
+                        io.printf("{}: file transfer complete ({:.2f}s), "
+                                  "creating snapshot."
+                                  .format(colourise(sink.name, Colours.INFO),
+                                          transfer_time))
 
-            # Print "transfer complete" message:
-            if transfer_time > 10:
-                io.printf("{}: file transfer complete ({:.2f}s), "
-                          "creating snapshot."
-                          .format(colourise(sink.name, Colours.INFO),
-                                  transfer_time))
+                # Assert that we have a staging area to work with:
+                if not dry_run:
+                    Util.readable(staging_area, error=err_cb)
 
-        # Assert that we have a staging area to work with:
-        if not dry_run:
-            Util.readable(staging_area, error=err_cb)
+                id, date = _get_unique_id()
+                name = date.snapshotfmt()
+                tree = os.path.join(sink.path, name)
 
-        (id, date) = _get_unique_id()
-        name = date.snapshotfmt()
-        tree = os.path.join(sink.path, name)
+                if not dry_run:
+                    # Move tree into position
+                    Util.mv(staging_area, tree, must_exist=True, error=err_cb)
 
-        if not dry_run:
-            # Move tree into position
-            Util.mv(staging_area, tree, must_exist=True, error=err_cb)
+                # Get parent node ID:
+                if sink.head():
+                    head_id = sink.head().id.snapshot_name
+                else:
+                    head_id = ""
 
-        # Get parent node ID:
-        if sink.head():
-            head_id = sink.head().id.snapshot_name
-        else:
-            head_id = ""
-
-        if not dry_run:
-            # Create node:
-            node_path = "{0}/.emu/nodes/{1}".format(sink.path, id.snapshot_name)
-            node = _ConfigParser()
-            node.add_section("Snapshot")
-            node.set("Snapshot", "snapshot",      id.snapshot_name)
-            node.set("Snapshot", "parent",        str(head_id))
-            node.set("Snapshot", "name",          str(name))
-            node.set("Snapshot", "date",          str(date))
-            node.add_section("Tree")
-            node.add_section("Sink")
-            node.set("Sink",     "source",        str(sink.source.path))
-            node.set("Sink",     "sink",          str(id.sink_name))
-            node.set("Sink",     "path",          str(sink.path))
-            node.set("Sink",     "snapshot-no",   str(len(list(sink.snapshots())) + 1))
-            node.add_section("Emu")
-            node.set("Emu",      "emu-version",   str(Meta.version))
-            node.set("Emu",      "user",          str(getpass.getuser()))
-            node.set("Emu",      "uid",           str(os.getuid()))
-            with open(node_path, "w") as node_file:
-                node.write(node_file)
-
-        source.lock.unlock(force=force)
-        sink.lock.unlock(force=force)
+                if not dry_run:
+                    # Create node:
+                    node_path = "{0}/.emu/nodes/{1}".format(sink.path, id.snapshot_name)
+                    node = _ConfigParser()
+                    node.add_section("Snapshot")
+                    node.set("Snapshot", "snapshot",      id.snapshot_name)
+                    node.set("Snapshot", "parent",        str(head_id))
+                    node.set("Snapshot", "name",          str(name))
+                    node.set("Snapshot", "date",          str(date))
+                    node.add_section("Tree")
+                    node.add_section("Sink")
+                    node.set("Sink",     "source",        str(sink.source.path))
+                    node.set("Sink",     "sink",          str(id.sink_name))
+                    node.set("Sink",     "path",          str(sink.path))
+                    node.set("Sink",     "snapshot-no",   str(len(list(sink.snapshots())) + 1))
+                    node.add_section("Emu")
+                    node.set("Emu",      "emu-version",   str(Meta.version))
+                    node.set("Emu",      "user",          str(getpass.getuser()))
+                    node.set("Emu",      "uid",           str(os.getuid()))
+                    with open(node_path, "w") as node_file:
+                        node.write(node_file)
 
         io.printf("{}: new snapshot {}".format(
             colourise(sink.name, Colours.OK),
@@ -1357,12 +1315,9 @@ class Snapshot:
         )
 
         if not dry_run:
-            snapshot = Snapshot(SnapshotID(sink.name, id.snapshot_name), sink)
-            Util.rm(os.path.join(sink.path, "Latest"))
-            olddir = os.getcwd()
-            os.chdir(sink.path)
-            Util.ln_s(snapshot.name, "Latest")
-            os.chdir(olddir)
+            snapshot = Snapshot(id, sink)
+            Util.rm(os.path.join(sink.path, "Latest"), must_exist=False)
+            Util.ln_s(snapshot.name, os.path.join(sink.path, "Latest"))
             return snapshot
 
 
@@ -2173,122 +2128,6 @@ class Util:
         exit(0)
 
 
-class DirectoryLock:
-    """
-    A file-based locking mechanism for directories.
-
-    Directory locks signal intended exclusive read and write access to
-    other compliant emu processes. Note that these locks provide no
-    guarantees: they can be forced, and they do not provide any
-    protection against non-emu processes.
-
-    Attributes:
-
-        path (str): Directory of lock.
-        lockpath (str): Path to lock file.
-        pid (int): The process ID of the lock. If lock is not claimed,
-          return None.
-        date (datetime): The date that the lock was claimed. If lock
-          is not claimed, return None.
-        islocked (bool): Whether the directory is locked.
-        owned_by_self (bool): Whether the current process has
-          locked the directory.
-    """
-    def __init__(self, dirpath, lockpath=None):
-        """
-        Create a new directory lock.
-
-        Arguments:
-
-            dirpath (str): Path of directory to lock.
-            lockpath (str, optional): Path of lockfile for
-              directory. Defaults to: <dirpath>/.emu/LOCK
-        """
-        lockpath = lockpath or path.join(dirpath, ".emu", "LOCK")
-        self.path = path.abspath(dirpath)
-        self.lockpath = path.join(lockpath)
-
-    @property
-    def pid(self):
-        if path.exists(self.lockpath):
-            with open(self.lockpath) as lockfile:
-                data = lockfile.read()
-                components = data.split()
-                pid = int(components[0])
-                return pid
-        else:
-            return None
-
-    @property
-    def date(self):
-        if path.exists(self.lockpath):
-            with open(self.lockpath) as lockfile:
-                data = lockfile.read()
-                components = data.split()
-                date = datetime.fromtimestamp(int(float(components[1])))
-                return date
-        else:
-            return None
-
-    @property
-    def islocked(self):
-        return os.path.exists(self.lockpath)
-
-    @property
-    def owned_by_self(self):
-        return self.pid == os.getpid()
-
-    def lock(self, force=False):
-        """
-        Lock directory to current process.
-
-        A lock can be claimed if any of these conditions are true:
-
-        1. There's no lock.
-        2. There *is* a lock but we're using force.
-        3. There is a lock but we own it.
-
-        Arguments:
-
-            force (boolean, optional): If true, ignore any existing
-              lock. If false, fail if lock already claimed.
-
-        Raises:
-
-            DirectoryIsLockedError: If the lock is already claimed
-              (not raised if force option is used).
-        """
-        io.verbose("Writing lockfile '{0}'".format(self.lockpath))
-
-        if not self.islocked or force or self.pid == os.getpid():
-            with open(self.lockpath, "w") as lockfile:
-                print(os.getpid(), time.time(), file=lockfile)
-        else:
-            raise DirectoryIsLockedError(self)
-
-    def unlock(self, force=False):
-        """
-        Unlock directory from current process.
-
-        To release a lock, we must already own the lock.
-
-        Raises:
-
-            DirectoryIsLockedError: If the lock is claimed by another
-              process (not raised if force option is used).
-        """
-        # There's no lock, so do nothing.
-        if not self.islocked:
-            return
-
-        io.verbose("Removing lockfile '{0}'".format(self.lockpath))
-
-        if self.owned_by_self or force:
-            os.remove(self.lockpath)
-        else:
-            raise DirectoryIsLockedError(self)
-
-
 #############################
 # Date representation class #
 #############################
@@ -2439,39 +2278,6 @@ class SourceCreateError(Error):
     def __str__(self):
         return ("Failed to create source at '{0}'!"
                 .format(self.source_dir))
-
-
-class DirectoryIsLockedError(Error):
-    """
-    Raised in case of lock contention.
-    """
-    def __init__(self, dirlock):
-        self.path = dirlock.path
-        self.claimant = dirlock.pid
-        self.claim_date = dirlock.date
-
-    def __repr__(self):
-        claimaint_is_running = True if isprocess(self.claimint) else False
-        claimaint_status = "running" if claimaint_is_running else "dead"
-        msg = [
-            "Directory '{path}' is locked by".format(path=self.path),
-            "    Process      {pid} ({status})".format(pid=self.claimaint,
-                                                       status=claimaint_status),
-            "    Date locked  {date}".format(date=self.claim_date),
-            ""
-        ]
-        if claimaint_is_running:
-            msg.append("It looks like the process is still running.")
-        else:
-            msg.append("It looks like the process is no longer running.")
-        msg += [
-            "",
-            "To ignore this lock and overwrite, use option '--force'."
-        ]
-        return "\n".join(msg)
-
-    def __str__(self):
-        return self.__repr__()
 
 
 class VersionError(Error):

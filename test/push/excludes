@@ -18,6 +18,7 @@ emu prune origin:HEAD
 
 echo "" > .emu/excludes
 emu push
+ls ../test-sink/Latest/
 assert_is_file ../test-sink/Latest/test
 
 
