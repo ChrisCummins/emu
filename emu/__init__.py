@@ -704,7 +704,6 @@ class Sink:
         # Sanity checks:
         Util.readable(os.path.join(self.path, ".emu"),          error=err_cb)
         Util.readable(os.path.join(self.path, ".emu", "nodes"), error=err_cb)
-        Util.readable(os.path.join(self.path, ".emu", "HEAD"),  error=err_cb)
 
         config_path = os.path.join(self.path, ".emu", "config")
         self.config = SinkConfig(config_path)
@@ -969,9 +968,6 @@ class Sink:
             Util.rsync(template_dir + "/", emu_dir + "/",
                        error=rsync_error, archive=archive, update=force,
                        quiet=not io.verbose_enabled)
-
-            # Create HEAD:
-            Util.write(os.path.join(emu_dir, "HEAD"), "", error=err_cb)
 
             # Create pointer:
             Util.write("{0}/.emu/sinks/{1}".format(source.path, name),
