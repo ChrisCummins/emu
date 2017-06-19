@@ -34,11 +34,11 @@ man_dir = man_prefix + "/man1/"
 
 setup(name="emu",
       version="0.2.5",
-      description=("Fast, incremental, rotating snapshot backups."),
+      description=("Fast, incremental, rotating backups"),
       url="https://github.com/ChrisCummins/emu",
       author="Chris Cummins",
       author_email="chrisc.101@gmail.com",
-      license="MIT",
+      license="GNU GPL v3",
       packages=["emu"],
       package_data={
           'emu': [
