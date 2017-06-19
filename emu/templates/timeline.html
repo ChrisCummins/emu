@@ -29,7 +29,7 @@
     <div class="container">
       <div><h1><i class="fa fa-server"></i> Emu Overview for <code>{{ source.path }}</code></h1></div>
       <p>
-      {{ num_snapshots }} snapshots {% if num_sinks > 1 %}across {{ num_sinks }} sinks{% else %}a single sink{% endif %}, from {{ snapshots[0].how_long_ago }} to {{ snapshots[-1].how_long_ago }}.
+      {{ num_snapshots }} snapshots {% if num_sinks > 1 %}across {{ num_sinks }} sinks,{% endif %} from {{ snapshots[0].how_long_ago }} to {{ snapshots[-1].how_long_ago }}.
       </p>
     </div>
   </div>
