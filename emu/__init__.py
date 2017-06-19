@@ -592,12 +592,12 @@ class Source:
             except Exception:
                 pass
 
-            io.error("{}: failed to pull snapshot {}!"
+            io.error("{}: failed to checkout snapshot {}!"
                      .format(colourise(sink.name, Colours.ERROR),
                              colourise(snapshot.id.snapshot_name, Colours.GREEN)))
             exit(1)
 
-        io.printf("Pull from {0}".format(snapshot.id))
+        io.printf("Pulling {0}".format(snapshot.id))
 
         sink = snapshot.sink
         exclude = ["/.emu"]
@@ -611,9 +611,6 @@ class Source:
                    dry_run=dry_run, exclude=exclude,
                    exclude_from=exclude_from,
                    delete=True, error=err_cb)
-
-        # Set new HEAD:
-        sink.head(head=snapshot, dry_run=dry_run, error=err_cb)
 
         sink.lock.unlock(force=force)
         self.lock.unlock(force=force)
@@ -734,60 +731,20 @@ class Sink:
         for id in ids:
             yield Snapshot(SnapshotID(self.name, id), self)
 
+    def head(self):
+        """
+        Get the current sink head
 
-    # head() - Get/Set the current sink head
-    #
-    # Returns the snapshot pointed to by the HEAD file, or None if
-    # headless. If 'head' is provided, set this snapshot to be the new
-    # head. If 'delete' is True, it deletes the current head.
-    def head(self, head=None, dry_run=False, delete=False, error=True):
-        head_pointer = os.path.join(self.path, ".emu", "HEAD")
-        most_recent_link = os.path.join(self.path, "Latest")
+        Returns the snapshot pointed to by the HEAD file, or None if headless.
+        """
+        nodes = sorted(Util.ls(os.path.join(self.path, ".emu", "nodes"),
+                               must_exist=True))
 
-        # Option 1 of 3: Set a new HEAD pointer.
-        if head:
-            old_head = self.head()
-            # Check that the new HEAD is different from the current
-            # HEAD pointer:
-            head_is_different = not old_head or (old_head.id != head.id)
+        # no snapshots
+        if not len(nodes):
+            return None
 
-            # If the new HEAD is the same as the current one, then do
-            # nothing:
-            if not head_is_different:
-                return
-
-            # Else write a new HEAD pointer:
-            if not dry_run:
-                Util.write(head_pointer, head.id.snapshot_name + "\n",
-                           error=error)
-
-                # Create a new "Latest" link:
-                if path.exists(most_recent_link):
-                    Util.rm(most_recent_link, error=error)
-                Util.ln_s(head.name, most_recent_link, error=error)
-
-            io.printf("{}: HEAD at {}".format(colourise(self.name, Colours.OK),
-                                              head.id.snapshot_name))
-
-        # Option 2 of 3: Delete the HEAD pointer, leaving the sink
-        #              headless.
-        elif delete:
-            if not dry_run:
-                Util.rm(most_recent_link, error=error)
-                Util.write(head_pointer, "", error=error)
-
-            io.printf("{}: now in headless state".format(colourise(self.name,
-                                                                   Colours.OK)))
-
-        # Option 3 of 3: Fetch the HEAD snapshot, or None if headless.
-        else:
-            pointer = Util.read(head_pointer, error=error)
-            if pointer:
-                id = SnapshotID(self.name, pointer)
-                return Util.get_snapshot_by_id(id, self.snapshots())
-            else:
-                return None
-
+        return Snapshot(SnapshotID(self.name, nodes[0]), self)
 
     def tail(self):
         """
@@ -799,12 +756,13 @@ class Sink:
         Returns:
             Snapshot: Tail
         """
-        head = self.head()
+        nodes = sorted(Util.ls(os.path.join(self.path, ".emu", "nodes")))
 
-        if head:
-            return list(head.branch())[-1]
-        else:
+        # no snapshots
+        if not len(nodes):
             return None
+
+        return Snapshot(SnapshotID(self.name, nodes[-1]), self)
 
 
     def rotate(self, force=False, dry_run=False):
@@ -935,15 +893,6 @@ class Sink:
                                   .format(colourise(path, Colours.RED)))
                 except Exception as e:
                     pass
-
-        # Check for orphan HEAD:
-        head_pointer = os.path.join(self.path, ".emu", "HEAD")
-        pointer = Util.read(head_pointer)
-        head_node = os.path.join(self.path, ".emu", "nodes", pointer)
-        if not os.path.exists(head_node):
-            io.printf("Deleted orphan HEAD '{0}'"
-                      .format(colourise(pointer, Colours.RED)))
-            self.head(delete=True, dry_run=dry_run)
 
         io.printf("Sink {0} is clean."
                   .format(colourise(self.name, Colours.BLUE)))
@@ -1195,18 +1144,12 @@ class Snapshot:
 
         # If current snapshot is HEAD, then set parent HEAD:
         head = sink.head()
-        if head and head.id == self.id:
+        if head and head.id == self.id and head.parent():
             new_head = head.parent()
 
             # Remove old "Latest" link:
             Util.rm(os.path.join(sink.path, "Latest"))
-
-            if new_head:
-                # Update head:
-                sink.head(head=new_head, dry_run=dry_run)
-            else:
-                # Remove head:
-                sink.head(delete=True, dry_run=dry_run)
+            Util.ln_s(new_head.name, "Latest")
 
         # Re-allocate parent references from all other snapshots:
         new_parent = self.parent()
@@ -1309,18 +1252,8 @@ class Snapshot:
             except Exception:
                 pass
             try:
-                if sink.head().id == id:
-                    sink.head(delete=true)
-            except Exception:
-                pass
-            try:
                 source.lock.unlock(force=force)
                 sink.lock.unlock(force=force)
-            except Exception:
-                pass
-            try:
-                if source.head().id == id:
-                    source.head(delete=True)
             except Exception:
                 pass
 
@@ -1415,11 +1348,6 @@ class Snapshot:
             with open(node_path, "w") as node_file:
                 node.write(node_file)
 
-        # Update HEAD:
-        if not dry_run:
-            snapshot = Snapshot(SnapshotID(sink.name, id.snapshot_name), sink)
-            sink.head(head=snapshot, dry_run=dry_run, error=err_cb)
-
         source.lock.unlock(force=force)
         sink.lock.unlock(force=force)
 
@@ -1429,6 +1357,12 @@ class Snapshot:
         )
 
         if not dry_run:
+            snapshot = Snapshot(SnapshotID(sink.name, id.snapshot_name), sink)
+            Util.rm(os.path.join(sink.path, "Latest"))
+            olddir = os.getcwd()
+            os.chdir(sink.path)
+            Util.ln_s(snapshot.name, "Latest")
+            os.chdir(olddir)
             return snapshot
 
 
