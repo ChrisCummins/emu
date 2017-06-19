@@ -66,10 +66,10 @@
             <div class="timeline-badge">
               <a><i class="fa fa-circle" id=""></i></a>
             </div>
-            {% if in_progress %}
+            {% if in_progress > 0 %}
             <div class="timeline-panel">
               <div class="timeline-heading">
-                <h4>In Progress</h4>
+                <h4>{% if in_progress > 1 %}{{ in_progress }} {% endif %}In Progress (started {{ in_progress_since_hr }})</h4>
               </div>
             </div>
             {% endif %}

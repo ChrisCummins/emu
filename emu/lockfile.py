@@ -223,7 +223,7 @@ class LockFile:
             with open(path) as infile:
                 components = infile.read().split()
                 pid = int(components[0])
-                date = datetime.date.fromtimestamp(float(components[1]))
+                date = datetime.datetime.fromtimestamp(float(components[1]))
             return pid, date
         else:
             return None, None

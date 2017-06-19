@@ -1,8 +1,8 @@
+import datetime
 import flask
 import humanize
 import os
 
-from datetime import datetime
 from itertools import chain
 from flask import Flask
 from typing import Dict, List
@@ -17,7 +17,7 @@ def unexpand_user(path: str) -> str:
 
 
 def get_sink_data(sink: emu.Sink) -> Dict[str, str]:
-    return {
+    d =  {
         "name": sink.name,
         "path": unexpand_user(sink.path),
         "space": {
@@ -29,13 +29,22 @@ def get_sink_data(sink: emu.Sink) -> Dict[str, str]:
         }
     }
 
+    if sink.is_inprogress:
+        d["in_progress"] = True
+        d["in_progress_since"] = (datetime.datetime.now() - sink.lock.date).total_seconds()
+    else:
+        d["in_progress"] = False
+        d["in_progress_since"] = None
+
+    return d
+
 
 def get_snapshot_data(snapshot: emu.Snapshot) -> Dict[str, str]:
     return {
         "sink": snapshot.sink.name,
         "name": snapshot.name,
-        "how_long_ago": humanize.naturaltime(datetime.now() - snapshot.date),
-        "seconds_ago": (datetime.now() - snapshot.date).total_seconds(),
+        "how_long_ago": humanize.naturaltime(datetime.datetime.now() - snapshot.date),
+        "seconds_ago": (datetime.datetime.now() - snapshot.date).total_seconds(),
     }
 
 
@@ -75,7 +84,6 @@ def index():
             "path": unexpand_user(source.path),
         },
         "sinks": [get_sink_data(sink) for sink in source.sinks()],
-        "in_progress": any(sink.is_inprogress for sink in source.sinks()),
         "snapshots": get_snapshots_data(source),
         "emu": {
             "version": emu.Meta.version,
@@ -85,11 +93,16 @@ def index():
     data["num_snapshots"] = len(data["snapshots"])
     data["num_sinks"] = len(data["sinks"])
 
+    data["in_progress"] = sum(1 if sink["in_progress"] else 0 for sink in data["sinks"])
+    data["in_progress_since"] = max(sink["in_progress_since"] for sink in data["sinks"])
+    data["in_progress_since_hr"] = humanize.naturaltime(
+        datetime.datetime.now() - datetime.timedelta(seconds=data["in_progress_since"]))
+
     return flask.render_template("timeline.html", **data)
 
 
 def main():
-    app.run(host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0')
 
 
 if __name__ == "__main__":
