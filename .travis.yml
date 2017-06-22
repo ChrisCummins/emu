@@ -17,6 +17,7 @@ before_install:
   - virtualenv -p python3.6 env
   - source env/bin/activate
   - python --version
+  - pip install coveralls
 
 install:
   - mkdir -pv $EMU_MANDIR
@@ -27,3 +28,6 @@ script:
   - python setup.py test
   - ./scripts/run-tests.sh
   - test ! -f test.log || cat test.log
+
+after_success:
+  - coveralls
