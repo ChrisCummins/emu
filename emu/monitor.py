@@ -101,8 +101,22 @@ def index():
     return flask.render_template("timeline.html", **data)
 
 
-def main():
-    app.run(debug=True, host='0.0.0.0')
+def main(local_only=False, debug=False):
+    """
+    Main monitor loop. This method never returns.
+
+    Arguments:
+        local_only (bool, optional): If true, server accessible from localhost.
+        debug (bool, optional): If true, run server in debug mode.
+    """
+    opts = {
+        debug=debug,
+    }
+
+    if not local_only:
+        opts["host"] = "0.0.0.0"
+
+    app.run(**opts)
 
 
 if __name__ == "__main__":
