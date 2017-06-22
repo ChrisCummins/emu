@@ -50,7 +50,7 @@ details.
    :target: https://coveralls.io/github/ChrisCummins/emu?branch=master
 
 .. |Documentation Status| image:: https://readthedocs.org/projects/emu/badge/?version=latest&style=flat
-   :target: http://emu.readthedocs.io/en/latest/?badge=latest
+   :target: http://emu-backups.readthedocs.io/en/latest/?badge=latest
 
 .. |PyPi Status| image:: https://badge.fury.io/py/emu.svg
    :target: https://pypi.python.org/pypi/emu
