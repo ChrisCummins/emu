@@ -55,8 +55,8 @@ details.
 .. |PyPi Status| image:: https://badge.fury.io/py/emu.svg
    :target: https://pypi.python.org/pypi/emu
 
-.. |Python Version| image:: https://img.shields.io/badge/python-3.6-blue.svg?style=flat
+.. |Python Version| image:: https://img.shields.io/badge/python-3.6-brightgreen.svg?style=flat
    :target: https://www.python.org/
 
-.. |License Badge| image:: https://img.shields.io/badge/license-GPL%20v3-blue.svg?style=flat
+.. |License Badge| image:: https://img.shields.io/badge/license-GPL%20v3-brightgreen.svg?style=flat
    :target: https://www.gnu.org/licenses/gpl-3.0.en.html
