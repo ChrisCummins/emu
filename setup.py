@@ -16,13 +16,28 @@
 # along with emu.  If not, see <http://www.gnu.org/licenses/>.
 import os
 from glob import glob
-from setuptools import setup
-from setuptools.command.test import test
+
+from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
 
 
 # Directory to install man pages to.
 man_prefix = os.environ.get("EMU_MANDIR", "/usr/share/man")
 man_dir = man_prefix + "/man1/"
+
+
+class PyTestCommand(TestCommand):
+    description = 'run test suite'
+    user_options = []
+
+    def run_tests(self):
+        import emu.test
+        emu.test.testsuite()
+
+
+def read_requirements(path='requirements.txt'):
+    with open(path) as infile:
+        return [x.strip() for x in infile.readlines() if x.strip()]
 
 
 setup(name="emu",
@@ -32,7 +47,10 @@ setup(name="emu",
       author="Chris Cummins",
       author_email="chrisc.101@gmail.com",
       license="GNU GPL v3",
-      packages=["emu"],
+      packages=[
+        "emu",
+        "emu.test",
+      ],
       package_data={
           'emu': [
               'static/site.js',
@@ -77,8 +95,6 @@ setup(name="emu",
           "coverage",
           "nose",
       ],
-      install_requires=[
-        "Flask==0.12.2",
-        "humanize==0.5.1",
-      ],
+      install_requires=read_requirements("requirements.txt"),
+      cmdclass={"test": PyTestCommand},
       zip_safe=False)

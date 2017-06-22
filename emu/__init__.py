@@ -70,29 +70,25 @@ def which(program, path=None):
     environment variable, and returns the full path if found.
 
     Examples:
+        >>> which("ls")  # doctest: +SKIP
+        '/bin/ls'
 
-        >>> emu.which("ls")
-        "/bin/ls"
+        >>> which("/bin/ls")  # doctest: +SKIP
+        '/bin/ls'
 
-        >>> emu.which("/bin/ls")
-        "/bin/ls"
+        >>> which("not-a-real-command")
 
-        >>> emu.which("not-a-real-command")
-        None
-
-        >>> emu.which("ls", path=("/usr/bin", "/bin"))
-        "/bin/ls"
+        >>> which("ls", path=("/usr/bin", "/bin"))
+        '/bin/ls'
 
     Arguments:
-
         program (str): The name of the program to look for. Can
           be an absolute path.
         path (sequence of str, optional): A list of directories to
           look for the pgoram in. Default value is system $PATH.
 
     Returns:
-
-       str: Full path to program if found, else None.
+        str: Full path to program if found, else None.
     """
     # If path is not given, read the $PATH environment variable.
     path = path or os.environ["PATH"].split(os.pathsep)
@@ -115,21 +111,17 @@ def lookup_emu_program(command):
     """
     Return the path to the program which implements an emu command.
 
-    Example:
-
-        >>> lookup_emu_program("clean")
-        "/bin/emu-clean"
+    Examples:
+        >>> lookup_emu_program("clean")  # doctest: +SKIP
+        '/bin/emu-clean'
 
     Arguments:
-
         command (str): The name of the emu command to look up.
 
     Returns:
-
         str: Absolute path of the program to implement command.
 
     Raises:
-
         InvalidEmuCommand: If the command does not exist.
     """
     # TODO: Use a more robust mechanism than using "which", since this
