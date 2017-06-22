@@ -2,7 +2,7 @@
 emu - Fast, incremental rotating backups
 ========================================
 
-|Build Status| |Coverage Status| |Documentation Status| |PyPi Status| |Python Version| |License Badge|
+|Build Status| |Coverage Status| |PyPi Status| |Python Version| |License Badge|
 
 Emu is a command line backup tool, inspired by `git` and Time Machine. It is:
 
