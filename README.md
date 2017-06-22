@@ -1,92 +1,45 @@
-README for emu version 0.2.5
---------------------------------------------------------------------------------
-Copyright (C) 2012-2017 Chris Cummins <chrisc.101@gmail.com>.
-See the end of this file for license conditions.
+# emu - Fast, incremental rotating backups
 
-This directory contains version 0.2.5 of emu, a snapshot backup program. Emu
-takes advantages of some of the many tools available on *nix systems to
-transparently and simply record snapshots of a directory tree. It does not store
-data in proprietary file formats, nor does it hide anything from the user, with
-its simplicity making it incredibly fast. See the HOW IT WORKS section below for
-a detailed description.
+<a href="https://badge.fury.io/py/lmk">
+  <img src="https://img.shields.io/pypi/v/emu.svg?colorB=green&style=flat">
+</a>
+<a href="https://travis-ci.org/ChrisCummins/emu">
+  <img src="https://img.shields.io/travis/ChrisCummins/emu/master.svg?style=flat">
+</a>
+<a href="https://tldrlegal.com/license/gnu-general-public-license-v3-(gpl-3)">
+  <img src="https://img.shields.io/badge/license-GPLv3-blue.svg?style=flat">
+</a>
 
-REQUIREMENTS
---------------------------------------------------------------------------------
-Emu requires python 2 and the setuptools package. Most systems will come with
-both of those packaged and perhaps already installed. If not, full installation
-instructions are available from their respective websites:
+Emu is a command line backup tool, inspired by `git` and Time Machine. It is:
 
-    https://wiki.python.org/moin/BeginnersGuide/Download
-    https://pypi.python.org/pypi/setuptools
+* **Fast:** The battle tested, optimized `rsync` perform the heavy lifting of transferring files.
+* **Incremental:** Hardlinks minimize the overhead of storing multiple backups when few files change.
+* **Rotating:** All backups are kept within the past day, daily backups are kept for the past month, weekly backups are kept for previous months. The oldest backups are removed to make space for the newest.
 
-INSTALLATION
---------------------------------------------------------------------------------
-Emu uses python setuptools to automate installation. Simply execute
-this command from the base project directory:
+Additionally, emu is:
 
-    sudo python3 ./setup.py install
+* **Transparent:** There are no proprietary formats or data blobs. Backups are files; metadata is plaintext.
+* **Accessible:** Use your favorite file manager to browse old backups, or use the Python API for more control.
+* **Simple:** The core operations are simple: It creates new backups, it deletes old backups as required. One line in your crontab is all it takes for peace of mind.
 
-It is recommended that users run the test suite. Note that this must
-be performed _after_ installation:
 
-    sudo python3 ./setup.py test
+## Installation
 
-BACKGROUND
---------------------------------------------------------------------------------
-A snapshot backup system is one in which multiple full "snapshots" of
-a directory tree are built up incrementally, allowing the user to see,
-explore or restore the state of the tree from any one snapshot. Emu
-refers to the target directory that is to be backed up as a
-"source". The destination for these source snapshots is referred to as
-a "sink". New snapshots are "pushed" form the source onto the sink,
-and snapshots can be checked out from a sink onto the source.
+Requires Python >= 3.6.
 
-There are many different ways of creating snapshot backups. The first technique
-- the "tarball approach" - is to create a full copy of the source directory for
-each snapshot, and to store them in a common location. This is the least
-efficient means of creating back ups, as the size of the backup dataset is a
-linear multiple of the size of the source; so two snapshots require double the
-space of a single snapshot, and four snapshots require twice the space of
-two. However, this technique is robust, as the independence of the snapshots
-means that the loss of one will not affect any others.
+```sh
+$ pip install emu
+```
 
-The second technique is the "incremental approach", in which the difference
-between the last snapshot and the current source are stored, so that when
-combined with the previous snapshots, the full state of the source can be
-recreated. This massively reduces the data bandwidth requirements, but this
-"daisy chaining" of snapshots is fragile (removing a single link breaks the full
-chain), and the extra computational requirements to reverse engineer a source
-from a set of incomplete snapshots can increase the amount of time required to
-create and restore snapshots.
+After installation, we recommend running the test suite to ensure everything is in tip-top working order:
 
-The technique that emu uses combines the strenghts of the tarball and
-incremental approaches to produce a robust sink with minimal data bandwidth
-requirements and fast execution times. It does this by using hardlinks to keep
-multiple references to identical files without storing duplicate data.
+```sh
+$ emu test
+```
 
-HOW IT WORKS
---------------------------------------------------------------------------------
-One of the key features of emu is the way in which snapshots are stored within a
-sink. Unix-like operating systems have the ability to maintain multiple
-references within a filesystem to the same inode, this means that '~/foo' and
-'~/bar' can both refer to the same physical data on the block device, while
-appearing and behaving like separate files. In emu, this ability is exploited in
-order to keep multiple snapshots of the same source without having to duplicate
-identical data. This erases the need for using 'diffs', since the actual
-mechanisms for sharing inodes happens within the kernel, completely
-transparently to emu.
 
-There is a 1-n relationship of sources to sinks. That means that for any
-directory tree that the user wishes to backup, there may be as many backup
-destinations as they wish. This enables multiple redundancy in the case of
-catastrophic data loss. Sinks are independent structures, and no data is shared
-between them.
+## License
 
-LICENSE
---------------------------------------------------------------------------------
-Copyright © 2012-2017 Chris Cummins.  License GPLv3+: GNU GPL version 3 or
-later <http://gnu.org/licenses/gpl.html>.  This is free software: you
-are free to change and redistribute it.  There is NO WARRANTY, to the
-extent permitted by law.
+Copyright © 2012-2017 Chris Cummins.
 
-For full license details, see the file COPYING in this directory.
+Released under the terms of the GPLv3 license. See [COPYING](/COPYING) for details.
