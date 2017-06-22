@@ -20,6 +20,7 @@ before_install:
 
 install:
   - mkdir -pv $EMU_MANDIR
+  - pip install -r requirements.txt
   - python setup.py install
 
 script:
