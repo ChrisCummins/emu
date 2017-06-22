@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>emu {{ source.path }}</title>
+  <meta name="description" content="emu monitor" />
+  <meta name="author" property="author" content="Chris Cummins" />
+  {% if refresh_every %}
+  <meta http-equiv="refresh" content="{{ refresh_every }}">
+  {% endif %}
+
+  <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+  <link href="{{ assets.styles_css }}?v={{ assets.cache_tag }}" rel="stylesheet" />
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+<body>
+  <div class="navbar navbar-default navbar-fixed-top header">
+    <div class="container">
+      <div><h1><i class="fa fa-server"></i> Emu Overview for <code>{{ source.path }}</code></h1></div>
+      <p>
+      {{ num_snapshots }} snapshots {% if num_sinks > 1 %}across {{ num_sinks }} sinks,{% endif %} from {{ snapshots[0].how_long_ago }} to {{ snapshots[-1].how_long_ago }}.
+      </p>
+    </div>
+  </div>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-8 col-md-offset-2">
+        <div class="sinks">
+          <h1>Sinks</h1>
+          {% for sink in sinks %}
+          <div class="progress">
+            <div class="progress-bar" role="progressbar" aria-valuenow="{{ sink.space.ratio_used }}"
+                 aria-valuemin="0" aria-valuemax="100"
+                 style="width: {{ sink.space.ratio_used }}%;">
+            </div> <!-- /.progress-bar -->
+          </div> <!-- /.progress -->
+
+          <p class="text-center">
+            {{ sink.space.used }} of {{ sink.space.total }} used ({{ sink.space.ratio_used }}%) on {{ sink.name }}
+          </p>
+          {% endfor %}
+        </div> <!-- /.device-overview -->
+      </div> <!-- /.col-lg-12 -->
+    </div> <!-- /.row -->
+  </div> <!-- /.container -->
+
+  <hr/>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12">
+        <h1>Snapshots</h1>
+        <ul class="timeline">
+          <li class="timeline-inverted now">
+            <div class="timeline-badge">
+              <a><i class="fa fa-circle" id=""></i></a>
+            </div>
+            {% if in_progress %}
+            <div class="timeline-panel">
+              <div class="timeline-heading">
+                <h4>In Progress</h4>
+              </div>
+            </div>
+            {% endif %}
+          </li>
+          {% for snapshot in snapshots %}
+
+          <li {% if loop.index0 % 2 == 0 %}class="timeline-inverted"{% endif %}
+              style="top: {{ snapshot.position * 1 | round }}px">
+            <div class="timeline-badge">
+              <a><i class="fa fa-circle" id=""></i></a>
+            </div>
+            <div class="timeline-panel">
+              <div class="timeline-heading">
+                <h4>{% if num_sinks > 1 %}{{ snapshot.sink }}:{% endif %}{{ snapshot.name }} from {{ snapshot.how_long_ago }}{% if num_sinks > 1 %} on {{ snapshot.sink }}{% endif %}</h4>
+              </div>
+            </div>
+          </li>
+          {% endfor %}
+          <li class="clearfix no-float" style="height: {{ snapshots[-1].position * 1 | round }}px"></li>
+        </ul>
+
+      </div> <!-- /.col-lg-12 -->
+    </div> <!-- /.row -->
+  </div> <!-- /.container -->
+
+  </div class="container-fluid">
+    <div class="row">
+      <div class="col-lg-12 footer">
+        <hr>
+        <p class="text-center">
+          <a href="https://github.com/ChrisCummins/emu">emu {{ emu.version }}</a>
+          made with <i class="fa fa-heart"></i> by
+          <a href="https://chriscummins.cc">Chris Cummins</a>
+        </p>
+      </div> <!-- /.col-lg-12 -->
+
+    </div> <!-- /.row -->
+  </div> <!-- /.container-fluid -->
+
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="{{ assets.site_js }}?v={{ assets.cache_tag }}"></script>
+</body>
+</html>

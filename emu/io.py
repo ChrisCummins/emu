@@ -90,6 +90,10 @@ def disable_verbose_messages():
     verbose_enabled = False
 
 
+def is_verbose():
+    return verbose_enabled
+
+
 def verbose(*args, **kwargs):
     """
     Print a verbose message.

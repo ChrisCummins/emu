@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #
 # Copyright (C) 2012-2017 Chris Cummins.
 #
@@ -78,21 +78,11 @@ def main(argv, argc):
                             Colours.INFO))
 
         # Log:
-        id = colourise(snapshot.id.id, Colours.SNAPSHOT)
+        id = colourise(snapshot.id.snapshot_name, Colours.SNAPSHOT)
         if options.short:
             s = "{0}  {1}".format(snapshot.id, snapshot.node.name())
         else:
             s = "snapshot       {0}".format(id)
-
-        # Print cached status, if available:
-        if snapshot.node.has_status():
-            status = snapshot.node.status()
-            s += " ("
-            if status:
-                s += colourise("ok", Colours.OK)
-            else:
-                s += colourise("bad", Colours.ERROR)
-            s += ")"
 
         print(s)
 
@@ -103,7 +93,7 @@ def main(argv, argc):
                 print_dict(snapshot.node.section("Sink"))
                 print_dict(snapshot.node.section("Emu"))
             if i < no_of_snapshots:
-                print
+                print()
 
     # Flush pagination
     tmp_file.flush()

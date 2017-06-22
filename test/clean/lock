@@ -4,8 +4,11 @@ test_setup
 lock=.emu/LOCK
 sink=../sink
 
+fake_pid=432123
+fake_timestamp=1497874516
+
 emu init
-echo -e "$(date) $$" > $lock
+echo "$fake_pid $fake_timestamp" > $lock
 assert_is_file $lock
 
 set +e
@@ -21,7 +24,7 @@ assert_is_not_file $lock
 mkdir -pv $sink
 emu sink add origin $sink
 
-echo -e "$(date) $$" > $sink/$lock
+echo "$fake_pid $fake_timestamp" > $sink/$lock
 assert_is_file $sink/$lock
 
 set +e
