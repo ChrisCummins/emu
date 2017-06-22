@@ -101,22 +101,15 @@ def index():
     return flask.render_template("timeline.html", **data)
 
 
-def main(local_only=False, debug=False):
+def main(source_dir="/", **flask_opts):
     """
     Main monitor loop. This method never returns.
 
     Arguments:
-        local_only (bool, optional): If true, server accessible from localhost.
-        debug (bool, optional): If true, run server in debug mode.
+        **flask_opts:
     """
-    opts = {
-        debug: debug,
-    }
-
-    if not local_only:
-        opts["host"] = "0.0.0.0"
-
-    app.run(**opts)
+    os.chdir(source_dir)
+    app.run(**flask_opts)
 
 
 if __name__ == "__main__":

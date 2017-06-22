@@ -28,4 +28,9 @@ import emu.monitor
 
 
 if __name__ == "__main__":
-    emu.monitor.main()
+    parser = emu.Parser()
+    parser.add_option("-p", "--port", type=int, default=None)
+    parser.add_option("-h", "--host", type=str, default=None)
+    (options, args) = parser.parse_args()
+
+    emu.monitor.main(**vars(options))
