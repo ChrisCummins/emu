@@ -110,7 +110,7 @@ def main(local_only=False, debug=False):
         debug (bool, optional): If true, run server in debug mode.
     """
     opts = {
-        debug=debug,
+        debug: debug,
     }
 
     if not local_only:
