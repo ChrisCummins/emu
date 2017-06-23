@@ -95,8 +95,9 @@ def index():
 
     data["in_progress"] = sum(1 if sink["in_progress"] else 0 for sink in data["sinks"])
     data["in_progress_since"] = max(sink["in_progress_since"] for sink in data["sinks"])
-    data["in_progress_since_hr"] = humanize.naturaltime(
-        datetime.datetime.now() - datetime.timedelta(seconds=data["in_progress_since"]))
+    if data["in_progress_since"]:
+        data["in_progress_since_hr"] = humanize.naturaltime(
+            datetime.datetime.now() - datetime.timedelta(seconds=data["in_progress_since"]))
 
     return flask.render_template("timeline.html", **data)
 
