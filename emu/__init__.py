@@ -783,7 +783,7 @@ class Sink:
                     io.printf(f"skipping last snapshot {snapshot} from {weeks_ago} weeks ago")
                     current_week = snapshot.node.date.isocalendar()[1]
                 else:
-                    io.printf(f"removing snapshot {snaphot} from {weeks_ago} weeks ago")
+                    io.printf(f"removing snapshot {snapshot} from {weeks_ago} weeks ago")
                     snapshot.destroy(dry_run=dry_run, force=force)
 
             snapshot = parent
