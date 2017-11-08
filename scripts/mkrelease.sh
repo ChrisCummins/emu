@@ -31,7 +31,7 @@ usage() {
 #     @return The absolute path to the project root directory
 get_project_root() {
     while [[ "$(pwd)" != "/" ]]; do
-        if test -f README; then
+        if test -f README.rst; then
             pwd
             return
         fi
@@ -72,8 +72,8 @@ get_micro() {
 #     @return Current version string, e.g. '0.1.4'
 get_current_version() {
     cd "$(get_project_root)"
-    grep 'README for emu version ' README \
-        | sed 's/README for emu version //'
+    grep 'version=' setup.py \
+        | sed -r "s/.*=[\"']([0-9\.]+)['\"].*/\1/"
 }
 
 # Replace the project version with a new one.
@@ -87,11 +87,6 @@ set_new_version() {
     local micro="$(get_micro "$new")"
 
     cd "$(get_project_root)"
-
-    echo "Setting new version... README"
-    test -f README || { echo "fatal: 'README' not found!"; exit 3; }
-    sed -r -i 's/(\s*README for emu version )([0-9\.]+)/\1'"$major.$minor.$micro"'/' README
-    sed -r -i 's/(\s*This directory contains version )([0-9\.]+)/\1'"$major.$minor.$micro"'/' README
 
     echo "Setting new version... setup.py"
     test -f setup.py || { echo "fatal: 'setup.py' not found!"; exit 3; }
