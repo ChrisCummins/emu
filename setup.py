@@ -41,7 +41,7 @@ def read_requirements(path='requirements.txt'):
 
 
 setup(name="emu",
-      version="0.2.5",
+      version="0.3.0",
       description=("Fast, incremental, rotating backups"),
       url="https://github.com/ChrisCummins/emu",
       author="Chris Cummins",
