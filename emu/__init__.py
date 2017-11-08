@@ -1461,7 +1461,7 @@ class Meta:
     #
     # Version and copyright information:
     #
-    version = Version(0, 3, 0, dirty=False)
+    version = Version(0, 3, 0, dirty=True)
     copyright = { "start": 2012, "end": 2017, "authors": ["Chris Cummins"]}
 
     #
