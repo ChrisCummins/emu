@@ -788,12 +788,13 @@ class Sink:
 
             snapshot = parent
 
-        # delete snapshots, starting with the tail, until at least 20% of the
+        # delete snapshots, starting with the oldest, until at least 5% of the
         # space on the drive is available
-        while len(list(self.snapshots())) and self.free_space_ratio < .2:
+        while len(list(self.snapshots())) > 1 and self.free_space_ratio < .05:
+            snapshot = self.tail()
             print(f"available space is {self.free_space_ratio:.0%}, " +
                   f"removing {snapshot}")
-            self.tail().destroy(dry_run=dry_run, force=force)
+            snapshot.destroy(dry_run=dry_run, force=force)
 
             # break manually on a dry-run to prevent infinite loop:
             if dry_run:
