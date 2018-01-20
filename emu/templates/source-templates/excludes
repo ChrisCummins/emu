@@ -27,7 +27,10 @@
 
 # Uncomment the following line to ignore cache files:
 # - /home/*/.cache/*
+# - /home/*/.ccache/*
 # - /var/cache/*
+
+/home/*/.gvfs/*
 
 # Uncomment the following lines if you are not interested in
 # preserving binaries:
