@@ -18,29 +18,28 @@
 # along with emu.  If not, see <http://www.gnu.org/licenses/>.
 #
 import sys
-import os
 
 from emu import *
 
 
 def main(argv, argc):
-    parser = Parser()
-    parser.add_option("-d", "--dry-run", action="store_true",
-                      dest="dry_run", default=False)
-    parser.add_option("-f", "--force", action="store_true",
-                      dest="force", default=False)
-    (options, args) = parser.parse_args()
+  parser = Parser()
+  parser.add_option("-d", "--dry-run", action="store_true",
+                    dest="dry_run", default=False)
+  parser.add_option("-f", "--force", action="store_true",
+                    dest="force", default=False)
+  (options, args) = parser.parse_args()
 
-    source = Source(options.source_dir)
-    snapshot = parser.parse_snapshots(source, accept_sink_names=False,
-                                      single_arg=True)[0]
+  source = Source(options.source_dir)
+  snapshot = parser.parse_snapshots(source, accept_sink_names=False,
+                                    single_arg=True)[0]
 
-    source.pull(snapshot, dry_run=options.dry_run, force=options.force)
+  source.pull(snapshot, dry_run=options.dry_run, force=options.force)
 
-    return 0
+  return 0
 
 
 if __name__ == "__main__":
-    argv = sys.argv[1:]
-    ret = main(argv, len(argv))
-    sys.exit(ret)
+  argv = sys.argv[1:]
+  ret = main(argv, len(argv))
+  sys.exit(ret)

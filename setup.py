@@ -15,9 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with emu.  If not, see <http://www.gnu.org/licenses/>.
 import os
-from glob import glob
 
-from setuptools import setup, find_packages
+from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
 
@@ -27,17 +26,17 @@ man_dir = man_prefix + "/man1/"
 
 
 class PyTestCommand(TestCommand):
-    description = 'run test suite'
-    user_options = []
+  description = 'run test suite'
+  user_options = []
 
-    def run_tests(self):
-        import emu.test
-        emu.test.testsuite()
+  def run_tests(self):
+    import emu.test
+    emu.test.testsuite()
 
 
 def read_requirements(path='requirements.txt'):
-    with open(path) as infile:
-        return [x.strip() for x in infile.readlines() if x.strip()]
+  with open(path) as infile:
+    return [x.strip() for x in infile.readlines() if x.strip()]
 
 
 setup(name="emu",
@@ -52,48 +51,48 @@ setup(name="emu",
         "emu.test",
       ],
       package_data={
-          'emu': [
-              'static/site.js',
-              'static/styles.css',
-              'templates/sink-templates/config',
-              'templates/source-templates/config',
-              'templates/source-templates/excludes',
-              'templates/source-templates/hooks/exec/log.error.sample',
-              'templates/source-templates/hooks/exec/mount-remote.post.sample',
-              'templates/source-templates/hooks/exec/mount-remote.pre.sample',
-              'templates/source-templates/hooks/push/email-report.post.sample',
-              'templates/source-templates/hooks/push/email.error.sample',
-              'templates/source-templates/hooks/push/log-start.pre.sample',
-              'templates/timeline.html',
-          ]
+        'emu': [
+          'static/site.js',
+          'static/styles.css',
+          'templates/sink-templates/config',
+          'templates/source-templates/config',
+          'templates/source-templates/excludes',
+          'templates/source-templates/hooks/exec/log.error.sample',
+          'templates/source-templates/hooks/exec/mount-remote.post.sample',
+          'templates/source-templates/hooks/exec/mount-remote.pre.sample',
+          'templates/source-templates/hooks/push/email-report.post.sample',
+          'templates/source-templates/hooks/push/email.error.sample',
+          'templates/source-templates/hooks/push/log-start.pre.sample',
+          'templates/timeline.html',
+        ]
       },
       data_files=[
-          (man_dir, [
-              'man/emu.1',
-              'man/emu-clean.1',
-              'man/emu-init.1',
-              'man/emu-log.1',
-              'man/emu-prune.1',
-              'man/emu-pull.1',
-              'man/emu-push.1',
-              'man/emu-sink.1',
-          ])
+        (man_dir, [
+          'man/emu.1',
+          'man/emu-clean.1',
+          'man/emu-init.1',
+          'man/emu-log.1',
+          'man/emu-prune.1',
+          'man/emu-pull.1',
+          'man/emu-push.1',
+          'man/emu-sink.1',
+        ])
       ],
       scripts=[
-          'bin/emu',
-          'bin/emu-clean',
-          'bin/emu-init',
-          'bin/emu-log',
-          'bin/emu-monitor',
-          'bin/emu-prune',
-          'bin/emu-pull',
-          'bin/emu-push',
-          'bin/emu-sink',
+        'bin/emu',
+        'bin/emu-clean',
+        'bin/emu-init',
+        'bin/emu-log',
+        'bin/emu-monitor',
+        'bin/emu-prune',
+        'bin/emu-pull',
+        'bin/emu-push',
+        'bin/emu-sink',
       ],
       test_suite="nose.collector",
       tests_require=[
-          "coverage",
-          "nose",
+        "coverage",
+        "nose",
       ],
       install_requires=read_requirements("requirements.txt"),
       cmdclass={"test": PyTestCommand},

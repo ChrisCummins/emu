@@ -17,29 +17,27 @@
 # You should have received a copy of the GNU General Public License
 # along with emu.  If not, see <http://www.gnu.org/licenses/>.
 #
-import re
 import sys
-import os
 
 from emu import *
 
 
 def main(argv, argc):
-    parser = Parser()
-    (options, args) = parser.parse_args()
+  parser = Parser()
+  (options, args) = parser.parse_args()
 
-    snapshots = parser.parse_snapshots(Source(options.source_dir),
-                                       accept_sink_names=False,
-                                       accept_no_args=False,
-                                       require=True)
+  snapshots = parser.parse_snapshots(Source(options.source_dir),
+                                     accept_sink_names=False,
+                                     accept_no_args=False,
+                                     require=True)
 
-    for snapshot in snapshots:
-        snapshot.destroy()
+  for snapshot in snapshots:
+    snapshot.destroy()
 
-    return 0
+  return 0
 
 
 if __name__ == "__main__":
-    argv = sys.argv[1:]
-    ret = main(argv, len(argv))
-    sys.exit(ret)
+  argv = sys.argv[1:]
+  ret = main(argv, len(argv))
+  sys.exit(ret)

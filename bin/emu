@@ -19,69 +19,69 @@
 #
 from __future__ import print_function
 
-import sys
 import os
+import sys
 
 from emu import *
 from emu import io
 
 
 def main(arguments=[]):
-    """
-    Emu main entry point.
+  """
+  Emu main entry point.
 
-    Accepts a list of arguments, and parses and performs the
-    appropriate actions.
+  Accepts a list of arguments, and parses and performs the
+  appropriate actions.
 
-    Examples:
+  Examples:
 
-        >>> emu.main()
-        # Opens man page.
+      >>> emu.main()
+      # Opens man page.
 
-        >>> emu.main(["clean", "--dry-run"])
-        # Runs "clean" script with args "--dry-run".
+      >>> emu.main(["clean", "--dry-run"])
+      # Runs "clean" script with args "--dry-run".
 
-    Arguments:
+  Arguments:
 
-        arguments (list of str, optional): Arguments to parse and
-          execute.
+      arguments (list of str, optional): Arguments to parse and
+        execute.
 
-    Returns:
+  Returns:
 
-        int: Return code of command.
-    """
+      int: Return code of command.
+  """
 
-    # Go to man page if help argument or no args.
-    if (not len(arguments) or
-        arguments[0] == "-h" or
-        arguments[0] == "--help"):
-        return os.system("man emu")
+  # Go to man page if help argument or no args.
+  if (not len(arguments) or
+      arguments[0] == "-h" or
+      arguments[0] == "--help"):
+    return os.system("man emu")
 
-    # emu help [command] handling.
-    elif (arguments[0] == "help"):
-        if len(arguments) > 1:
-            # Lookup the path to emu command, as this will fail if the
-            # command does not exist.
-            lookup_emu_program(arguments[1])
-            return os.system("man emu-" + arguments[1])
-        return os.system("man emu")
+  # emu help [command] handling.
+  elif (arguments[0] == "help"):
+    if len(arguments) > 1:
+      # Lookup the path to emu command, as this will fail if the
+      # command does not exist.
+      lookup_emu_program(arguments[1])
+      return os.system("man emu-" + arguments[1])
+    return os.system("man emu")
 
-    # emu version command.
-    elif arguments[0] == "--version" or arguments[0] == "version":
-        io.printf(Meta.versionstr())
-        return 0
+  # emu version command.
+  elif arguments[0] == "--version" or arguments[0] == "version":
+    io.printf(Meta.versionstr())
+    return 0
 
-    else:
-        # Assemble script path and arguments.
-        script_path = lookup_emu_program(arguments[0])
-        script_args = arguments[1:]
-        command = ' '.join([script_path] + script_args)
-        return os.system(command)
+  else:
+    # Assemble script path and arguments.
+    script_path = lookup_emu_program(arguments[0])
+    script_args = arguments[1:]
+    command = ' '.join([script_path] + script_args)
+    return os.system(command)
 
 
 if __name__ == "__main__":
-    try:
-        ret = main(sys.argv[1:])
-        sys.exit(int(ret % 255))
-    except InvalidEmuCommand as error:
-        io.fatal(error)
+  try:
+    ret = main(sys.argv[1:])
+    sys.exit(int(ret % 255))
+  except InvalidEmuCommand as error:
+    io.fatal(error)

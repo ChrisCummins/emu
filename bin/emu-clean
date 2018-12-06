@@ -19,42 +19,38 @@
 #
 from __future__ import print_function
 
-import os
-import re
-import subprocess
 import sys
-import tempfile
 from sys import exit
 
 from emu import *
 
 
 def main(argv, argc):
-    parser = Parser()
-    parser.add_option("-d", "--dry-run", action="store_true",
-                      dest="dry_run", default=False)
-    parser.add_option("-r", "--recursive", action="store_true",
-                      dest="recursive", default=False)
-    (options, args) = parser.parse_args()
+  parser = Parser()
+  parser.add_option("-d", "--dry-run", action="store_true",
+                    dest="dry_run", default=False)
+  parser.add_option("-r", "--recursive", action="store_true",
+                    dest="recursive", default=False)
+  (options, args) = parser.parse_args()
 
-    source = Source(options.source_dir)
+  source = Source(options.source_dir)
 
-    if len(args):
-        for arg in args:
-            try:
-                sink = Util.get_sink_by_name(arg, source.sinks())
-                sink.clean(dry_run=options.dry_run)
-            except SinkNotFoundError as e:
-                print(e)
-                sys.exit(1)
-    else:
-        source.clean(recursive=options.recursive,
-                     dry_run=options.dry_run)
+  if len(args):
+    for arg in args:
+      try:
+        sink = Util.get_sink_by_name(arg, source.sinks())
+        sink.clean(dry_run=options.dry_run)
+      except SinkNotFoundError as e:
+        print(e)
+        sys.exit(1)
+  else:
+    source.clean(recursive=options.recursive,
+                 dry_run=options.dry_run)
 
-    return 0
+  return 0
 
 
 if __name__ == "__main__":
-    argv = sys.argv[1:]
-    ret = main(argv, len(argv))
-    exit(ret)
+  argv = sys.argv[1:]
+  ret = main(argv, len(argv))
+  exit(ret)

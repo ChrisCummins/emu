@@ -27,30 +27,30 @@ from emu import *
 
 
 def main(argv, argc):
-    parser = Parser(source_dir_arg=False)
-    parser.add_option("-S", "--source-dir", action="store", type="string",
-                      dest="source_dir", default=os.getcwd())
-    parser.add_option("-t", "--template-dir", action="store", type="string",
-                      dest="template_dir", default=Meta.source_templates)
-    parser.add_option("-f", "--force", action="store_true", dest="force",
-                      default=False)
-    (options, args) = parser.parse_args()
+  parser = Parser(source_dir_arg=False)
+  parser.add_option("-S", "--source-dir", action="store", type="string",
+                    dest="source_dir", default=os.getcwd())
+  parser.add_option("-t", "--template-dir", action="store", type="string",
+                    dest="template_dir", default=Meta.source_templates)
+  parser.add_option("-f", "--force", action="store_true", dest="force",
+                    default=False)
+  (options, args) = parser.parse_args()
 
-    # Fail if no read/write permissions
-    Util.readable(options.source_dir, error=True)
-    Util.writable(options.source_dir, error=True)
+  # Fail if no read/write permissions
+  Util.readable(options.source_dir, error=True)
+  Util.writable(options.source_dir, error=True)
 
-    # Perform initialisation
-    try:
-        Source.create(options.source_dir, options.template_dir,
-                      force=options.force)
-        return 0
-    except SourceCreateError as e:
-        print(e)
-        return 1
+  # Perform initialisation
+  try:
+    Source.create(options.source_dir, options.template_dir,
+                  force=options.force)
+    return 0
+  except SourceCreateError as e:
+    print(e)
+    return 1
 
 
 if __name__ == "__main__":
-    argv = sys.argv[1:]
-    ret = main(argv, len(argv))
-    exit(ret)
+  argv = sys.argv[1:]
+  ret = main(argv, len(argv))
+  exit(ret)

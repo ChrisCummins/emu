@@ -36,7 +36,7 @@ termination.
 """
 from __future__ import print_function
 
-from sys import exit,stderr
+from sys import exit, stderr
 
 
 printf_enabled = True
@@ -47,166 +47,166 @@ error_enabled = True
 
 
 def enable_printf_messages():
-    """
-    Enable message printing.
-    """
-    global printf_enabled
-    printf_enabled = True
+  """
+  Enable message printing.
+  """
+  global printf_enabled
+  printf_enabled = True
 
 
 def disable_printf_messages():
-    """
-    Disable message printing.
-    """
-    global printf_enabled
-    printf_enabled = False
+  """
+  Disable message printing.
+  """
+  global printf_enabled
+  printf_enabled = False
 
 
 def printf(*args, **kwargs):
-    """
-    Print a message.
+  """
+  Print a message.
 
-    Arguments:
+  Arguments:
 
-        *args, **kwargs: Arguments to be passed to print().
-    """
-    if printf_enabled:
-        print(*args, **kwargs)
+      *args, **kwargs: Arguments to be passed to print().
+  """
+  if printf_enabled:
+    print(*args, **kwargs)
 
 
 def enable_verbose_messages():
-    """
-    Enable verbose message printing.
-    """
-    global verbose_enabled
-    verbose_enabled = True
+  """
+  Enable verbose message printing.
+  """
+  global verbose_enabled
+  verbose_enabled = True
 
 
 def disable_verbose_messages():
-    """
-    Disable verbose message printing.
-    """
-    global verbose_enabled
-    verbose_enabled = False
+  """
+  Disable verbose message printing.
+  """
+  global verbose_enabled
+  verbose_enabled = False
 
 
 def is_verbose():
-    return verbose_enabled
+  return verbose_enabled
 
 
 def verbose(*args, **kwargs):
-    """
-    Print a verbose message.
+  """
+  Print a verbose message.
 
-    Arguments:
+  Arguments:
 
-        *args, **kwargs: Arguments to be passed to print().
-    """
-    if verbose_enabled:
-        print(*args, **kwargs)
+      *args, **kwargs: Arguments to be passed to print().
+  """
+  if verbose_enabled:
+    print(*args, **kwargs)
 
 
 def enable_debug_messages():
-    """
-    Enable debugging message printing.
-    """
-    global debug_enabled
-    debug_enabled = True
+  """
+  Enable debugging message printing.
+  """
+  global debug_enabled
+  debug_enabled = True
 
 
 def disable_debug_messages():
-    """
-    Disable debugging message printing.
-    """
-    global debug_enabled
-    debug_enabled = False
+  """
+  Disable debugging message printing.
+  """
+  global debug_enabled
+  debug_enabled = False
 
 
 def debug(*args, **kwargs):
-    """
-    Print a debugging message.
+  """
+  Print a debugging message.
 
-    Arguments:
+  Arguments:
 
-        *args, **kwargs: Arguments to be passed to print().
-    """
-    if debug_enabled:
-        print(*args, **kwargs)
+      *args, **kwargs: Arguments to be passed to print().
+  """
+  if debug_enabled:
+    print(*args, **kwargs)
 
 
 def enable_warning_messages():
-    """
-    Enable warning message printing.
-    """
-    global warning_enabled
-    warning_enabled = True
+  """
+  Enable warning message printing.
+  """
+  global warning_enabled
+  warning_enabled = True
 
 
 def disable_warning_messages():
-    """
-    Disable warning message printing.
-    """
-    global warning_enabled
-    warning_enabled = False
+  """
+  Disable warning message printing.
+  """
+  global warning_enabled
+  warning_enabled = False
 
 
 def warning(*args, **kwargs):
-    """
-    Print a warning message.
+  """
+  Print a warning message.
 
-    Arguments:
+  Arguments:
 
-        *args, **kwargs: Arguments to be passed to print().
-    """
-    if "file" not in kwargs:
-        kwargs["file"] = stderr
-    if warning_enabled:
-        print(*args, **kwargs)
+      *args, **kwargs: Arguments to be passed to print().
+  """
+  if "file" not in kwargs:
+    kwargs["file"] = stderr
+  if warning_enabled:
+    print(*args, **kwargs)
 
 
 def enable_error_messages():
-    """
-    Enable error message printing.
-    """
-    global error_enabled
-    error_enabled = True
+  """
+  Enable error message printing.
+  """
+  global error_enabled
+  error_enabled = True
 
 
 def disable_error_messages():
-    """
-    Disable error message printing.
-    """
-    global error_enabled
-    error_enabled = False
+  """
+  Disable error message printing.
+  """
+  global error_enabled
+  error_enabled = False
 
 
 def error(*args, **kwargs):
-    """
-    Print an error message.
+  """
+  Print an error message.
 
-    Arguments:
+  Arguments:
 
-        *args, **kwargs: Arguments to be passed to print().
-    """
-    if "file" not in kwargs:
-        kwargs["file"] = stderr
-    if error_enabled:
-        print(*args, **kwargs)
+      *args, **kwargs: Arguments to be passed to print().
+  """
+  if "file" not in kwargs:
+    kwargs["file"] = stderr
+  if error_enabled:
+    print(*args, **kwargs)
 
 
 def fatal(*args, **kwargs):
-    """
-    Print a an error message and quit.
+  """
+  Print a an error message and quit.
 
-    Never returns.
+  Never returns.
 
-    Arguments:
+  Arguments:
 
-        *args, **kwargs: Arguments to be passed to print().
-        status (int, optional): Exit status.
-    """
-    status = kwargs.pop("status", 1)
-    if "file" not in kwargs:
-        kwargs["file"] = stderr
-    print("fatal:", *args, **kwargs)
-    exit(status)
+      *args, **kwargs: Arguments to be passed to print().
+      status (int, optional): Exit status.
+  """
+  status = kwargs.pop("status", 1)
+  if "file" not in kwargs:
+    kwargs["file"] = stderr
+  print("fatal:", *args, **kwargs)
+  exit(status)
