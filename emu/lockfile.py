@@ -1,4 +1,4 @@
-# Copyright (C) 2017 Chris Cummins.
+# Copyright (C) 2012-2020 Chris Cummins.
 #
 # Labm8 is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free

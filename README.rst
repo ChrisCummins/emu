@@ -38,7 +38,7 @@ After installation, we recommend running the test suite to ensure everything is 
 License
 -------
 
-Copyright © 2012-2017 Chris Cummins.
+Copyright © 2012-2020 Chris Cummins.
 
 Released under the terms of the GPLv3 license. See `COPYING </COPYING>`__ for
 details.
