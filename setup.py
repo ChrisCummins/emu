@@ -94,6 +94,6 @@ setup(name="emu",
         "coverage",
         "nose",
       ],
-      install_requires=read_requirements("requirements.txt"),
+      install_requires=read_requirements("emu/requirements.txt"),
       cmdclass={"test": PyTestCommand},
       zip_safe=False)
